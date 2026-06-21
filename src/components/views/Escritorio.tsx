@@ -183,7 +183,7 @@ const Escritorio: React.FC<EscritorioProps> = ({ activeActivityTab, setActiveAct
           </div>
           {chartData.length > 0 ? (
             <div className="h-[180px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart data={chartData} margin={{ top: 5, right: 0, left: -30, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} dy={8} />
@@ -228,7 +228,7 @@ const Escritorio: React.FC<EscritorioProps> = ({ activeActivityTab, setActiveAct
            </div>
            {chartData.length > 0 ? (
              <div className="flex-1 min-h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} dy={10} />

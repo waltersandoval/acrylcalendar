@@ -357,7 +357,7 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, calendar
   return (
     <div className="bg-[#f8f9fa] pb-4 rounded-b-2xl">
       {/* Action Bar */}
-      <div className="flex justify-end gap-3 px-6 py-4 border-b hairline bg-[#f5f5f7]/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
+      <div className="flex justify-end gap-3 px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
         <button className="px-5 py-2.5 srf-panel border hairline ink-2 rounded-xl text-[13px] font-semibold transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer hover:srf-sunken">
           Cancelar
         </button>

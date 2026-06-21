@@ -30,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebarItem, setActiveSidebarIt
         <div className={`px-4 py-3.5 flex items-center mb-1 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
           {!isCollapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-extrabold shadow-md shadow-black/15" style={{ background: 'linear-gradient(140deg, var(--accent), var(--accent-strong))' }}>A</div>
+              <div className="w-9 h-9 rounded-[11px] flex items-center justify-center accent-fill font-extrabold shadow-md shadow-black/15">A</div>
               <span className="font-bold text-[18px] tracking-tight ink-1 font-display">Acryl Calendar</span>
             </div>
           )}
@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebarItem, setActiveSidebarIt
                     : 'ink-2 font-medium border border-transparent hover:bg-[color-mix(in_srgb,rgb(var(--glass-hairline))_6%,transparent)]'
                 }`}
               >
-                <item.icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? '' : 'ink-3'}`} style={isActive ? { color: 'var(--accent)' } : undefined} strokeWidth={isActive ? 2.4 : 2} />
+                <item.icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'ink-1' : 'ink-3'}`} strokeWidth={isActive ? 2.4 : 2} />
                 {!isCollapsed && <span>{item.name}</span>}
               </button>
             )
@@ -102,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebarItem, setActiveSidebarIt
              {user?.photoURL ? (
                <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" style={{ border: '1px solid var(--hairline)' }} />
              ) : (
-               <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ background: profileActive ? 'linear-gradient(140deg, var(--accent), var(--accent-strong))' : 'color-mix(in srgb, rgb(var(--glass-hairline)) 22%, transparent)' }}>
+               <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0" style={{ background: profileActive ? 'var(--btn-bg)' : 'color-mix(in srgb, rgb(var(--glass-hairline)) 22%, transparent)', color: profileActive ? 'var(--btn-fg)' : 'var(--ink-1)' }}>
                  {initial}
                </div>
              )}

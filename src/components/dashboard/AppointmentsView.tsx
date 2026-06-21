@@ -198,13 +198,13 @@ const AppointmentsView: React.FC<AppointmentsViewProps> = ({ calendarFilter, set
                 onClick={() => setStatus(s.id)}
                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-bold border transition-all ${
                   active
-                    ? 'bg-slate-900 text-white border-slate-900'
-                    : 'srf-panel ink-2 hairline hover:border-slate-400'
+                    ? 'accent-fill border-transparent'
+                    : 'srf-panel ink-2 hairline'
                 }`}
               >
                 {s.label}
                 {s.id !== 'all' && counts[s.id] > 0 && (
-                  <span className={`ml-1.5 text-[11px] ${active ? 'text-slate-300' : 'ink-3'}`}>
+                  <span className={`ml-1.5 text-[11px] ${active ? 'opacity-60' : 'ink-3'}`}>
                     {counts[s.id]}
                   </span>
                 )}
@@ -268,7 +268,7 @@ const AppointmentsView: React.FC<AppointmentsViewProps> = ({ calendarFilter, set
 
   // ─── ESCRITORIO ────────────────────────────────────────────────────────────
   return (
-    <div className="srf-panel border-x border-b border-t-0 hairline shadow-sm flex flex-col overflow-hidden flex-1 mb-6 rounded-b-3xl mx-4 md:mx-6">
+    <div className="srf-panel border hairline shadow-sm flex flex-col overflow-hidden flex-1 mt-4 mb-6 r-window mx-4 md:mx-6">
       <CalendarHeader
         selectedCalendarFilter={calendarFilter}
         setSelectedCalendarFilter={setCalendarFilter}

@@ -86,7 +86,7 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
 
   return (
     <div className="srf-panel pb-10 rounded-b-2xl">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-6 py-4 border-b hairline bg-[#f5f5f7]/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-4 md:gap-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-4 md:gap-0">
          <h3 className="ink-1 font-semibold text-[15px] tracking-tight">Sincronización y Automatizaciones</h3>
          <div className="flex gap-4 items-center w-full md:w-auto justify-end">
             <button className="ink-1 text-xs font-semibold flex items-center tracking-wider hover:text-black cursor-pointer transition-colors shadow-sm srf-panel px-3 py-1.5 rounded-lg border hairline h-10">

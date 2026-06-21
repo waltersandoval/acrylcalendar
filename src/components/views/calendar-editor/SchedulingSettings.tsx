@@ -208,7 +208,7 @@ const CustomTimePicker = ({ value, onChange, disabled = false }: { value: string
     <div className="relative w-full flex-1 max-w-[150px]" ref={dropdownRef}>
       <div 
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsOpen(!isOpen); }}
-        className="w-full bg-[#f5f5f7] border border-transparent hover:border-slate-300 focus-within:border-slate-300 focus-within:srf-panel ink-1 text-[13px] rounded-xl py-2 pl-9 pr-3 outline-none font-semibold text-center transition-all duration-200 shadow-sm cursor-pointer hover:shadow-md select-none relative z-10 flex items-center justify-center min-h-[38px]"
+        className="w-full srf-sunken border border-transparent hover:border-slate-300 focus-within:border-slate-300 focus-within:srf-panel ink-1 text-[13px] rounded-xl py-2 pl-9 pr-3 outline-none font-semibold text-center transition-all duration-200 shadow-sm cursor-pointer hover:shadow-md select-none relative z-10 flex items-center justify-center min-h-[38px]"
       >
         <Clock className="w-4 h-4 ink-3 absolute left-3 top-[11px] z-20 pointer-events-none" />
         <span className="font-semibold ink-1">{value || '8:00 a. m.'}</span>
@@ -748,7 +748,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
   return (
     <div className="srf-panel pb-10 rounded-b-2xl">
       {/* ── Sticky Action Bar ─────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-[#f5f5f7]/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
+      <div className="sticky top-0 z-20 srf-sunken/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
         {/* Row 1: Group tabs */}
         <div className="flex items-end overflow-x-auto no-scrollbar pt-3 px-4 gap-1">
           <button
@@ -830,14 +830,14 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
                  value={activeGroup.title} 
                  onChange={(e) => updateGroup({ title: e.target.value, name: e.target.value })}
                  placeholder="Ej. Uñas Acrílicas" 
-                 className="w-full bg-[#f5f5f7] border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/20 focus:border-slate-300 transition-all duration-200 outline-none" 
+                 className="w-full srf-sunken border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/20 focus:border-slate-300 transition-all duration-200 outline-none" 
                />
              </div>
              <div>
                <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5">
                  Administradores <span className="text-red-500 ml-1 opacity-80">*</span> <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
                </label>
-               <div className="bg-[#f5f5f7] border hairline rounded-xl p-3 flex flex-wrap gap-2 text-sm min-h-[60px] items-start transition-colors hover:border-slate-300">
+               <div className="srf-sunken border hairline rounded-xl p-3 flex flex-wrap gap-2 text-sm min-h-[60px] items-start transition-colors hover:border-slate-300">
                   {activeGroup.administrators.map(admin => (
                     <div key={admin.id} className="srf-panel rounded-lg py-1.5 px-2.5 flex items-center shadow-sm border hairline">
                       {admin.avatar ? (
@@ -872,7 +872,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
                value={activeGroup.description}
                onChange={(e) => updateGroup({ description: e.target.value })}
                placeholder="Añade una descripción sobre los servicios o el equipo asignado a este grupo..."
-               className="w-full bg-[#f5f5f7] border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/20 focus:border-slate-300 transition-all duration-200 outline-none resize-none" 
+               className="w-full srf-sunken border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/20 focus:border-slate-300 transition-all duration-200 outline-none resize-none" 
              />
            </div>
         </div>
@@ -925,7 +925,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
                          updateGroup({ startingPoint: `Cada 1 minuto(s)` });
                        }
                      }}
-                     className="w-full bg-[#f5f5f7] border border-transparent focus:srf-panel hover:border-slate-300 focus:border-slate-300 rounded-xl pl-4 pr-16 py-3 text-sm ink-1 font-semibold outline-none transition-all duration-200 focus:ring-2 focus:ring-black/20 shadow-sm"
+                     className="w-full srf-sunken border border-transparent focus:srf-panel hover:border-slate-300 focus:border-slate-300 rounded-xl pl-4 pr-16 py-3 text-sm ink-1 font-semibold outline-none transition-all duration-200 focus:ring-2 focus:ring-black/20 shadow-sm"
                    />
                    <span className="absolute right-3 top-3.5 text-xs ink-3 font-bold pointer-events-none">
                      minutos
@@ -935,7 +935,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
                   <select 
                     value={activeGroup.startingPoint}
                     onChange={(e) => updateGroup({ startingPoint: e.target.value })}
-                    className="w-full bg-[#f5f5f7] border border-transparent focus:srf-panel hover:border-slate-300 focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 font-semibold outline-none cursor-pointer transition-all duration-200 focus:ring-2 focus:ring-black/20 shadow-sm"
+                    className="w-full srf-sunken border border-transparent focus:srf-panel hover:border-slate-300 focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 font-semibold outline-none cursor-pointer transition-all duration-200 focus:ring-2 focus:ring-black/20 shadow-sm"
                   >
                      <option value="Cada 5 minuto(s)">Cada 5 minuto(s)</option>
                      <option value="Cada 10 minuto(s)">Cada 10 minuto(s)</option>
@@ -1041,7 +1041,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
             </div>
 
             {/* Days card — same style as Meses Disponibles */}
-            <div className="bg-[#f5f5f7]/60 border hairline rounded-2xl overflow-hidden">
+            <div className="srf-sunken/60 border hairline rounded-2xl overflow-hidden">
                {activeGroup.days.map((day, dayIndex) => (
                   <div
                     key={day.name}
@@ -1199,7 +1199,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
               </h3>
            </div>
 
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 max-w-4xl px-7 py-7 bg-[#f5f5f7]/50 border hairline rounded-2xl">
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 max-w-4xl px-7 py-7 srf-sunken/50 border hairline rounded-2xl">
               {activeGroup.months.map((month, monthIndex) => (
                  <div key={month.name} className="flex flex-col gap-2">
                     <label className="flex items-center cursor-pointer mb-1">
@@ -1375,7 +1375,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
                  </button>
               </div>
 
-              <div className="mt-5 border hairline rounded-xl p-4 flex flex-wrap gap-2.5 max-w-3xl min-h-[70px] bg-[#f5f5f7]/30">
+              <div className="mt-5 border hairline rounded-xl p-4 flex flex-wrap gap-2.5 max-w-3xl min-h-[70px] srf-sunken/30">
                  {activeGroup.blockedDates.map(date => (
                     <div key={date} className="srf-panel border border-rose-100 text-rose-500 text-[13px] font-semibold px-3 py-1.5 rounded-lg flex items-center shadow-sm">
                        {date.split('-').reverse().join('/')}
@@ -1577,7 +1577,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
                   value={newAdminName} 
                   onChange={(e) => setNewAdminName(e.target.value)}
                   placeholder="Ej. Ana María"
-                  className="w-full bg-[#f5f5f7] border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 outline-none focus:ring-2 focus:ring-black/20 transition-all"
+                  className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 outline-none focus:ring-2 focus:ring-black/20 transition-all"
                   autoFocus
                 />
               </div>

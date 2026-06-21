@@ -145,7 +145,7 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({ calendarId, calendarTit
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
           </div>
-          <div className="flex-1 w-full bg-[#f5f5f7] border border-transparent hover:border-slate-300 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-black/20 rounded-xl px-4 py-3 flex items-center transition-all">
+          <div className="flex-1 w-full srf-sunken border border-transparent hover:border-slate-300 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-black/20 rounded-xl px-4 py-3 flex items-center transition-all">
              <input 
                type="text" 
                readOnly 

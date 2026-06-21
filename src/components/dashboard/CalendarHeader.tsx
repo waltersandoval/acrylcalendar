@@ -91,125 +91,126 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   }, []);
 
   return (
-    <div className="px-6 py-5 border-b hairline srf-panel backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5">
-        <h2 className="text-[22px] font-semibold tracking-tight ink-1">Lista de Citas</h2>
-
-        <div className="flex items-center space-x-3 w-full md:w-auto">
-          <button
-            className="accent-bg hover:brightness-110 text-white px-5 py-2 rounded-xl text-[13px] font-semibold tracking-wide flex items-center shadow-sm transition-all duration-200 cursor-pointer whitespace-nowrap border border-slate-950"
-            onClick={() => setIsNewEventModalOpen(true)}
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Nueva Cita
-          </button>
+    <div className="px-5 py-4 border-b hairline glass-strong sticky top-0 z-10">
+      {/* Fila 1: título + acción */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
+        <div>
+          <h2 className="text-[20px] font-bold tracking-tight ink-1">Lista de Citas</h2>
+          <p className="text-[12px] ink-3 font-medium mt-0.5">{counts.all || 0} {(counts.all || 0) === 1 ? 'cita' : 'citas'} en total</p>
         </div>
+
+        <button
+          className="accent-fill hover:brightness-110 px-5 py-2.5 rounded-[11px] text-[13px] font-bold tracking-wide flex items-center shadow-sm transition-all duration-200 cursor-pointer whitespace-nowrap active:scale-[0.98]"
+          onClick={() => setIsNewEventModalOpen(true)}
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Nueva Cita
+        </button>
       </div>
       <NewEventModal isOpen={isNewEventModalOpen} onClose={() => setIsNewEventModalOpen(false)} calendarId={selectedCalendarFilter} />
 
-      {/* Filters */}
-      <div className="flex justify-between flex-col lg:flex-row items-start lg:items-center mt-2 border-t hairline pt-4 gap-4">
+      {/* Fila 2: toolbar de filtros unificada (pista hundida con controles elevados) */}
+      <div className="srf-sunken rounded-[14px] p-2 flex flex-wrap items-center gap-2" style={{ border: '1px solid var(--hairline)' }}>
+        {/* Estado */}
+        <div className="relative group" ref={statusRef}>
+          <div
+            onClick={() => setIsStatusOpen(!isStatusOpen)}
+            className="flex items-center justify-between srf-panel ink-1 text-[13px] font-medium rounded-[10px] pl-8 pr-10 py-2 transition-all duration-200 cursor-pointer min-w-[170px] hover:brightness-95"
+            style={{ border: '1px solid var(--hairline)' }}
+          >
+            <span>{selectedStatus.label}</span>
+          </div>
+          <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 ink-3 pointer-events-none" />
+          <div className={`absolute left-3 top-3.5 h-2 w-2 rounded-full ${selectedStatus.color}`}></div>
 
-        {/* Left Side: Standard Filters */}
-        <div className="flex flex-wrap gap-3 items-center">
-          {/* Estado */}
-          <div className="relative group" ref={statusRef}>
-            <div
-              onClick={() => setIsStatusOpen(!isStatusOpen)}
-              className="flex items-center justify-between bg-[#f5f5f7] border border-transparent hover:border-slate-300 ink-1 text-[13px] font-medium rounded-xl pl-8 pr-10 py-2 transition-all duration-200 cursor-pointer min-w-[170px]"
-            >
-              <span>{selectedStatus.label}</span>
-            </div>
-            <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 ink-3 pointer-events-none group-hover:ink-2 transition-colors" />
-            <div className={`absolute left-3 top-3.5 h-2 w-2 rounded-full ${selectedStatus.color}`}></div>
-
-            {isStatusOpen && (
-              <div className="absolute top-full left-0 mt-1 w-60 srf-panel border hairline shadow-xl rounded-xl overflow-hidden z-50 py-1">
-                {statusOptions.map((option) => (
-                  <div
-                    key={option.id}
-                    onClick={() => { setStatus(option.id); setIsStatusOpen(false); }}
-                    className="flex justify-between items-center px-4 py-2 hover:srf-sunken cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${option.color}`}></div>
-                      <span className="text-[13px] ink-1">{option.label}</span>
-                    </div>
-                    <span className="text-[12px] font-bold ink-1">{counts[option.id] || 0}</span>
+          {isStatusOpen && (
+            <div className="absolute top-full left-0 mt-1.5 w-60 srf-panel border hairline shadow-xl rounded-[12px] overflow-hidden z-50 py-1">
+              {statusOptions.map((option) => (
+                <div
+                  key={option.id}
+                  onClick={() => { setStatus(option.id); setIsStatusOpen(false); }}
+                  className="flex justify-between items-center px-4 py-2 hover:srf-sunken cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${option.color}`}></div>
+                    <span className="text-[13px] ink-1">{option.label}</span>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Calendario */}
-          <div className="relative group">
-            <select
-              value={selectedCalendarFilter || ''}
-              onChange={(e) => setSelectedCalendarFilter?.(e.target.value || null)}
-              className="appearance-none bg-[#f5f5f7] border border-transparent hover:border-slate-300 ink-1 text-[13px] font-medium rounded-xl px-4 pr-10 py-2 transition-all duration-200 cursor-pointer"
-            >
-              <option value="">Todos los calendarios</option>
-              {availableCalendars.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
+                  <span className="text-[12px] font-bold ink-2">{counts[option.id] || 0}</span>
+                </div>
               ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 ink-3 pointer-events-none group-hover:ink-2 transition-colors" />
-          </div>
-
-          {/* Administrador */}
-          <div className="relative group">
-            <select
-              value={adminFilter}
-              onChange={(e) => setAdminFilter(e.target.value)}
-              className="appearance-none bg-[#f5f5f7] border border-transparent hover:border-slate-300 ink-1 text-[13px] font-medium rounded-xl px-4 pr-10 py-2 transition-all duration-200 cursor-pointer"
-            >
-              <option value="">Administradores</option>
-              {admins.map((a) => (
-                <option key={a.id} value={a.name}>{a.name}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 ink-3 pointer-events-none group-hover:ink-2 transition-colors" />
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Right Side: Date range + search */}
-        <div className="flex flex-wrap gap-3 items-center w-full lg:w-auto">
-          <div className="flex items-center gap-2 bg-[#f5f5f7] border hairline rounded-xl px-3 py-1.5 shadow-sm">
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="bg-transparent ink-2 text-[13px] font-medium outline-none cursor-pointer"
-            />
-            <span className="ink-3 text-[10px] uppercase font-bold tracking-wider">A</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="bg-transparent ink-2 text-[13px] font-medium outline-none cursor-pointer"
-            />
-            {(dateFrom || dateTo) && (
-              <button
-                onClick={() => { setDateFrom(''); setDateTo(''); }}
-                className="ink-3 hover:ink-1 text-xs font-bold ml-1"
-                title="Limpiar fechas"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          <div className="relative flex-1 lg:min-w-[220px]">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar citas..."
-              className="w-full bg-[#f5f5f7] border border-transparent hover:border-slate-300 ink-1 text-[13px] font-medium rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black focus:srf-panel placeholder-slate-400 transition-all duration-200"
-            />
-            <Search className="absolute left-3.5 top-2.5 h-4 w-4 ink-3 pointer-events-none" />
-          </div>
+        {/* Calendario */}
+        <div className="relative group">
+          <select
+            value={selectedCalendarFilter || ''}
+            onChange={(e) => setSelectedCalendarFilter?.(e.target.value || null)}
+            className="appearance-none srf-panel ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-10 py-2 transition-all duration-200 cursor-pointer hover:brightness-95"
+            style={{ border: '1px solid var(--hairline)' }}
+          >
+            <option value="">Todos los calendarios</option>
+            {availableCalendars.map((c) => (
+              <option key={c.id} value={c.id}>{c.title}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 ink-3 pointer-events-none" />
+        </div>
+
+        {/* Administrador */}
+        <div className="relative group">
+          <select
+            value={adminFilter}
+            onChange={(e) => setAdminFilter(e.target.value)}
+            className="appearance-none srf-panel ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-10 py-2 transition-all duration-200 cursor-pointer hover:brightness-95"
+            style={{ border: '1px solid var(--hairline)' }}
+          >
+            <option value="">Administradores</option>
+            {admins.map((a) => (
+              <option key={a.id} value={a.name}>{a.name}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 ink-3 pointer-events-none" />
+        </div>
+
+        {/* Rango de fechas */}
+        <div className="flex items-center gap-2 srf-panel rounded-[10px] px-3 py-1.5" style={{ border: '1px solid var(--hairline)' }}>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="bg-transparent ink-2 text-[13px] font-medium outline-none cursor-pointer"
+          />
+          <span className="ink-3 text-[10px] uppercase font-bold tracking-wider">A</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="bg-transparent ink-2 text-[13px] font-medium outline-none cursor-pointer"
+          />
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo(''); }}
+              className="ink-3 hover:ink-1 text-xs font-bold ml-1"
+              title="Limpiar fechas"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* Búsqueda (ocupa el resto) */}
+        <div className="relative flex-1 min-w-[200px]">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar citas..."
+            className="w-full srf-panel ink-1 text-[13px] font-medium rounded-[10px] pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all duration-200"
+            style={{ border: '1px solid var(--hairline)' }}
+          />
+          <Search className="absolute left-3.5 top-2.5 h-4 w-4 ink-3 pointer-events-none" />
         </div>
       </div>
     </div>

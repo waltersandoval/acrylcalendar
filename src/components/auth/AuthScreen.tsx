@@ -100,16 +100,16 @@ const AuthScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen srf-window flex items-center justify-center p-5 pt-safe pb-safe relative overflow-hidden">
-      {/* Fondo ambiental tipo Tahoe (luces de vidrio) */}
+      {/* Fondo ambiental tipo Tahoe (luces de vidrio, neutras) */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-[440px] h-[440px] rounded-full blur-3xl opacity-40" style={{ background: 'radial-gradient(circle, var(--accent), transparent 70%)' }} />
-        <div className="absolute -bottom-32 -right-20 w-[420px] h-[420px] rounded-full blur-3xl opacity-30" style={{ background: 'radial-gradient(circle, #a855f7, transparent 70%)' }} />
+        <div className="absolute -top-24 -left-24 w-[440px] h-[440px] rounded-full blur-3xl opacity-30" style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--ink-1) 30%, transparent), transparent 70%)' }} />
+        <div className="absolute -bottom-32 -right-20 w-[420px] h-[420px] rounded-full blur-3xl opacity-20" style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--ink-1) 22%, transparent), transparent 70%)' }} />
       </div>
 
       <div className="w-full max-w-md relative animate-glass-pop">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-black/15" style={{ background: 'linear-gradient(140deg, var(--accent), var(--accent-strong))' }}>A</div>
+          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center accent-fill font-extrabold text-2xl shadow-lg shadow-black/15">A</div>
           <h1 className="text-[26px] font-extrabold tracking-tight ink-1 font-display mt-4">Acryl Calendar</h1>
           <p className="ink-3 text-[14px] font-medium mt-1">
             {mode === 'login' ? 'Inicia sesión para continuar' : 'Crea tu cuenta para empezar'}
@@ -144,7 +144,7 @@ const AuthScreen: React.FC = () => {
           {error && <p className="text-rose-500 text-[13px] font-medium">{error}</p>}
           {notice && <p className="text-emerald-600 text-[13px] font-medium">{notice}</p>}
 
-          <button type="submit" disabled={loading} className="w-full text-white py-4 rounded-2xl text-[15px] font-bold shadow-md shadow-[var(--accent)]/25 flex items-center justify-center gap-2 active:scale-[0.99] transition-transform disabled:opacity-60" style={{ background: 'linear-gradient(140deg, var(--accent), var(--accent-strong))' }}>
+          <button type="submit" disabled={loading} className="w-full accent-fill py-4 rounded-2xl text-[15px] font-bold shadow-md flex items-center justify-center gap-2 active:scale-[0.99] transition-transform disabled:opacity-60">
             {loading && <Loader2 className="w-5 h-5 animate-spin" />}
             {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
           </button>

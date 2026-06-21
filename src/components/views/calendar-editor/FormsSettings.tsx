@@ -157,7 +157,7 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, calendarGroups })
   return (
     <div className="srf-panel pb-10 rounded-b-2xl">
       {/* Header logic */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-6 py-4 border-b hairline bg-[#f5f5f7]/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-4 md:gap-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-4 md:gap-0">
          <div className="flex-1">
            <h3 className="ink-1 font-semibold text-[15px] tracking-tight">Datos a solicitar en la programación de citas</h3>
          </div>
@@ -220,7 +220,7 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, calendarGroups })
                       </div>
                     )}
                   </label>
-                  <input type="text" readOnly value={`Dato para: ${field.label}`} className={`w-full bg-[#f5f5f7] border border-transparent ink-3 px-4 py-3 text-[13px] rounded-xl outline-none transition-colors ${!field.isDefault ? 'cursor-not-allowed opacity-70' : 'cursor-default'}`} />
+                  <input type="text" readOnly value={`Dato para: ${field.label}`} className={`w-full srf-sunken border border-transparent ink-3 px-4 py-3 text-[13px] rounded-xl outline-none transition-colors ${!field.isDefault ? 'cursor-not-allowed opacity-70' : 'cursor-default'}`} />
                 </div>
               ))}
               

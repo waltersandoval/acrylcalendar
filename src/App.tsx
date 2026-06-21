@@ -31,7 +31,7 @@ function BiometricGate({ children }: { children: React.ReactNode }) {
   if (!locked) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex flex-col items-center justify-center p-6 text-center pt-safe pb-safe">
+    <div className="min-h-screen srf-window flex flex-col items-center justify-center p-6 text-center pt-safe pb-safe">
       <div className="w-20 h-20 rounded-3xl bg-slate-100 text-slate-800 flex items-center justify-center mb-6">
         <Fingerprint className="w-10 h-10" />
       </div>
@@ -58,7 +58,7 @@ function AdminGate() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center">
+      <div className="min-h-screen srf-window flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-black animate-spin" />
       </div>
     );

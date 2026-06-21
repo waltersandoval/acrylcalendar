@@ -121,7 +121,7 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
     <div className="srf-panel pb-10 rounded-b-2xl">
 
       {/* ── Sticky Action Bar ─────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-[#f5f5f7]/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
+      <div className="sticky top-0 z-20 srf-sunken/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between px-5 py-3 gap-4">
           <div className="flex items-center gap-2 min-w-0">
             <CreditCard className="w-4 h-4 ink-3 shrink-0" />

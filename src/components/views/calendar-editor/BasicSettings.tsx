@@ -85,7 +85,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
   return (
     <div className="srf-panel pb-10">
       {/* Action Bar */}
-      <div className="flex justify-end gap-3 px-6 py-4 border-b hairline bg-[#f5f5f7]/80 backdrop-blur-md sticky top-0 z-10">
+      <div className="flex justify-end gap-3 px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10">
         <button className="px-6 py-2.5 srf-panel border hairline ink-2 rounded-xl text-[13px] font-semibold transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer hover:srf-sunken">
           Cancelar
         </button>
@@ -109,7 +109,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={100}
                   placeholder="Ej. Sesión de Consultoría"
-                  className="w-full bg-[#f5f5f7] border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 focus:border-black transition-all duration-200 outline-none"
+                  className="w-full srf-sunken border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 focus:border-black transition-all duration-200 outline-none"
                 />
                 <span className="absolute right-3.5 top-3.5 text-[10px] ink-3 font-medium srf-sunken px-1.5 rounded-sm">{title.length}/100</span>
               </div>
@@ -125,7 +125,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Añade una descripción para este calendario que verán tus clientes..."
-                  className="w-full bg-[#f5f5f7] border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 focus:border-black transition-all duration-200 outline-none resize-none"
+                  className="w-full srf-sunken border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 focus:border-black transition-all duration-200 outline-none resize-none"
                 />
               </div>
             </div>
@@ -136,7 +136,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
             <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5">
               Logo Institucional <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
             </label>
-            <div className="border hairline rounded-2xl p-4 bg-[#f5f5f7] flex flex-col items-center justify-center text-center relative h-40 group hover:border-slate-300 transition-colors">
+            <div className="border hairline rounded-2xl p-4 srf-sunken flex flex-col items-center justify-center text-center relative h-40 group hover:border-slate-300 transition-colors">
               {logoBase64 ? (
                 <>
                   <div onClick={removeLogo} className="absolute top-2.5 right-2.5 cursor-pointer p-1.5 srf-panel text-rose-500 rounded-full shadow-sm hover:bg-rose-50 transition-all duration-200 z-10 border hairline opacity-0 group-hover:opacity-100 focus:opacity-100">
@@ -209,7 +209,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
             
             <div 
               onClick={() => setTzMode('user')}
-              className={`flex flex-col items-center text-center cursor-pointer group rounded-2xl p-6 transition-all duration-300 border-2 ${tzMode === 'user' ? 'border-black srf-sunken' : 'border-transparent hover:bg-[#f5f5f7]'}`}
+              className={`flex flex-col items-center text-center cursor-pointer group rounded-2xl p-6 transition-all duration-300 border-2 ${tzMode === 'user' ? 'border-black srf-sunken' : 'border-transparent hover:srf-sunken'}`}
             >
               <div className={`w-20 h-20 rounded-2xl mb-5 flex items-center justify-center relative transition-colors ${tzMode === 'user' ? 'srf-sunken' : 'srf-sunken group-hover:bg-slate-200'}`}>
                 {tzMode === 'user' ? (
@@ -225,7 +225,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
 
             <div 
               onClick={() => setTzMode('fixed')}
-              className={`flex flex-col items-center text-center cursor-pointer group rounded-2xl p-6 transition-all duration-300 border-2 ${tzMode === 'fixed' ? 'border-black srf-sunken' : 'border-transparent hover:bg-[#f5f5f7]'}`}
+              className={`flex flex-col items-center text-center cursor-pointer group rounded-2xl p-6 transition-all duration-300 border-2 ${tzMode === 'fixed' ? 'border-black srf-sunken' : 'border-transparent hover:srf-sunken'}`}
             >
               <div className={`w-20 h-20 rounded-2xl mb-5 flex items-center justify-center relative transition-colors ${tzMode === 'fixed' ? 'srf-sunken' : 'srf-sunken group-hover:bg-slate-200'}`}>
                 {tzMode === 'fixed' ? (
@@ -251,7 +251,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
             
             <div 
               onClick={() => setLangMode('auto')}
-              className={`flex flex-col items-center text-center cursor-pointer group rounded-2xl p-6 transition-all duration-300 border-2 ${langMode === 'auto' ? 'border-black srf-sunken' : 'border-transparent hover:bg-[#f5f5f7]'}`}
+              className={`flex flex-col items-center text-center cursor-pointer group rounded-2xl p-6 transition-all duration-300 border-2 ${langMode === 'auto' ? 'border-black srf-sunken' : 'border-transparent hover:srf-sunken'}`}
             >
               <div className={`w-20 h-20 rounded-2xl mb-5 flex items-center justify-center relative transition-colors ${langMode === 'auto' ? 'srf-sunken' : 'srf-sunken group-hover:bg-slate-200'}`}>
                 {langMode === 'auto' ? (
@@ -270,7 +270,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
 
             <div 
               onClick={() => setLangMode('fixed')}
-              className={`flex flex-col items-center text-center cursor-pointer group rounded-2xl p-6 transition-all duration-300 border-2 ${langMode === 'fixed' ? 'border-black srf-sunken' : 'border-transparent hover:bg-[#f5f5f7]'}`}
+              className={`flex flex-col items-center text-center cursor-pointer group rounded-2xl p-6 transition-all duration-300 border-2 ${langMode === 'fixed' ? 'border-black srf-sunken' : 'border-transparent hover:srf-sunken'}`}
             >
               <div className={`w-20 h-20 rounded-2xl mb-5 flex items-center justify-center relative transition-colors ${langMode === 'fixed' ? 'srf-sunken' : 'srf-sunken group-hover:bg-slate-200'}`}>
                 {langMode === 'fixed' ? (

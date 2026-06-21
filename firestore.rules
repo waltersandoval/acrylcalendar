@@ -114,10 +114,16 @@ service cloud.firestore {
     }
 
     match /payment_configs/{configId} {
-      // Acotado al calendario activo al que pertenece el documento, en vez de
-      // `if true`: evita que cualquiera pueda listar la configuración de pago
-      // (precio, calendarId, ownerUid) de toda la plataforma de una sola vez.
-      allow get, list: if resource.data.calendarId is string && isActiveCalendar(calendarData(resource.data.calendarId));
+      // El dueño SIEMPRE puede leer sus propias configuraciones desde su panel,
+      // aunque el calendario vinculado esté inactivo o en la basura (si no, la
+      // vista "Configuración de Pagos" recibía permission-denied y no mostraba
+      // nada). Para terceros (incluida la página pública de reservas) se mantiene
+      // acotado al calendario activo, en vez de `if true`: evita que cualquiera
+      // pueda listar la configuración de pago (precio, calendarId, ownerUid) de
+      // toda la plataforma de una sola vez. La llave secreta de PayPal vive en la
+      // subcolección `private/` (bloqueada), así que el dueño nunca la lee aquí.
+      allow get, list: if isOwner(resource.data)
+        || (resource.data.calendarId is string && isActiveCalendar(calendarData(resource.data.calendarId)));
       // No basta con validar que `ownerUid` sea el propio uid: sin exigir
       // además que `calendarId` apunte a un calendario que el caller puede
       // editar, cualquier usuario autenticado podría crear/redirigir una

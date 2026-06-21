@@ -48,11 +48,20 @@ export default defineConfig(() => {
           // navegaciones con NetworkFirst, el documento (y sus headers) se
           // traen siempre frescos del servidor; la caché es solo respaldo offline.
           globPatterns: ['**/*.{js,css,png,svg,woff2}'],
-          navigateFallbackDenylist: [/^\/booking\//],
+          // Sin `navigateFallback`: como el `index.html` ya no está precacheado,
+          // un fallback de navegación a 'index.html' lanzaba `non-precached-url`.
+          // Las navegaciones se resuelven con la ruta NetworkFirst de abajo
+          // (online → red fresca; offline → caché de respaldo).
+          navigateFallback: null as any,
           cleanupOutdatedCaches: true,
           runtimeCaching: [
             {
-              urlPattern: ({request}) => request.mode === 'navigate',
+              // Documento principal siempre fresco desde la red para que los
+              // headers de seguridad (CSP, X-Frame-Options) no se queden viejos.
+              // `/booking/*` se excluye (lo sirve la red directamente, como antes
+              // con el navigateFallbackDenylist).
+              urlPattern: ({request, url}) =>
+                request.mode === 'navigate' && !url.pathname.startsWith('/booking/'),
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'html-shell',

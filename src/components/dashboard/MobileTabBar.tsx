@@ -43,11 +43,11 @@ const MobileTabBar: React.FC<MobileTabBarProps> = ({ activeSidebarItem, setActiv
             />
           )}
           <tab.icon
-            className={`relative w-[23px] h-[23px] transition-all duration-200 ${isActive ? 'text-slate-950' : 'text-slate-400'}`}
+            className={`relative w-[23px] h-[23px] transition-all duration-200 ${isActive ? 'text-slate-950' : 'ink-3'}`}
             strokeWidth={isActive ? 2.5 : 1.8}
           />
           <span
-            className={`relative text-[10px] font-semibold tracking-tight transition-colors duration-200 ${isActive ? 'text-slate-950' : 'text-slate-400'}`}
+            className={`relative text-[10px] font-semibold tracking-tight transition-colors duration-200 ${isActive ? 'text-slate-950' : 'ink-3'}`}
           >
             {tab.label}
           </span>
@@ -68,12 +68,12 @@ const MobileTabBar: React.FC<MobileTabBarProps> = ({ activeSidebarItem, setActiv
               type="button"
               onClick={() => setActiveSidebarItem('Nuevo calendario')}
               whileTap={{ scale: 0.9 }}
-              className="w-[52px] h-[52px] rounded-full bg-black text-white flex items-center justify-center shadow-xl shadow-black/20 border-[3px] border-[#f5f5f7] active:opacity-80"
+              className="w-[52px] h-[52px] rounded-full accent-bg text-white flex items-center justify-center shadow-xl shadow-black/20 border-[3px] border-[#f5f5f7] active:opacity-80"
               aria-label="Nuevo calendario"
             >
               <Plus className="w-6 h-6" strokeWidth={2.5} />
             </motion.button>
-            <span className="text-[10px] font-semibold tracking-tight text-slate-400 mt-1">Nuevo</span>
+            <span className="text-[10px] font-semibold tracking-tight ink-3 mt-1">Nuevo</span>
           </div>
         </li>
 

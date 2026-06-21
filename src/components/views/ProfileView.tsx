@@ -28,9 +28,9 @@ import { enablePush, disablePush, isPushEnabled, isPushConfigured } from '../../
 const Toggle: React.FC<{ checked: boolean; onChange: () => void; disabled?: boolean }> = ({ checked, onChange, disabled }) => (
   <span
     onClick={(e) => { e.stopPropagation(); if (!disabled) onChange(); }}
-    className={`w-12 h-7 rounded-full relative transition-colors duration-200 shrink-0 ${disabled ? 'bg-slate-200 opacity-50 cursor-not-allowed' : checked ? 'bg-black cursor-pointer' : 'bg-slate-300 cursor-pointer'}`}
+    className={`w-12 h-7 rounded-full relative transition-colors duration-200 shrink-0 ${disabled ? 'bg-slate-200 opacity-50 cursor-not-allowed' : checked ? 'accent-bg cursor-pointer' : 'bg-slate-300 cursor-pointer'}`}
   >
-    <span className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200 ${checked ? 'left-[26px]' : 'left-1'}`} />
+    <span className={`absolute top-1 w-5 h-5 rounded-full srf-panel shadow-sm transition-all duration-200 ${checked ? 'left-[26px]' : 'left-1'}`} />
   </span>
 );
 
@@ -44,14 +44,14 @@ interface RowProps {
   danger?: boolean;
 }
 
-const Row: React.FC<RowProps> = ({ icon: Icon, label, sublabel, tint = 'bg-slate-100 text-slate-600', onClick, right, danger }) => (
-  <button onClick={onClick} className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors text-left">
+const Row: React.FC<RowProps> = ({ icon: Icon, label, sublabel, tint = 'srf-sunken ink-2', onClick, right, danger }) => (
+  <button onClick={onClick} className="w-full flex items-center gap-3 px-4 py-3.5 active:srf-sunken transition-colors text-left">
     <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${danger ? 'bg-rose-50 text-rose-600' : tint}`}>
       <Icon className="w-[18px] h-[18px]" />
     </span>
     <div className="flex-1 min-w-0">
-      <p className={`font-semibold text-[15px] ${danger ? 'text-rose-600' : 'text-slate-800'}`}>{label}</p>
-      {sublabel && <p className="text-[12px] text-slate-400 font-medium mt-0.5">{sublabel}</p>}
+      <p className={`font-semibold text-[15px] ${danger ? 'text-rose-600' : 'ink-1'}`}>{label}</p>
+      {sublabel && <p className="text-[12px] ink-3 font-medium mt-0.5">{sublabel}</p>}
     </div>
     {right !== undefined ? right : <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />}
   </button>
@@ -222,10 +222,10 @@ const ProfileView: React.FC = () => {
   return (
     <div className="flex flex-col pt-1 pb-4">
       {/* Large title */}
-      <h1 className="text-[32px] leading-[1.05] font-extrabold tracking-tight text-slate-900 font-display mb-5">Perfil</h1>
+      <h1 className="text-[32px] leading-[1.05] font-extrabold tracking-tight ink-1 font-display mb-5">Perfil</h1>
 
       {/* User card */}
-      <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm p-5 flex items-center gap-4 mb-6">
+      <div className="srf-panel rounded-3xl border hairline shadow-sm p-5 flex items-center gap-4 mb-6">
         <label className="relative w-[72px] h-[72px] rounded-full shrink-0 cursor-pointer group">
           {photoURL ? (
             <img src={photoURL} alt="" className="w-[72px] h-[72px] rounded-full object-cover border-2 border-white shadow-md ring-1 ring-slate-200" />
@@ -234,7 +234,7 @@ const ProfileView: React.FC = () => {
               {initial}
             </div>
           )}
-          <span className="absolute inset-0 rounded-full bg-black/0 group-active:bg-black/30 transition-colors flex items-center justify-center">
+          <span className="absolute inset-0 rounded-full accent-bg/0 group-active:accent-bg/30 transition-colors flex items-center justify-center">
             {busy === 'photo'
               ? <Loader2 className="w-5 h-5 text-white animate-spin" />
               : <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity" />
@@ -247,20 +247,20 @@ const ProfileView: React.FC = () => {
           }} />
         </label>
         <div className="min-w-0">
-          <p className="font-bold text-slate-900 text-[18px] truncate">{user?.displayName || 'Usuario'}</p>
-          <p className="text-slate-400 text-[14px] truncate mt-0.5">{user?.email}</p>
-          <p className="text-[12px] text-slate-400 mt-1 font-medium">Toca la foto para cambiarla</p>
+          <p className="font-bold ink-1 text-[18px] truncate">{user?.displayName || 'Usuario'}</p>
+          <p className="ink-3 text-[14px] truncate mt-0.5">{user?.email}</p>
+          <p className="text-[12px] ink-3 mt-1 font-medium">Toca la foto para cambiarla</p>
         </div>
       </div>
 
       {/* Grupo: Cuenta */}
-      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1 mb-2">Cuenta</p>
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm divide-y divide-slate-100 overflow-hidden mb-6">
+      <p className="text-[11px] font-bold ink-3 uppercase tracking-widest px-1 mb-2">Cuenta</p>
+      <div className="srf-panel rounded-2xl border hairline shadow-sm divide-y divide-slate-100 overflow-hidden mb-6">
         <Row
           icon={KeyRound}
           label="Cambiar contraseña"
           sublabel="Actualiza tu contraseña de acceso"
-          tint="bg-slate-100 text-slate-900"
+          tint="srf-sunken ink-1"
           onClick={() => { setPwdMsg(null); setPwdOpen(true); }}
         />
         <Row
@@ -270,7 +270,7 @@ const ProfileView: React.FC = () => {
           tint="bg-violet-50 text-violet-600"
           onClick={bioSupported ? toggleBiometric : undefined}
           right={busy === 'bio'
-            ? <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            ? <Loader2 className="w-5 h-5 animate-spin ink-3" />
             : <Toggle checked={bioOn} onChange={toggleBiometric} disabled={!bioSupported} />
           }
         />
@@ -281,7 +281,7 @@ const ProfileView: React.FC = () => {
           tint="bg-amber-50 text-amber-600"
           onClick={togglePush}
           right={busy === 'push'
-            ? <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            ? <Loader2 className="w-5 h-5 animate-spin ink-3" />
             : <Toggle checked={pushOn} onChange={togglePush} disabled={!isPushConfigured()} />
           }
         />
@@ -289,9 +289,9 @@ const ProfileView: React.FC = () => {
         {/* Botón de diagnóstico — siempre visible */}
         <button
           onClick={runPushDiagnostic}
-          className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-slate-50 transition-colors cursor-pointer border-t border-slate-100"
+          className="w-full flex items-center gap-3 px-4 py-3 text-left active:srf-sunken transition-colors cursor-pointer border-t hairline"
         >
-          <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 text-slate-600">
+          <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 srf-sunken ink-2">
             {diagLoading
               ? <Loader2 className="w-[18px] h-[18px] animate-spin" />
               : pushDiagOpen
@@ -300,14 +300,14 @@ const ProfileView: React.FC = () => {
             }
           </span>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[14px] text-slate-700">Diagnóstico de notificaciones</p>
-            <p className="text-[11px] text-slate-400 font-medium">Ver estado del sistema de push</p>
+            <p className="font-semibold text-[14px] ink-1">Diagnóstico de notificaciones</p>
+            <p className="text-[11px] ink-3 font-medium">Ver estado del sistema de push</p>
           </div>
         </button>
 
         {/* Panel de diagnóstico expandible */}
         {pushDiagOpen && pushDiag && (
-          <div className="px-4 pb-4 bg-slate-50 border-t border-slate-100 space-y-2 pt-3">
+          <div className="px-4 pb-4 srf-sunken border-t hairline space-y-2 pt-3">
             {/* Estado VAPID Key */}
             <div className={`flex items-start gap-2.5 p-3 rounded-xl border text-[13px] ${pushDiag.vapid ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
               {pushDiag.vapid
@@ -378,8 +378,8 @@ const ProfileView: React.FC = () => {
       </div>
 
       {/* Zona peligrosa */}
-      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1 mb-2">Zona peligrosa</p>
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden mb-6">
+      <p className="text-[11px] font-bold ink-3 uppercase tracking-widest px-1 mb-2">Zona peligrosa</p>
+      <div className="srf-panel rounded-2xl border hairline shadow-sm overflow-hidden mb-6">
         <Row
           icon={Trash2}
           label="Eliminar cuenta"
@@ -393,51 +393,51 @@ const ProfileView: React.FC = () => {
       {/* Cerrar sesión */}
       <button
         onClick={logout}
-        className="w-full bg-white rounded-2xl border border-slate-200/60 shadow-sm py-4 flex items-center justify-center gap-2 text-slate-700 font-bold text-[15px] active:bg-slate-50 transition-colors"
+        className="w-full srf-panel rounded-2xl border hairline shadow-sm py-4 flex items-center justify-center gap-2 ink-1 font-bold text-[15px] active:srf-sunken transition-colors"
       >
         <LogOut className="w-5 h-5" /> Cerrar sesión
       </button>
 
       {/* Sheet: cambiar contraseña */}
       <Sheet isOpen={pwdOpen} onClose={() => setPwdOpen(false)} maxWidthClass="max-w-md" zIndex={60}>
-        <form onSubmit={changePassword} className="bg-white p-6 space-y-4">
-          <h3 className="text-lg font-bold text-slate-800">Cambiar contraseña</h3>
+        <form onSubmit={changePassword} className="srf-panel p-6 space-y-4">
+          <h3 className="text-lg font-bold ink-1">Cambiar contraseña</h3>
           <div>
-            <label className="block text-[13px] font-semibold text-slate-500 mb-1.5">Contraseña actual</label>
-            <input type="password" value={curPwd} onChange={(e) => setCurPwd(e.target.value)} required className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/30" />
+            <label className="block text-[13px] font-semibold ink-3 mb-1.5">Contraseña actual</label>
+            <input type="password" value={curPwd} onChange={(e) => setCurPwd(e.target.value)} required className="w-full srf-sunken border hairline rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/30" />
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-slate-500 mb-1.5">Nueva contraseña</label>
-            <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/30" />
+            <label className="block text-[13px] font-semibold ink-3 mb-1.5">Nueva contraseña</label>
+            <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required className="w-full srf-sunken border hairline rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/30" />
           </div>
           {pwdMsg && <p className={`text-xs font-medium ${pwdMsg.type === 'err' ? 'text-rose-500' : 'text-emerald-600'}`}>{pwdMsg.text}</p>}
           <div className="flex flex-col gap-3 pt-2">
-            <button type="submit" disabled={pwdSaving} className="w-full py-3 bg-black hover:bg-slate-900 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
+            <button type="submit" disabled={pwdSaving} className="w-full py-3 accent-bg hover:brightness-110 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
               {pwdSaving && <Loader2 className="w-4 h-4 animate-spin" />} Guardar
             </button>
-            <button type="button" onClick={() => setPwdOpen(false)} className="w-full py-3 text-slate-600 font-semibold bg-slate-100 rounded-xl text-sm transition-colors">Cancelar</button>
+            <button type="button" onClick={() => setPwdOpen(false)} className="w-full py-3 ink-2 font-semibold srf-sunken rounded-xl text-sm transition-colors">Cancelar</button>
           </div>
         </form>
       </Sheet>
 
       {/* Sheet: eliminar cuenta */}
       <Sheet isOpen={delOpen} onClose={() => !deleting && setDelOpen(false)} maxWidthClass="max-w-md" zIndex={70}>
-        <div className="bg-white p-6 space-y-4">
+        <div className="srf-panel p-6 space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
             <Trash2 className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-slate-800">Eliminar cuenta</h3>
-          <p className="text-sm text-slate-500">Esta acción borra tu cuenta y <strong>todos tus datos</strong> de forma permanente. No se puede deshacer.</p>
+          <h3 className="text-lg font-bold ink-1">Eliminar cuenta</h3>
+          <p className="text-sm ink-3">Esta acción borra tu cuenta y <strong>todos tus datos</strong> de forma permanente. No se puede deshacer.</p>
           <div>
-            <label className="block text-[13px] font-semibold text-slate-500 mb-1.5">Escribe <strong>ELIMINAR</strong> para confirmar</label>
-            <input value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-500/30" />
+            <label className="block text-[13px] font-semibold ink-3 mb-1.5">Escribe <strong>ELIMINAR</strong> para confirmar</label>
+            <input value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} className="w-full srf-sunken border hairline rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-500/30" />
           </div>
           {delError && <p className="text-rose-500 text-xs font-medium">{delError}</p>}
           <div className="flex flex-col gap-3 pt-2">
             <button onClick={deleteAccount} disabled={deleting} className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
               {deleting && <Loader2 className="w-4 h-4 animate-spin" />} Eliminar definitivamente
             </button>
-            <button onClick={() => setDelOpen(false)} disabled={deleting} className="w-full py-3 text-slate-600 font-semibold bg-slate-100 rounded-xl text-sm transition-colors">Cancelar</button>
+            <button onClick={() => setDelOpen(false)} disabled={deleting} className="w-full py-3 ink-2 font-semibold srf-sunken rounded-xl text-sm transition-colors">Cancelar</button>
           </div>
         </div>
       </Sheet>

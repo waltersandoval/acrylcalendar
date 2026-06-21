@@ -118,21 +118,21 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
   };
 
   return (
-    <div className="bg-white pb-10 rounded-b-2xl">
+    <div className="srf-panel pb-10 rounded-b-2xl">
 
       {/* ── Sticky Action Bar ─────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-[#f5f5f7]/95 backdrop-blur-md border-b border-slate-200/60 shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
+      <div className="sticky top-0 z-20 bg-[#f5f5f7]/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between px-5 py-3 gap-4">
           <div className="flex items-center gap-2 min-w-0">
-            <CreditCard className="w-4 h-4 text-slate-500 shrink-0" />
-            <h3 className="text-slate-800 font-bold text-[14px] tracking-tight truncate">
+            <CreditCard className="w-4 h-4 ink-3 shrink-0" />
+            <h3 className="ink-1 font-bold text-[14px] tracking-tight truncate">
               Módulo de Pago
             </h3>
           </div>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-5 py-2 bg-black hover:bg-slate-900 text-white rounded-xl text-[13px] font-bold flex items-center gap-2 transition-all shadow-md shadow-black/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2 accent-bg hover:brightness-110 text-white rounded-xl text-[13px] font-bold flex items-center gap-2 transition-all shadow-md shadow-black/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? (
               <>
@@ -157,8 +157,8 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
         {/* Sección: Precio */}
         <div className="space-y-4">
           <div>
-            <h4 className="text-[16px] font-bold text-slate-900 tracking-tight">Precio del servicio</h4>
-            <p className="text-[13px] text-slate-500 mt-1">
+            <h4 className="text-[16px] font-bold ink-1 tracking-tight">Precio del servicio</h4>
+            <p className="text-[13px] ink-3 mt-1">
               Define cuánto cobrarás por cada cita. Si lo dejas en blanco, el servicio será gratuito.
             </p>
           </div>
@@ -167,13 +167,13 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
           <div className="flex gap-3">
             {/* Selector de moneda */}
             <div className="w-48 shrink-0">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
+              <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
                 Moneda
               </label>
               <select
                 value={currency}
                 onChange={(e) => { setCurrency(e.target.value); if (paypalEnabled) setPaypalEnabled(false); }}
-                className="w-full text-[13px] px-3 py-2.5 bg-white rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm cursor-pointer font-semibold"
+                className="w-full text-[13px] px-3 py-2.5 srf-panel rounded-xl border hairline outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm cursor-pointer font-semibold"
               >
                 {CURRENCY_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -183,11 +183,11 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
 
             {/* Campo de precio */}
             <div className="flex-1">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
+              <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
                 Precio
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ink-3" />
                 <input
                   type="number"
                   min="0"
@@ -195,7 +195,7 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
                   placeholder="0.00"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 text-[14px] font-bold bg-white rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm"
+                  className="w-full pl-9 pr-4 py-2.5 text-[14px] font-bold srf-panel rounded-xl border hairline outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm"
                 />
               </div>
             </div>
@@ -215,20 +215,20 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
           )}
         </div>
 
-        <hr className="border-slate-200/60" />
+        <hr className="hairline" />
 
         {/* Sección: PayPal Checkout */}
         <div className="space-y-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="text-[16px] font-bold text-slate-900 tracking-tight">Checkout con PayPal</h4>
+              <h4 className="text-[16px] font-bold ink-1 tracking-tight">Checkout con PayPal</h4>
               <img
                 src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg"
                 alt="PayPal"
                 className="h-5 rounded"
               />
             </div>
-            <p className="text-[13px] text-slate-500">
+            <p className="text-[13px] ink-3">
               Permite que tus clientes paguen la cita online de forma segura con PayPal.
               La cita solo se confirma <strong>después</strong> de verificar el pago.
             </p>
@@ -242,20 +242,20 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
             className={`w-full flex items-center justify-between gap-4 p-5 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
               paypalEnabled && canEnablePaypal
                 ? 'border-blue-500 bg-blue-50/60 shadow-md shadow-blue-100'
-                : 'border-slate-200 bg-white hover:border-slate-300'
+                : 'hairline srf-panel hover:border-slate-300'
             }`}
           >
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                paypalEnabled && canEnablePaypal ? 'bg-blue-100' : 'bg-slate-100'
+                paypalEnabled && canEnablePaypal ? 'bg-blue-100' : 'srf-sunken'
               }`}>
-                <ShieldCheck className={`w-5 h-5 ${paypalEnabled && canEnablePaypal ? 'text-blue-600' : 'text-slate-400'}`} />
+                <ShieldCheck className={`w-5 h-5 ${paypalEnabled && canEnablePaypal ? 'text-blue-600' : 'ink-3'}`} />
               </div>
               <div>
-                <p className={`font-bold text-[14px] ${paypalEnabled && canEnablePaypal ? 'text-blue-900' : 'text-slate-700'}`}>
+                <p className={`font-bold text-[14px] ${paypalEnabled && canEnablePaypal ? 'text-blue-900' : 'ink-1'}`}>
                   Habilitar PayPal Checkout
                 </p>
-                <p className="text-[12px] text-slate-500 mt-0.5">
+                <p className="text-[12px] ink-3 mt-0.5">
                   El cliente paga antes de confirmar la cita
                 </p>
               </div>
@@ -285,9 +285,9 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
             <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
               
               {/* Contenedor del Formulario "PayPal Configuraciones" */}
-              <div className="bg-slate-50/70 border border-slate-200 rounded-3xl p-6 space-y-6">
-                <div className="border-b border-slate-200 pb-3 flex items-center justify-between">
-                  <h4 className="font-extrabold text-slate-800 text-[18px] tracking-tight">
+              <div className="srf-sunken border hairline rounded-3xl p-6 space-y-6">
+                <div className="border-b hairline pb-3 flex items-center justify-between">
+                  <h4 className="font-extrabold ink-1 text-[18px] tracking-tight">
                     PayPal Configuraciones
                   </h4>
                   <span className="text-[11px] font-extrabold bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -298,9 +298,9 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
                   
                   {/* Columna Izquierda: Instrucciones */}
-                  <div className="md:col-span-5 space-y-3 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-                    <p className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wider">Instrucciones</p>
-                    <ul className="text-[12px] text-slate-600 space-y-2.5 list-disc pl-4 font-semibold leading-relaxed">
+                  <div className="md:col-span-5 space-y-3 srf-panel p-5 rounded-2xl border hairline shadow-sm">
+                    <p className="text-[12px] font-extrabold ink-3 uppercase tracking-wider">Instrucciones</p>
+                    <ul className="text-[12px] ink-2 space-y-2.5 list-disc pl-4 font-semibold leading-relaxed">
                       <li>Por favor, ingrese una breve <strong>Descripción</strong> para esta configuración.</li>
                       <li>Acceda a <a href="https://developer.paypal.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">developer.paypal.com</a></li>
                       <li>Haga clic en <strong>Log in to Dashboard</strong> en la esquina superior derecha e ingrese sus credenciales de PayPal.</li>
@@ -316,7 +316,7 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
                     
                     {/* Input: Descripción */}
                     <div>
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
+                      <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
                         Descripción
                       </label>
                       <input
@@ -324,13 +324,13 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
                         placeholder="Ej. Mi Cuenta de Negocios"
                         value={description}
                         onChange={(e) => setPaypalDescription(e.target.value)}
-                        className="w-full px-4 py-2.5 text-[13px] font-semibold bg-white rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm"
+                        className="w-full px-4 py-2.5 text-[13px] font-semibold srf-panel rounded-xl border hairline outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm"
                       />
                     </div>
 
                     {/* Input: Client ID */}
                     <div>
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
+                      <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
                         Client ID
                       </label>
                       <input
@@ -338,13 +338,13 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
                         placeholder="AWudDtSX4eTP22T7i..."
                         value={clientId}
                         onChange={(e) => setPaypalClientId(e.target.value)}
-                        className="w-full px-4 py-2.5 text-[13px] font-mono bg-white rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm break-all"
+                        className="w-full px-4 py-2.5 text-[13px] font-mono srf-panel rounded-xl border hairline outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm break-all"
                       />
                     </div>
 
                     {/* Input: Secret */}
                     <div>
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
+                      <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
                         Secret (Llave Secreta)
                       </label>
                       <div className="relative">
@@ -353,17 +353,17 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
                           placeholder="EKqG7iVHb13cc..."
                           value={clientSecret}
                           onChange={(e) => setPaypalSecret(e.target.value)}
-                          className="w-full pl-4 pr-10 py-2.5 text-[13px] font-mono bg-white rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm break-all"
+                          className="w-full pl-4 pr-10 py-2.5 text-[13px] font-mono srf-panel rounded-xl border hairline outline-none focus:ring-2 focus:ring-black/20 focus:border-slate-400 shadow-sm break-all"
                         />
                         <button
                           type="button"
                           onClick={() => setShowSecret(!showSecret)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 ink-3 hover:ink-2 focus:outline-none cursor-pointer"
                         >
                           {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
-                      <p className="text-[10.5px] text-slate-400 font-semibold mt-1.5 ml-1">
+                      <p className="text-[10.5px] ink-3 font-semibold mt-1.5 ml-1">
                         La llave secreta se almacena de forma segura y nunca se expone públicamente.
                       </p>
                     </div>
@@ -376,10 +376,10 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
                         className="relative cursor-pointer focus:outline-none shrink-0"
                       >
                         <div className={`w-11 h-6 rounded-full transition-colors ${sandboxMode ? 'bg-blue-500' : 'bg-slate-300'}`}>
-                          <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full transition-transform duration-200 shadow ${sandboxMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                          <div className={`absolute top-0.5 left-0.5 srf-panel w-5 h-5 rounded-full transition-transform duration-200 shadow ${sandboxMode ? 'translate-x-5' : 'translate-x-0'}`} />
                         </div>
                       </button>
-                      <span className="text-[13px] font-bold text-slate-700 select-none cursor-pointer" onClick={() => setSandboxMode(!sandboxMode)}>
+                      <span className="text-[13px] font-bold ink-1 select-none cursor-pointer" onClick={() => setSandboxMode(!sandboxMode)}>
                         Modo SANDBOX habilitado (para realizar pruebas)
                       </span>
                     </div>

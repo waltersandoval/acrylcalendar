@@ -50,28 +50,28 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
       <div className="flex flex-col pt-3">
         <div className="flex items-center gap-3 mb-5">
           {onBack && (
-            <button onClick={onBack} className="w-11 h-11 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-600 active:scale-95 transition-transform shrink-0" aria-label="Atrás">
+            <button onClick={onBack} className="w-11 h-11 rounded-full srf-panel border hairline shadow-sm flex items-center justify-center ink-2 active:scale-95 transition-transform shrink-0" aria-label="Atrás">
               <ChevronLeft className="w-6 h-6" />
             </button>
           )}
-          <h1 className="text-[28px] leading-tight font-extrabold tracking-tight text-slate-900 font-display truncate">
+          <h1 className="text-[28px] leading-tight font-extrabold tracking-tight ink-1 font-display truncate">
             Nuevo calendario
           </h1>
         </div>
 
-        <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm p-6">
+        <div className="srf-panel rounded-3xl border hairline shadow-sm p-6">
           <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center text-slate-900 mb-5">
+            <div className="w-20 h-20 rounded-3xl srf-sunken flex items-center justify-center ink-1 mb-5">
               <CalendarDays className="w-10 h-10" strokeWidth={1.6} />
             </div>
-            <h1 className="text-[26px] leading-[1.15] font-extrabold tracking-tight text-slate-900 font-display">Configurar calendario de consulta</h1>
-            <p className="text-slate-500 font-medium text-[14px] mt-3 leading-relaxed">
+            <h1 className="text-[26px] leading-[1.15] font-extrabold tracking-tight ink-1 font-display">Configurar calendario de consulta</h1>
+            <p className="ink-3 font-medium text-[14px] mt-3 leading-relaxed">
               Usted establece su horario de apertura y sus clientes eligen el horario en el que prefieren ser atendidos.
             </p>
           </div>
 
           <div className="mt-7">
-            <label className="block text-[15px] font-bold text-slate-800 mb-2">Nombre de su calendario</label>
+            <label className="block text-[15px] font-bold ink-1 mb-2">Nombre de su calendario</label>
             <div className="relative">
               <input
                 type="text"
@@ -79,17 +79,17 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
                 value={calendarTitle}
                 onChange={(e) => setCalendarTitle(e.target.value)}
                 maxLength={100}
-                className="w-full bg-white border border-slate-200 text-slate-700 font-medium rounded-2xl pl-4 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black shadow-sm"
+                className="w-full srf-panel border hairline ink-1 font-medium rounded-2xl pl-4 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black shadow-sm"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-300">{calendarTitle.length}/100</span>
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-start gap-3 mt-5">
-            <Info className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+          <div className="srf-sunken border hairline rounded-2xl p-4 flex items-start gap-3 mt-5">
+            <Info className="w-5 h-5 ink-3 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-slate-800 text-[14px]">Consejo</p>
-              <p className="text-[13px] text-slate-500 mt-0.5">Elige un nombre claro que te ayude a identificar este calendario fácilmente.</p>
+              <p className="font-bold ink-1 text-[14px]">Consejo</p>
+              <p className="text-[13px] ink-3 mt-0.5">Elige un nombre claro que te ayude a identificar este calendario fácilmente.</p>
             </div>
           </div>
 
@@ -98,7 +98,7 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
           <button
             onClick={handleCreate}
             disabled={!calendarTitle.trim() || loading}
-            className="w-full mt-6 bg-black text-white py-4 rounded-2xl text-[15px] font-bold tracking-wide shadow-lg shadow-black/10 flex items-center justify-center gap-2 active:scale-[0.99] transition-transform disabled:opacity-50"
+            className="w-full mt-6 accent-bg text-white py-4 rounded-2xl text-[15px] font-bold tracking-wide shadow-lg shadow-black/10 flex items-center justify-center gap-2 active:scale-[0.99] transition-transform disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CalendarDays className="h-5 w-5" />}
             {loading ? 'CREANDO...' : 'CREAR CALENDARIO'}
@@ -113,8 +113,8 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
     <div className="flex flex-col flex-1 h-full max-w-4xl mx-auto w-full pt-8">
       <div className="flex flex-col items-center mt-6">
         <div className="text-center max-w-2xl mb-10">
-          <h1 className="text-3xl font-black text-slate-800 mb-3">Configurar calendario de consulta</h1>
-          <p className="text-slate-500 font-medium text-sm leading-relaxed max-w-lg mx-auto">
+          <h1 className="text-3xl font-black ink-1 mb-3">Configurar calendario de consulta</h1>
+          <p className="ink-3 font-medium text-sm leading-relaxed max-w-lg mx-auto">
             Usted establece su horario de apertura y sus clientes eligen el horario en el que prefieren ser atendidos.
           </p>
         </div>
@@ -127,14 +127,14 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
               value={calendarTitle}
               onChange={(e) => setCalendarTitle(e.target.value)}
               maxLength={100}
-              className="w-full bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl pl-4 pr-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black shadow-sm transition-all"
+              className="w-full srf-panel border hairline ink-1 font-semibold rounded-xl pl-4 pr-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black shadow-sm transition-all"
             />
             <span className="absolute right-3 top-4 text-[10px] font-bold text-slate-300">{calendarTitle.length}/100</span>
           </div>
           <button
             onClick={handleCreate}
             disabled={!calendarTitle.trim() || loading}
-            className="w-full sm:w-auto bg-black hover:bg-slate-900 text-white px-8 py-3.5 rounded-xl text-sm font-bold tracking-wide shadow-sm transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-w-[220px]"
+            className="w-full sm:w-auto accent-bg hover:brightness-110 text-white px-8 py-3.5 rounded-xl text-sm font-bold tracking-wide shadow-sm transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-w-[220px]"
           >
             {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <CalendarDays className="h-5 w-5 mr-2" />}
             {loading ? 'CREANDO...' : 'CREAR CALENDARIO'}

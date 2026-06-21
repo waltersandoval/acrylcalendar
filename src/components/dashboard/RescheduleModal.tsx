@@ -105,12 +105,12 @@ const RescheduleModal: React.FC<Props> = ({ isOpen, onClose, event, onReschedule
   return (
     <Sheet isOpen={isOpen} onClose={onClose} maxWidthClass="max-w-xl" zIndex={60}>
       {/* Header */}
-      <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 bg-slate-50 sticky top-0 z-10">
+      <div className="flex justify-between items-center px-6 py-5 border-b hairline srf-sunken sticky top-0 z-10">
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900 font-display">Reprogramar Cita</h2>
-          <p className="text-[11px] font-semibold text-slate-500 mt-0.5">Define la nueva fecha y hora para este espacio</p>
+          <h2 className="text-lg font-extrabold ink-1 font-display">Reprogramar Cita</h2>
+          <p className="text-[11px] font-semibold ink-3 mt-0.5">Define la nueva fecha y hora para este espacio</p>
         </div>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-200/60 text-slate-500 cursor-pointer transition-all duration-200 active:scale-90 flex-shrink-0">
+        <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-200/60 ink-3 cursor-pointer transition-all duration-200 active:scale-90 flex-shrink-0">
           <X className="w-4.5 h-4.5" />
         </button>
       </div>
@@ -119,15 +119,15 @@ const RescheduleModal: React.FC<Props> = ({ isOpen, onClose, event, onReschedule
       <div className="px-6 py-6 space-y-5">
         {/* Active Event Summary */}
         {event && (
-          <div className="bg-slate-50 border border-slate-200/50 rounded-2xl p-4 shadow-sm">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cita actual</p>
+          <div className="srf-sunken border hairline rounded-2xl p-4 shadow-sm">
+            <p className="text-[10px] font-bold ink-3 uppercase tracking-wider">Cita actual</p>
             <div className="mt-2 flex items-center justify-between gap-4">
               <div>
-                <h3 className="font-extrabold text-sm text-slate-800">{event.client}</h3>
-                <p className="text-xs font-semibold text-slate-500 mt-0.5">{event.service}</p>
+                <h3 className="font-extrabold text-sm ink-1">{event.client}</h3>
+                <p className="text-xs font-semibold ink-3 mt-0.5">{event.service}</p>
               </div>
               <div className="text-right shrink-0">
-                <span className="inline-block text-[11px] font-bold text-slate-700 bg-slate-200/60 px-2.5 py-1 rounded-lg">
+                <span className="inline-block text-[11px] font-bold ink-1 bg-slate-200/60 px-2.5 py-1 rounded-lg">
                   {event.day} {event.month} - {event.time}
                 </span>
               </div>
@@ -136,8 +136,8 @@ const RescheduleModal: React.FC<Props> = ({ isOpen, onClose, event, onReschedule
         )}
 
         {/* Attention Banner */}
-        <div className="bg-slate-50 border border-slate-200/80 text-slate-600 p-4 rounded-2xl text-[13px] leading-relaxed font-semibold flex gap-2.5 items-start">
-           <AlertCircle className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+        <div className="srf-sunken border hairline ink-2 p-4 rounded-2xl text-[13px] leading-relaxed font-semibold flex gap-2.5 items-start">
+           <AlertCircle className="w-5 h-5 ink-3 shrink-0 mt-0.5" />
            <span>
              <strong>Atención:</strong> Al reprogramar la cita de forma manual no se validarán cruces de horarios automáticos en el calendario. Asegúrese de verificar la disponibilidad antes de guardar.
            </span>
@@ -146,44 +146,44 @@ const RescheduleModal: React.FC<Props> = ({ isOpen, onClose, event, onReschedule
         {/* Date & Time Selectors */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
            <div>
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Fecha</label>
+              <label className="block text-xs font-bold ink-3 mb-2 uppercase tracking-wide">Fecha</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <CalendarIcon className="h-4 w-4 text-slate-500" />
+                  <CalendarIcon className="h-4 w-4 ink-3" />
                 </div>
                 <input 
                   type="date" 
                   value={date} 
                   onChange={e => setDate(e.target.value)} 
-                  className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-10 pr-3 text-xs font-bold text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all shadow-sm" 
+                  className="w-full srf-panel border hairline rounded-xl py-3.5 pl-10 pr-3 text-xs font-bold ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all shadow-sm" 
                 />
               </div>
            </div>
            <div>
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">De</label>
+              <label className="block text-xs font-bold ink-3 mb-2 uppercase tracking-wide">De</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Clock className="h-4 w-4 text-slate-500" />
+                  <Clock className="h-4 w-4 ink-3" />
                 </div>
                 <input 
                   type="time" 
                   value={startTime} 
                   onChange={e => setStartTime(e.target.value)} 
-                  className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-10 pr-3 text-xs font-bold text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all shadow-sm" 
+                  className="w-full srf-panel border hairline rounded-xl py-3.5 pl-10 pr-3 text-xs font-bold ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all shadow-sm" 
                 />
               </div>
            </div>
            <div>
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">A</label>
+              <label className="block text-xs font-bold ink-3 mb-2 uppercase tracking-wide">A</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Clock className="h-4 w-4 text-slate-500" />
+                  <Clock className="h-4 w-4 ink-3" />
                 </div>
                 <input 
                   type="time" 
                   value={endTime} 
                   onChange={e => setEndTime(e.target.value)} 
-                  className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-10 pr-3 text-xs font-bold text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all shadow-sm" 
+                  className="w-full srf-panel border hairline rounded-xl py-3.5 pl-10 pr-3 text-xs font-bold ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all shadow-sm" 
                 />
               </div>
            </div>
@@ -191,10 +191,10 @@ const RescheduleModal: React.FC<Props> = ({ isOpen, onClose, event, onReschedule
 
         {/* Email Notifications */}
         <div className="space-y-3 pt-2">
-           <label className="flex items-center p-3.5 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-black transition-all duration-200 shadow-sm">
+           <label className="flex items-center p-3.5 srf-panel border hairline rounded-xl cursor-pointer hover:border-black transition-all duration-200 shadow-sm">
              <div className="relative flex items-center justify-center">
                <input type="checkbox" className="sr-only" checked={notifySubscriber} onChange={e => setNotifySubscriber(e.target.checked)} />
-               <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${notifySubscriber ? 'bg-black text-white' : 'border border-slate-300'}`}>
+               <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${notifySubscriber ? 'accent-bg text-white' : 'border border-slate-300'}`}>
                  {notifySubscriber && (
                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3.5">
                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
@@ -202,13 +202,13 @@ const RescheduleModal: React.FC<Props> = ({ isOpen, onClose, event, onReschedule
                  )}
                </div>
              </div>
-             <span className="ml-3 text-xs text-slate-600 font-semibold leading-relaxed">Enviar correo electrónico de notificación al cliente.</span>
+             <span className="ml-3 text-xs ink-2 font-semibold leading-relaxed">Enviar correo electrónico de notificación al cliente.</span>
            </label>
 
-           <label className="flex items-center p-3.5 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-black transition-all duration-200 shadow-sm">
+           <label className="flex items-center p-3.5 srf-panel border hairline rounded-xl cursor-pointer hover:border-black transition-all duration-200 shadow-sm">
              <div className="relative flex items-center justify-center">
                <input type="checkbox" className="sr-only" checked={notifyHost} onChange={e => setNotifyHost(e.target.checked)} />
-               <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${notifyHost ? 'bg-black text-white' : 'border border-slate-300'}`}>
+               <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${notifyHost ? 'accent-bg text-white' : 'border border-slate-300'}`}>
                  {notifyHost && (
                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3.5">
                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
@@ -216,20 +216,20 @@ const RescheduleModal: React.FC<Props> = ({ isOpen, onClose, event, onReschedule
                  )}
                </div>
              </div>
-             <span className="ml-3 text-xs text-slate-600 font-semibold leading-relaxed">Enviar correo electrónico de notificación al administrador.</span>
+             <span className="ml-3 text-xs ink-2 font-semibold leading-relaxed">Enviar correo electrónico de notificación al administrador.</span>
            </label>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap justify-end gap-3 items-center pt-4 border-t border-slate-100 mt-6">
+        <div className="flex flex-wrap justify-end gap-3 items-center pt-4 border-t hairline mt-6">
            {error && <span className="text-red-500 text-xs font-semibold mr-auto flex items-center gap-1"><AlertCircle className="w-4 h-4" />{error}</span>}
-           <button type="button" onClick={onClose} disabled={loading} className="px-5 py-3 text-xs font-extrabold text-slate-500 hover:text-slate-900 cursor-pointer tracking-wider disabled:opacity-50 transition-colors uppercase">
+           <button type="button" onClick={onClose} disabled={loading} className="px-5 py-3 text-xs font-extrabold ink-3 hover:ink-1 cursor-pointer tracking-wider disabled:opacity-50 transition-colors uppercase">
              Cancelar
            </button>
            <button 
              onClick={handleReschedule} 
              disabled={loading}
-             className="bg-black hover:bg-slate-900 text-white font-extrabold py-3 px-8 rounded-xl shadow-md text-xs tracking-wider cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[160px] uppercase"
+             className="accent-bg hover:brightness-110 text-white font-extrabold py-3 px-8 rounded-xl shadow-md text-xs tracking-wider cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[160px] uppercase"
            >
              {loading ? 'Guardando...' : 'Reprogramar'}
            </button>

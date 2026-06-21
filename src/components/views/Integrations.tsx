@@ -106,9 +106,9 @@ const Integrations: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
         <div>
            <h2 className="text-2xl font-bold text-black mb-1">Integraciones</h2>
-           <p className="text-slate-500 font-semibold text-sm">Gestione sus integraciones con aplicaciones externas</p>
+           <p className="ink-3 font-semibold text-sm">Gestione sus integraciones con aplicaciones externas</p>
         </div>
-        <button onClick={() => { setError(null); setFormOpen(true); }} className="w-full md:w-auto bg-black hover:bg-slate-900 text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-sm transition-colors cursor-pointer">
+        <button onClick={() => { setError(null); setFormOpen(true); }} className="w-full md:w-auto accent-bg hover:brightness-110 text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-sm transition-colors cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           CREAR NUEVA INTEGRACIÓN
         </button>
@@ -127,7 +127,7 @@ const Integrations: React.FC = () => {
              <button onClick={dismissBannerForever} className="px-4 py-1.5 bg-slate-700/30 hover:bg-slate-700/50 rounded-md text-sm font-semibold transition-colors cursor-pointer border border-slate-700/30">
                No Mostrar De Nuevo
              </button>
-             <button onClick={() => setShowBanner(false)} className="px-8 py-1.5 bg-white text-black hover:bg-slate-100 rounded-md text-sm font-bold shadow-sm transition-colors cursor-pointer">
+             <button onClick={() => setShowBanner(false)} className="px-8 py-1.5 srf-panel text-black hover:srf-sunken rounded-md text-sm font-bold shadow-sm transition-colors cursor-pointer">
                Listo!
              </button>
            </div>
@@ -136,12 +136,12 @@ const Integrations: React.FC = () => {
 
       <div className="bg-transparent space-y-2">
         {all.map((integration) => (
-          <div key={integration.id} className="bg-white border border-slate-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm hover:shadow-md transition-shadow">
-            <span className="font-bold text-slate-700 text-sm mb-2 sm:mb-0 sm:w-1/2 truncate">{integration.account}</span>
+          <div key={integration.id} className="srf-panel border hairline rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+            <span className="font-bold ink-1 text-sm mb-2 sm:mb-0 sm:w-1/2 truncate">{integration.account}</span>
             <div className="flex justify-between items-center w-full sm:w-1/2">
                 <div className="flex items-center text-emerald-500 font-semibold text-sm">
                    <CheckCircle2 className="w-4 h-4 mr-2 shrink-0" />
-                   <span className="truncate">{integration.service} {integration.type === 'default' && <span className="text-slate-400 ml-1 font-medium">(Por defecto)</span>}</span>
+                   <span className="truncate">{integration.service} {integration.type === 'default' && <span className="ink-3 ml-1 font-medium">(Por defecto)</span>}</span>
                 </div>
                 {integration.type === 'custom' && (
                     <button onClick={() => setConfirmDelete(integration)} className="text-red-400 hover:text-red-600 transition-colors cursor-pointer ml-4 p-1 rounded hover:bg-red-50 shrink-0" title="Eliminar integración">
@@ -155,22 +155,22 @@ const Integrations: React.FC = () => {
 
       {/* Sheet: nueva integración */}
       <Sheet isOpen={formOpen} onClose={() => setFormOpen(false)} maxWidthClass="max-w-md" zIndex={60}>
-        <form onSubmit={handleCreate} className="bg-white p-6 space-y-4">
-          <h3 className="text-lg font-bold text-slate-800">Nueva integración</h3>
+        <form onSubmit={handleCreate} className="srf-panel p-6 space-y-4">
+          <h3 className="text-lg font-bold ink-1">Nueva integración</h3>
           <div>
-            <label className="block text-[13px] font-semibold text-slate-500 mb-1.5">Servicio</label>
-            <select value={form.service} onChange={(e) => setForm({ ...form, service: e.target.value })} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-black">
+            <label className="block text-[13px] font-semibold ink-3 mb-1.5">Servicio</label>
+            <select value={form.service} onChange={(e) => setForm({ ...form, service: e.target.value })} className="w-full srf-panel border hairline rounded-lg px-3 py-2.5 text-sm ink-1 outline-none focus:ring-2 focus:ring-black">
               {SERVICE_OPTIONS.map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-slate-500 mb-1.5">Cuenta / Email</label>
-            <input value={form.account} onChange={(e) => setForm({ ...form, account: e.target.value })} required placeholder="correo@ejemplo.com" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-black" />
+            <label className="block text-[13px] font-semibold ink-3 mb-1.5">Cuenta / Email</label>
+            <input value={form.account} onChange={(e) => setForm({ ...form, account: e.target.value })} required placeholder="correo@ejemplo.com" className="w-full srf-panel border hairline rounded-lg px-3 py-2.5 text-sm ink-1 outline-none focus:ring-2 focus:ring-black" />
           </div>
           {error && <p className="text-rose-500 text-xs font-medium">{error}</p>}
           <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end pt-2">
-            <button type="button" onClick={() => setFormOpen(false)} className="px-4 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-lg text-sm transition-colors">Cancelar</button>
-            <button type="submit" disabled={saving} className="px-5 py-2.5 bg-black hover:bg-slate-900 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
+            <button type="button" onClick={() => setFormOpen(false)} className="px-4 py-2.5 ink-2 font-medium hover:srf-sunken rounded-lg text-sm transition-colors">Cancelar</button>
+            <button type="submit" disabled={saving} className="px-5 py-2.5 accent-bg hover:brightness-110 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               Crear integración
             </button>
@@ -180,11 +180,11 @@ const Integrations: React.FC = () => {
 
       {/* Sheet: confirmar eliminación */}
       <Sheet isOpen={!!confirmDelete} onClose={() => setConfirmDelete(null)} maxWidthClass="max-w-sm" zIndex={70}>
-        <div className="bg-white p-6">
-          <h3 className="text-lg font-bold text-slate-800 mb-2">Eliminar integración</h3>
-          <p className="text-slate-600 mb-6 text-sm">¿Eliminar la integración con <strong>{confirmDelete?.service}</strong> ({confirmDelete?.account})?</p>
+        <div className="srf-panel p-6">
+          <h3 className="text-lg font-bold ink-1 mb-2">Eliminar integración</h3>
+          <p className="ink-2 mb-6 text-sm">¿Eliminar la integración con <strong>{confirmDelete?.service}</strong> ({confirmDelete?.account})?</p>
           <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
-            <button onClick={() => setConfirmDelete(null)} className="px-4 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-lg text-sm transition-colors">Atrás</button>
+            <button onClick={() => setConfirmDelete(null)} className="px-4 py-2.5 ink-2 font-medium hover:srf-sunken rounded-lg text-sm transition-colors">Atrás</button>
             <button onClick={handleDelete} className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm transition-colors">Eliminar</button>
           </div>
         </div>

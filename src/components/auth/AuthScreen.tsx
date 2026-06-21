@@ -99,59 +99,65 @@ const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-5 pt-safe pb-safe">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen srf-window flex items-center justify-center p-5 pt-safe pb-safe relative overflow-hidden">
+      {/* Fondo ambiental tipo Tahoe (luces de vidrio) */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-24 -left-24 w-[440px] h-[440px] rounded-full blur-3xl opacity-40" style={{ background: 'radial-gradient(circle, var(--accent), transparent 70%)' }} />
+        <div className="absolute -bottom-32 -right-20 w-[420px] h-[420px] rounded-full blur-3xl opacity-30" style={{ background: 'radial-gradient(circle, #a855f7, transparent 70%)' }} />
+      </div>
+
+      <div className="w-full max-w-md relative animate-glass-pop">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-3xl bg-black flex items-center justify-center text-white font-extrabold text-2xl shadow-sm">A</div>
-          <h1 className="text-[26px] font-extrabold tracking-tight text-slate-900 font-display mt-4">Acryl Calendar</h1>
-          <p className="text-slate-500 text-[14px] font-medium mt-1">
+          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-black/15" style={{ background: 'linear-gradient(140deg, var(--accent), var(--accent-strong))' }}>A</div>
+          <h1 className="text-[26px] font-extrabold tracking-tight ink-1 font-display mt-4">Acryl Calendar</h1>
+          <p className="ink-3 text-[14px] font-medium mt-1">
             {mode === 'login' ? 'Inicia sesión para continuar' : 'Crea tu cuenta para empezar'}
           </p>
         </div>
 
-        <form onSubmit={submit} className="bg-white rounded-3xl border border-slate-200/60 shadow-sm p-6 space-y-4">
+        <form onSubmit={submit} className="glass-strong r-window p-6 space-y-4">
           {mode === 'register' && (
             <div className="relative">
-              <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre completo" className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-[15px] text-slate-700 outline-none focus:ring-2 focus:ring-black/10 focus:border-black" />
+              <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ink-3" />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre completo" className="w-full srf-sunken rounded-2xl pl-12 pr-4 py-3.5 text-[15px] ink-1 outline-none transition-all focus:ring-2 focus:ring-[var(--accent)]/30" style={{ border: '1px solid var(--hairline)' }} />
             </div>
           )}
           <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Email" className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-[15px] text-slate-700 outline-none focus:ring-2 focus:ring-black/10 focus:border-black" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ink-3" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Email" className="w-full srf-sunken rounded-2xl pl-12 pr-4 py-3.5 text-[15px] ink-1 outline-none transition-all focus:ring-2 focus:ring-[var(--accent)]/30" style={{ border: '1px solid var(--hairline)' }} />
           </div>
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input type={showPwd ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Contraseña" className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-12 py-3.5 text-[15px] text-slate-700 outline-none focus:ring-2 focus:ring-black/10 focus:border-black" />
-            <button type="button" onClick={() => setShowPwd((v) => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ink-3" />
+            <input type={showPwd ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Contraseña" className="w-full srf-sunken rounded-2xl pl-12 pr-12 py-3.5 text-[15px] ink-1 outline-none transition-all focus:ring-2 focus:ring-[var(--accent)]/30" style={{ border: '1px solid var(--hairline)' }} />
+            <button type="button" onClick={() => setShowPwd((v) => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 ink-3 hover:ink-1">
               {showPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
 
           {mode === 'login' && (
             <div className="text-right -mt-1">
-              <button type="button" onClick={resetPassword} className="text-[13px] font-semibold text-slate-800 hover:text-black">¿Olvidaste tu contraseña?</button>
+              <button type="button" onClick={resetPassword} className="text-[13px] font-semibold ink-2 hover:ink-1">¿Olvidaste tu contraseña?</button>
             </div>
           )}
 
           {error && <p className="text-rose-500 text-[13px] font-medium">{error}</p>}
           {notice && <p className="text-emerald-600 text-[13px] font-medium">{notice}</p>}
 
-          <button type="submit" disabled={loading} className="w-full bg-black text-white py-4 rounded-2xl text-[15px] font-bold shadow-md flex items-center justify-center gap-2 active:scale-[0.99] transition-transform disabled:opacity-60">
+          <button type="submit" disabled={loading} className="w-full text-white py-4 rounded-2xl text-[15px] font-bold shadow-md shadow-[var(--accent)]/25 flex items-center justify-center gap-2 active:scale-[0.99] transition-transform disabled:opacity-60" style={{ background: 'linear-gradient(140deg, var(--accent), var(--accent-strong))' }}>
             {loading && <Loader2 className="w-5 h-5 animate-spin" />}
             {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
           </button>
 
           {/* Divisor */}
           <div className="flex items-center gap-3 py-1">
-            <div className="flex-1 h-px bg-slate-200" />
-            <span className="text-[12px] font-semibold text-slate-400">o</span>
-            <div className="flex-1 h-px bg-slate-200" />
+            <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+            <span className="text-[12px] font-semibold ink-3">o</span>
+            <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
           </div>
 
           {/* Google */}
-          <button type="button" onClick={signInWithGoogle} disabled={loading} className="w-full bg-white border border-slate-200 text-slate-700 py-3.5 rounded-2xl text-[15px] font-bold flex items-center justify-center gap-3 hover:bg-slate-50 active:scale-[0.99] transition-all disabled:opacity-60">
+          <button type="button" onClick={signInWithGoogle} disabled={loading} className="w-full srf-raised ink-1 py-3.5 rounded-2xl text-[15px] font-bold flex items-center justify-center gap-3 hover:brightness-95 active:scale-[0.99] transition-all disabled:opacity-60" style={{ border: '1px solid var(--hairline)' }}>
             <svg className="w-5 h-5" viewBox="0 0 48 48" aria-hidden="true">
               <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
               <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" />
@@ -162,9 +168,9 @@ const AuthScreen: React.FC = () => {
           </button>
         </form>
 
-        <p className="text-center text-[14px] text-slate-500 mt-6">
+        <p className="text-center text-[14px] ink-3 mt-6">
           {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
-          <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null); setNotice(null); }} className="font-bold text-slate-800 hover:text-black">
+          <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null); setNotice(null); }} className="font-bold ink-1 hover:opacity-80">
             {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
           </button>
         </p>

@@ -104,7 +104,7 @@ const Sheet: React.FC<SheetProps> = ({
             style={{ zIndex: resolvedZIndex + 1 }}
           >
             <motion.div
-              className={`pointer-events-auto w-full ${maxWidthClass} bg-white shadow-2xl flex flex-col overflow-hidden ${
+              className={`pointer-events-auto w-full ${maxWidthClass} srf-panel shadow-2xl flex flex-col overflow-hidden ${
                 isMobile ? 'max-h-[92vh] rounded-t-[1.75rem]' : 'max-h-[88vh] rounded-3xl'
               }`}
               variants={panelVariants}
@@ -122,7 +122,7 @@ const Sheet: React.FC<SheetProps> = ({
               {/* Grab handle (solo móvil) */}
               {isMobile && (
                 <div className="pt-2.5 pb-1 flex justify-center shrink-0 cursor-grab active:cursor-grabbing">
-                  <div className="w-10 h-1.5 rounded-full bg-slate-300" />
+                  <div className="w-10 h-1.5 rounded-full" style={{ background: 'color-mix(in srgb, rgb(var(--glass-hairline)) 25%, transparent)' }} />
                 </div>
               )}
 

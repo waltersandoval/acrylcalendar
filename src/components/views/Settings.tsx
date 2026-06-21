@@ -121,10 +121,10 @@ const Settings: React.FC<SettingsProps> = ({ embedded = false }) => {
   const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; label: React.ReactNode }> = ({ checked, onChange, label }) => (
     <label className="flex items-center cursor-pointer group">
       <div className="relative" onClick={(e) => { e.preventDefault(); onChange(!checked); }}>
-        <div className={`block w-10 h-6 rounded-full transition-colors ${checked ? 'bg-black' : 'bg-slate-200 group-hover:bg-slate-300'}`}></div>
-        <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${checked ? 'translate-x-4' : ''}`}></div>
+        <div className={`block w-10 h-6 rounded-full transition-colors ${checked ? 'accent-bg' : 'bg-slate-200 group-hover:bg-slate-300'}`}></div>
+        <div className={`absolute left-1 top-1 srf-panel w-4 h-4 rounded-full transition-transform ${checked ? 'translate-x-4' : ''}`}></div>
       </div>
-      <span className="ml-3 text-sm font-semibold text-slate-600">{label}</span>
+      <span className="ml-3 text-sm font-semibold ink-2">{label}</span>
     </label>
   );
 
@@ -141,13 +141,13 @@ const Settings: React.FC<SettingsProps> = ({ embedded = false }) => {
       {!(embedded || isMobileApp) && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-black mb-1">Preferencias del usuario</h2>
-          <p className="text-slate-500 font-semibold text-sm">Establezca su zona horaria y el formato de hora que desea mostrar sus calendarios</p>
+          <p className="ink-3 font-semibold text-sm">Establezca su zona horaria y el formato de hora que desea mostrar sus calendarios</p>
         </div>
       )}
 
-      <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="w-full srf-panel rounded-2xl shadow-sm border hairline overflow-hidden">
         {/* Header Row with Tabs and Save Button */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-2 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b hairline srf-sunken px-6 py-2 gap-4">
           <div className="flex overflow-x-auto no-scrollbar">
             {navItems.map(item => (
               <button
@@ -156,7 +156,7 @@ const Settings: React.FC<SettingsProps> = ({ embedded = false }) => {
                 className={`px-5 py-4 text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === item
                     ? 'border-black text-black'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    : 'border-transparent ink-3 hover:ink-1'
                 }`}
               >
                 {item}
@@ -167,7 +167,7 @@ const Settings: React.FC<SettingsProps> = ({ embedded = false }) => {
              <button
                onClick={handleSave}
                disabled={saving}
-               className={`px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center shadow-sm transition-all duration-200 cursor-pointer text-white disabled:opacity-60 ${saved ? 'bg-slate-800 hover:bg-slate-700' : 'bg-black hover:bg-slate-900'}`}
+               className={`px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center shadow-sm transition-all duration-200 cursor-pointer text-white disabled:opacity-60 ${saved ? 'bg-slate-800 hover:bg-slate-700' : 'accent-bg hover:brightness-110'}`}
              >
                {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : saved ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                {saving ? 'GUARDANDO...' : saved ? 'GUARDADO' : 'GUARDAR'}
@@ -185,55 +185,55 @@ const Settings: React.FC<SettingsProps> = ({ embedded = false }) => {
           {activeTab === 'General' && (
             <div className="max-w-2xl space-y-6">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Su URL Booking</label>
+                <label className="block text-sm font-bold ink-1 mb-2">Su URL Booking</label>
                 <div className="flex items-center w-full overflow-hidden">
-                  <span className="bg-slate-50 border border-slate-200 border-r-0 text-slate-400 px-4 py-2.5 rounded-l-lg text-sm font-semibold select-none flex-shrink-0 max-w-[55%] truncate">
+                  <span className="srf-sunken border hairline border-r-0 ink-3 px-4 py-2.5 rounded-l-lg text-sm font-semibold select-none flex-shrink-0 max-w-[55%] truncate">
                     {window.location.origin}/booking/
                   </span>
                   <input
                     type="text"
                     value={settings.bookingSlug}
                     onChange={(e) => update('bookingSlug', e.target.value)}
-                    className="w-full min-w-0 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-r-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+                    className="w-full min-w-0 srf-panel border hairline ink-1 text-sm font-semibold rounded-r-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Tipo de moneda preferido</label>
+                <label className="block text-sm font-bold ink-1 mb-2">Tipo de moneda preferido</label>
                 <div className="relative">
                   <select
                     value={settings.currency}
                     onChange={(e) => update('currency', e.target.value)}
-                    className="w-full appearance-none bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg pl-12 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
+                    className="w-full appearance-none srf-panel border hairline ink-1 text-sm font-semibold rounded-lg pl-12 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
                   >
                     {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                     <div className="bg-black text-white text-xs font-bold px-1.5 py-0.5 rounded flex items-center justify-center">$</div>
+                     <div className="accent-bg text-white text-xs font-bold px-1.5 py-0.5 rounded flex items-center justify-center">$</div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="flex items-center text-sm font-bold text-slate-700 mb-2">
+                <label className="flex items-center text-sm font-bold ink-1 mb-2">
                   Códigos de países destacados
-                  <Info className="h-3.5 w-3.5 ml-2 text-slate-400 cursor-help" />
+                  <Info className="h-3.5 w-3.5 ml-2 ink-3 cursor-help" />
                 </label>
                 <div className="flex flex-col gap-3">
                   <select
                     onChange={(e) => { addCountry(e.target.value); e.target.value = ''; }}
                     defaultValue=""
-                    className="w-full appearance-none bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
+                    className="w-full appearance-none srf-panel border hairline ink-1 text-sm font-semibold rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
                   >
                     <option value="">-- Select to add --</option>
                     {COUNTRY_OPTIONS.filter((c) => !settings.countryCodes.includes(c)).map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   <div className="flex flex-wrap gap-2">
                     {settings.countryCodes.map((code) => (
-                      <div key={code} className="inline-flex items-center bg-white border border-slate-200 rounded-md px-3 py-1.5 shadow-sm text-sm font-bold text-slate-600">
+                      <div key={code} className="inline-flex items-center srf-panel border hairline rounded-md px-3 py-1.5 shadow-sm text-sm font-bold ink-2">
                          {code}
-                         <button onClick={() => removeCountry(code)} className="ml-2 text-slate-300 hover:text-slate-500 bg-slate-100 rounded-full p-0.5 cursor-pointer">
+                         <button onClick={() => removeCountry(code)} className="ml-2 text-slate-300 hover:ink-3 srf-sunken rounded-full p-0.5 cursor-pointer">
                             <X className="h-3 w-3" />
                          </button>
                       </div>
@@ -242,8 +242,8 @@ const Settings: React.FC<SettingsProps> = ({ embedded = false }) => {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase mb-3">Desarrollado por Builderall</p>
+              <div className="pt-4 border-t hairline">
+                <p className="text-xs font-bold ink-3 uppercase mb-3">Desarrollado por Builderall</p>
                 <Toggle checked={settings.showBranding} onChange={(v) => update('showBranding', v)} label="Muestra la marca Builderall" />
               </div>
             </div>
@@ -252,39 +252,39 @@ const Settings: React.FC<SettingsProps> = ({ embedded = false }) => {
           {activeTab === 'Fechas & Horas' && (
             <div className="max-w-2xl space-y-6">
                <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Zona Horaria</label>
+                <label className="block text-sm font-bold ink-1 mb-2">Zona Horaria</label>
                 <select
                   value={settings.timezone}
                   onChange={(e) => update('timezone', e.target.value)}
-                  className="w-full appearance-none bg-white border border-slate-200 text-slate-600 text-sm font-semibold rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
+                  className="w-full appearance-none srf-panel border hairline ink-2 text-sm font-semibold rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
                 >
                     {TIMEZONES.map((tz) => <option key={tz}>{tz}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Formato de hora de sus calendarios</label>
+                <label className="block text-sm font-bold ink-1 mb-2">Formato de hora de sus calendarios</label>
                 <select
                   value={settings.timeFormat}
                   onChange={(e) => update('timeFormat', e.target.value)}
-                  className="w-full appearance-none bg-white border border-slate-200 text-slate-600 text-sm font-semibold rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
+                  className="w-full appearance-none srf-panel border hairline ink-2 text-sm font-semibold rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
                 >
                     <option>12h (AM/PM)</option>
                     <option>24h</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">El día que comienza cada semana</label>
+                <label className="block text-sm font-bold ink-1 mb-2">El día que comienza cada semana</label>
                 <select
                   value={settings.weekStart}
                   onChange={(e) => update('weekStart', e.target.value)}
-                  className="w-full appearance-none bg-white border border-slate-200 text-slate-600 text-sm font-semibold rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
+                  className="w-full appearance-none srf-panel border hairline ink-2 text-sm font-semibold rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black cursor-pointer"
                 >
                     <option>domingo</option>
                     <option>lunes</option>
                 </select>
               </div>
               <div className="pt-2">
-                <Toggle checked={settings.showAmPm} onChange={(v) => update('showAmPm', v)} label={<span className="flex items-center">Mostrar AM/PM<Info className="h-3.5 w-3.5 ml-2 text-slate-400 cursor-help" /></span>} />
+                <Toggle checked={settings.showAmPm} onChange={(v) => update('showAmPm', v)} label={<span className="flex items-center">Mostrar AM/PM<Info className="h-3.5 w-3.5 ml-2 ink-3 cursor-help" /></span>} />
               </div>
             </div>
           )}
@@ -292,73 +292,73 @@ const Settings: React.FC<SettingsProps> = ({ embedded = false }) => {
           {activeTab === 'Notificaciones' && (
             <div className="max-w-2xl space-y-6">
               <div>
-                 <label className="text-sm font-bold text-slate-700 mb-3 block">Notificaciones</label>
+                 <label className="text-sm font-bold ink-1 mb-3 block">Notificaciones</label>
                  <Toggle checked={settings.notifyInApp} onChange={(v) => update('notifyInApp', v)} label="Recibir notificaciones de citas nuevas y cancelaciones en mi centro de notificaciones" />
               </div>
 
               <div>
-                 <label className="text-sm font-bold text-slate-700 mb-3 block">Via email</label>
+                 <label className="text-sm font-bold ink-1 mb-3 block">Via email</label>
                  <Toggle checked={settings.notifyEmail} onChange={(v) => update('notifyEmail', v)} label="También recibir notificaciones en mi correo electrónico" />
               </div>
 
               <div>
-                 <label className="flex items-center text-sm font-bold text-slate-700 mb-2">
+                 <label className="flex items-center text-sm font-bold ink-1 mb-2">
                   Destinatario de las notificaciones de la administración
-                  <Info className="h-3.5 w-3.5 ml-2 text-slate-400 cursor-help" />
+                  <Info className="h-3.5 w-3.5 ml-2 ink-3 cursor-help" />
                  </label>
                  <input
                     type="text"
                     value={settings.notifyRecipient}
                     onChange={(e) => update('notifyRecipient', e.target.value)}
-                    className="w-full bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+                    className="w-full srf-panel border hairline ink-2 text-sm font-medium rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                   />
               </div>
 
-              <div className="pb-6 border-b border-slate-100">
-                 <label className="flex items-center text-sm font-bold text-slate-700 mb-3">
+              <div className="pb-6 border-b hairline">
+                 <label className="flex items-center text-sm font-bold ink-1 mb-3">
                   A través de Navegador/Aplicación
-                  <Info className="h-3.5 w-3.5 ml-2 text-slate-400 cursor-help" />
+                  <Info className="h-3.5 w-3.5 ml-2 ink-3 cursor-help" />
                  </label>
                  <Toggle checked={settings.notifyBrowser} onChange={(v) => update('notifyBrowser', v)} label="También recibir notificaciones en mi Navegador/Aplicación" />
               </div>
 
               <div className="space-y-5 pt-2">
-                  <h4 className="text-base font-bold text-slate-800">Remitente del correo electrónico</h4>
+                  <h4 className="text-base font-bold ink-1">Remitente del correo electrónico</h4>
 
                   <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Remitente del correo electrónico</label>
+                      <label className="block text-sm font-bold ink-1 mb-2">Remitente del correo electrónico</label>
                       <input
                           type="email"
                           value={settings.emailFrom}
                           onChange={(e) => update('emailFrom', e.target.value)}
-                          className="w-full bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+                          className="w-full srf-panel border hairline ink-2 text-sm font-medium rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                       />
                   </div>
 
                   <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Nombre del remitente del correo electrónico</label>
+                      <label className="block text-sm font-bold ink-1 mb-2">Nombre del remitente del correo electrónico</label>
                       <div className="relative">
                           <input
                               type="text"
                               maxLength={40}
                               value={settings.emailName}
                               onChange={(e) => update('emailName', e.target.value)}
-                              className="w-full bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg pl-4 pr-12 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+                              className="w-full srf-panel border hairline ink-1 text-sm font-medium rounded-lg pl-4 pr-12 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                           />
-                          <span className="absolute right-3 top-3 text-[10px] font-bold text-slate-400">{settings.emailName.length}/40</span>
+                          <span className="absolute right-3 top-3 text-[10px] font-bold ink-3">{settings.emailName.length}/40</span>
                       </div>
                   </div>
 
                   <div>
-                      <label className="flex items-center text-sm font-bold text-slate-700 mb-2">
+                      <label className="flex items-center text-sm font-bold ink-1 mb-2">
                           Responder a
-                          <Info className="h-3.5 w-3.5 ml-2 text-slate-400 cursor-help" />
+                          <Info className="h-3.5 w-3.5 ml-2 ink-3 cursor-help" />
                       </label>
                       <input
                           type="email"
                           value={settings.emailReplyTo}
                           onChange={(e) => update('emailReplyTo', e.target.value)}
-                          className="w-full bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+                          className="w-full srf-panel border hairline ink-1 text-sm font-medium rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                       />
                   </div>
               </div>

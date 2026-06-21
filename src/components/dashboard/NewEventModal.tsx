@@ -167,9 +167,9 @@ const NewEventModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, calendarId
   return (
     <Sheet isOpen={isOpen} onClose={onClose} maxWidthClass="max-w-lg" zIndex={60}>
       <div className="bg-[#f8f9fa]">
-        <div className="flex justify-between items-center p-5 sm:p-6 bg-[#f8f9fa] border-b border-slate-200">
+        <div className="flex justify-between items-center p-5 sm:p-6 bg-[#f8f9fa] border-b hairline">
           <h2 className="text-[18px] sm:text-[20px] font-bold text-[#374151]">Nueva Cita</h2>
-          <button onClick={onClose} className="p-1.5 rounded-full bg-[#e2e8f0] hover:bg-[#cbd5e1] text-slate-500 cursor-pointer transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-full bg-[#e2e8f0] hover:bg-[#cbd5e1] ink-3 cursor-pointer transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -177,12 +177,12 @@ const NewEventModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, calendarId
         <form onSubmit={handleSubmit} className="px-5 sm:px-6 pb-6 pt-4 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] text-slate-500 mb-2 font-semibold">Calendario</label>
+              <label className="block text-[13px] ink-3 mb-2 font-semibold">Calendario</label>
               <select
                 value={selectedCalId}
                 onChange={e => setSelectedCalId(e.target.value)}
                 required
-                className="w-full bg-white border border-slate-200 rounded-md py-2.5 px-3 text-[13px] text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black font-medium"
+                className="w-full srf-panel border hairline rounded-md py-2.5 px-3 text-[13px] ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black font-medium"
               >
                 <option value="">Selecciona calendario</option>
                 {calendarsList.map(c => (
@@ -192,7 +192,7 @@ const NewEventModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, calendarId
             </div>
             
             <div>
-              <label className="block text-[13px] text-slate-500 mb-2 font-semibold">Grupo de reserva</label>
+              <label className="block text-[13px] ink-3 mb-2 font-semibold">Grupo de reserva</label>
               <select
                 value={selectedGrpId}
                 onChange={e => {
@@ -204,7 +204,7 @@ const NewEventModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, calendarId
                   }
                 }}
                 required
-                className="w-full bg-white border border-slate-200 rounded-md py-2.5 px-3 text-[13px] text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black font-medium"
+                className="w-full srf-panel border hairline rounded-md py-2.5 px-3 text-[13px] ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black font-medium"
               >
                 <option value="">Selecciona grupo</option>
                 {groupsList.map(g => (
@@ -215,7 +215,7 @@ const NewEventModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, calendarId
           </div>
 
           <div>
-            <label className="block text-[13px] text-slate-500 mb-2 font-semibold">Asunto / Título</label>
+            <label className="block text-[13px] ink-3 mb-2 font-semibold">Asunto / Título</label>
             <div className="relative">
               <input 
                 type="text" 
@@ -223,16 +223,16 @@ const NewEventModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, calendarId
                 onChange={e => setTitle(e.target.value)} 
                 required
                 placeholder="Ej. Consulta general"
-                className="w-full bg-white border border-slate-200 rounded-md py-2.5 px-3 text-[13px] text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black" 
+                className="w-full srf-panel border hairline rounded-md py-2.5 px-3 text-[13px] ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black" 
               />
             </div>
           </div>
           
           <div>
-            <label className="block text-[13px] text-slate-500 mb-2 font-semibold">Nombre del Cliente</label>
+            <label className="block text-[13px] ink-3 mb-2 font-semibold">Nombre del Cliente</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-4 w-4 text-slate-400" />
+                <User className="h-4 w-4 ink-3" />
               </div>
               <input 
                 type="text" 
@@ -240,16 +240,16 @@ const NewEventModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, calendarId
                 onChange={e => setClient(e.target.value)} 
                 required
                 placeholder="Nombre del cliente"
-                className="w-full bg-white border border-slate-200 rounded-md py-2.5 pl-9 pr-3 text-[13px] text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black" 
+                className="w-full srf-panel border hairline rounded-md py-2.5 pl-9 pr-3 text-[13px] ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black" 
               />
             </div>
           </div>
           
           <div>
-            <label className="block text-[13px] text-slate-500 mb-2 font-semibold">Servicio / Tratamiento</label>
+            <label className="block text-[13px] ink-3 mb-2 font-semibold">Servicio / Tratamiento</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FileText className="h-4 w-4 text-slate-400" />
+                <FileText className="h-4 w-4 ink-3" />
               </div>
               <input 
                 type="text" 
@@ -257,68 +257,68 @@ const NewEventModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, calendarId
                 onChange={e => setService(e.target.value)} 
                 required
                 placeholder="Ej. Manicura Rusa"
-                className="w-full bg-white border border-slate-200 rounded-md py-2.5 pl-9 pr-3 text-[13px] text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black" 
+                className="w-full srf-panel border hairline rounded-md py-2.5 pl-9 pr-3 text-[13px] ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black" 
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
              <div>
-                <label className="block text-[13px] text-slate-500 mb-2 font-semibold">Fecha</label>
+                <label className="block text-[13px] ink-3 mb-2 font-semibold">Fecha</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <CalendarIcon className="h-4 w-4 text-slate-400" />
+                    <CalendarIcon className="h-4 w-4 ink-3" />
                   </div>
                   <input 
                     type="date" 
                     value={date} 
                     onChange={e => setDate(e.target.value)} 
                     required
-                    className="w-full bg-white border border-slate-200 rounded-md py-2.5 pl-9 pr-3 text-[13px] text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black" 
+                    className="w-full srf-panel border hairline rounded-md py-2.5 pl-9 pr-3 text-[13px] ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black" 
                   />
                 </div>
              </div>
              <div>
-                <label className="block text-[13px] text-slate-500 mb-2 font-semibold">De</label>
+                <label className="block text-[13px] ink-3 mb-2 font-semibold">De</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Clock className="h-4 w-4 text-slate-400" />
+                    <Clock className="h-4 w-4 ink-3" />
                   </div>
                   <input 
                     type="time" 
                     value={startTime} 
                     onChange={e => setStartTime(e.target.value)} 
                     required
-                    className="w-full bg-white border border-slate-200 rounded-md py-2.5 pl-9 pr-3 text-[13px] text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black" 
+                    className="w-full srf-panel border hairline rounded-md py-2.5 pl-9 pr-3 text-[13px] ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black" 
                   />
                 </div>
              </div>
              <div>
-                <label className="block text-[13px] text-slate-500 mb-2 font-semibold">A</label>
+                <label className="block text-[13px] ink-3 mb-2 font-semibold">A</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Clock className="h-4 w-4 text-slate-400" />
+                    <Clock className="h-4 w-4 ink-3" />
                   </div>
                   <input 
                     type="time" 
                     value={endTime} 
                     onChange={e => setEndTime(e.target.value)} 
                     required
-                    className="w-full bg-white border border-slate-200 rounded-md py-2.5 pl-9 pr-3 text-[13px] text-slate-700 outline-none focus:border-black focus:ring-1 focus:ring-black" 
+                    className="w-full srf-panel border hairline rounded-md py-2.5 pl-9 pr-3 text-[13px] ink-1 outline-none focus:border-black focus:ring-1 focus:ring-black" 
                   />
                 </div>
              </div>
           </div>
 
-          <div className="flex flex-wrap justify-end gap-4 sm:gap-6 items-center mt-8 pt-4 border-t border-slate-200">
+          <div className="flex flex-wrap justify-end gap-4 sm:gap-6 items-center mt-8 pt-4 border-t hairline">
              {error && <span className="text-red-500 text-xs font-medium mr-auto">{error}</span>}
-             <button type="button" onClick={onClose} disabled={loading} className="text-[13px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer tracking-wider disabled:opacity-50 transition-colors">
+             <button type="button" onClick={onClose} disabled={loading} className="text-[13px] font-bold ink-2 hover:ink-1 cursor-pointer tracking-wider disabled:opacity-50 transition-colors">
                CANCELAR
              </button>
              <button 
                type="submit"
                disabled={loading}
-               className="bg-black hover:bg-slate-900 text-white font-bold py-3 px-8 rounded shadow-md text-[13px] tracking-wider cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[150px]"
+               className="accent-bg hover:brightness-110 text-white font-bold py-3 px-8 rounded shadow-md text-[13px] tracking-wider cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[150px]"
              >
                {loading ? 'GUARDANDO...' : 'PROGRAMAR CITA'}
              </button>

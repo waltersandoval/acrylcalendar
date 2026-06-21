@@ -194,8 +194,8 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({
     return (
       <div className="flex flex-col items-center gap-3 py-2">
         <div className="w-full h-12 rounded-xl bg-amber-100 animate-pulse" />
-        <div className="w-2/3 h-10 rounded-xl bg-slate-100 animate-pulse" />
-        <p className="text-xs text-slate-400 font-semibold animate-pulse">Cargando PayPal...</p>
+        <div className="w-2/3 h-10 rounded-xl srf-sunken animate-pulse" />
+        <p className="text-xs ink-3 font-semibold animate-pulse">Cargando PayPal...</p>
       </div>
     );
   }
@@ -204,9 +204,9 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({
   return (
     <div className="relative">
       {processing && (
-        <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-3">
+        <div className="absolute inset-0 z-20 srf-panel backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-bold text-slate-700">Verificando pago...</p>
+          <p className="text-sm font-bold ink-1">Verificando pago...</p>
         </div>
       )}
       {/* Contenedor donde PayPal inyecta sus botones */}

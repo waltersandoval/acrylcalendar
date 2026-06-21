@@ -32,29 +32,29 @@ const Ajustes: React.FC<{ embedded?: boolean }> = ({ embedded }) => {
         {/* Header (hidden when embedded in Profile) */}
         {!embedded && (
           <div className="mb-5">
-            <h1 className="text-[32px] leading-[1.05] font-extrabold tracking-tight text-slate-900 font-display">Ajustes</h1>
-            <p className="text-slate-500 font-medium text-[14px] mt-0.5">Preferencias, integraciones y accesos</p>
+            <h1 className="text-[32px] leading-[1.05] font-extrabold tracking-tight ink-1 font-display">Ajustes</h1>
+            <p className="ink-3 font-medium text-[14px] mt-0.5">Preferencias, integraciones y accesos</p>
           </div>
         )}
 
         {/* iOS-style grouped navigation list (when no active detail) OR back to main sections */}
         {/* Tab selector as grouped list rows */}
         {!embedded && (
-          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm divide-y divide-slate-100 overflow-hidden mb-5">
+          <div className="srf-panel rounded-2xl border hairline shadow-sm divide-y divide-slate-100 overflow-hidden mb-5">
             {tabs.map((t) => {
               const active = activeTab === t.key;
               return (
                 <button
                   key={t.key}
                   onClick={() => setActiveTab(t.key)}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${active ? 'bg-slate-50' : 'bg-white active:bg-slate-50'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${active ? 'srf-sunken' : 'srf-panel active:srf-sunken'}`}
                 >
-                  <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-black text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${active ? 'accent-bg text-white' : 'srf-sunken ink-2'}`}>
                     <t.icon className="w-[18px] h-[18px]" />
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className={`font-semibold text-[15px] ${active ? 'text-slate-900' : 'text-slate-800'}`}>{t.label}</p>
-                    <p className="text-[12px] text-slate-400 font-medium">{t.description}</p>
+                    <p className={`font-semibold text-[15px] ${active ? 'ink-1' : 'ink-1'}`}>{t.label}</p>
+                    <p className="text-[12px] ink-3 font-medium">{t.description}</p>
                   </div>
                   <ChevronRight className={`w-4 h-4 shrink-0 ${active ? 'text-black' : 'text-slate-300'}`} />
                 </button>
@@ -65,14 +65,14 @@ const Ajustes: React.FC<{ embedded?: boolean }> = ({ embedded }) => {
 
         {/* Tabs en tarjeta (solo cuando va embebido en el Perfil) */}
         {embedded && (
-          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-1.5 flex items-center mb-4 overflow-x-auto no-scrollbar">
+          <div className="srf-panel rounded-2xl border hairline shadow-sm p-1.5 flex items-center mb-4 overflow-x-auto no-scrollbar">
             {tabs.map((t) => {
               const active = activeTab === t.key;
               return (
                 <button
                   key={t.key}
                   onClick={() => setActiveTab(t.key)}
-                  className={`flex-1 min-w-max flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-[13px] font-bold transition-all duration-200 ${active ? 'bg-slate-100 text-black' : 'text-slate-500'}`}
+                  className={`flex-1 min-w-max flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-[13px] font-bold transition-all duration-200 ${active ? 'srf-sunken text-black' : 'ink-3'}`}
                 >
                   <t.icon className="w-4 h-4" />
                   {t.label}
@@ -89,19 +89,19 @@ const Ajustes: React.FC<{ embedded?: boolean }> = ({ embedded }) => {
 
   // ─── ESCRITORIO ────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 flex flex-col h-full bg-white rounded-b-3xl">
-      <div className="border-b border-slate-200/60 px-6 py-4">
-        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Ajustes del Sistema</h2>
-        <p className="text-slate-500 text-sm mt-1">Configura preferencias, integraciones y accesos</p>
+    <div className="flex-1 flex flex-col h-full srf-panel rounded-b-3xl">
+      <div className="border-b hairline px-6 py-4">
+        <h2 className="text-2xl font-bold ink-1 tracking-tight">Ajustes del Sistema</h2>
+        <p className="ink-3 text-sm mt-1">Configura preferencias, integraciones y accesos</p>
       </div>
 
-      <div className="flex border-b border-slate-200/60 px-6 gap-6 bg-slate-50/50">
+      <div className="flex border-b hairline px-6 gap-6 srf-sunken">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             className={`flex items-center gap-2 py-4 text-[13px] font-semibold border-b-2 transition-colors cursor-pointer ${
-              activeTab === t.key ? 'border-black text-black' : 'border-transparent text-slate-500 hover:text-slate-700'
+              activeTab === t.key ? 'border-black text-black' : 'border-transparent ink-3 hover:ink-1'
             }`}
           >
             <t.icon className="w-4 h-4" />

@@ -702,7 +702,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen srf-panel flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
       </div>
     );
@@ -710,10 +710,10 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
   if (!calendar) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen srf-panel flex items-center justify-center">
         <div className="text-center p-6 max-w-md w-full">
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Calendario no encontrado</h2>
-          <p className="text-slate-500 text-sm">El enlace proporcionado no es válido o el calendario ya no existe.</p>
+          <h2 className="text-2xl font-bold ink-1 mb-2">Calendario no encontrado</h2>
+          <p className="ink-3 text-sm">El enlace proporcionado no es válido o el calendario ya no existe.</p>
         </div>
       </div>
     );
@@ -721,13 +721,13 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
   if (calendar.status === false) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen srf-panel flex items-center justify-center">
         <div className="text-center max-w-md w-full p-6">
-          <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-100">
-            <CalendarIcon className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 srf-sunken ink-3 rounded-2xl flex items-center justify-center mx-auto mb-6 border hairline">
+            <CalendarIcon className="w-8 h-8 ink-3" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-3">Calendario no disponible</h2>
-          <p className="text-slate-500 text-sm mb-6 leading-relaxed">El administrador ha desactivado temporalmente este calendario y no se pueden agendar nuevas citas en este momento.</p>
+          <h2 className="text-2xl font-bold ink-1 mb-3">Calendario no disponible</h2>
+          <p className="ink-3 text-sm mb-6 leading-relaxed">El administrador ha desactivado temporalmente este calendario y no se pueden agendar nuevas citas en este momento.</p>
         </div>
       </div>
     );
@@ -735,10 +735,10 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-tr from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] py-6 px-4 sm:px-6 lg:py-16 flex items-center justify-center font-sans">
-      <div className="w-full max-w-[1200px] bg-white border border-slate-200/80 shadow-[0_32px_120px_-32px_rgba(15,23,42,0.12)] rounded-[32px] overflow-hidden flex flex-col lg:flex-row min-h-[780px] relative divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+      <div className="w-full max-w-[1200px] srf-panel border hairline shadow-[0_32px_120px_-32px_rgba(15,23,42,0.12)] rounded-[32px] overflow-hidden flex flex-col lg:flex-row min-h-[780px] relative divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
         
         {/* Info Column (Sidebar) */}
-        <div className="w-full lg:w-[360px] flex flex-col p-8 sm:p-10 bg-slate-50/40 relative overflow-hidden shrink-0">
+        <div className="w-full lg:w-[360px] flex flex-col p-8 sm:p-10 srf-sunken relative overflow-hidden shrink-0">
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-slate-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-slate-600/5 rounded-full blur-3xl pointer-events-none" />
           
@@ -747,27 +747,27 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
               <img 
                 src={calendar.section_BASIC.logoBase64} 
                 alt="Logo" 
-                className="max-h-16 max-w-full rounded-2xl object-contain bg-white p-2 border border-slate-200/50 shadow-sm"
+                className="max-h-16 max-w-full rounded-2xl object-contain srf-panel p-2 border hairline shadow-sm"
                 referrerPolicy="no-referrer"
               />
             </div>
           )}
 
           <div className="mb-6">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight font-display leading-[1.15]">
+            <h1 className="text-3xl font-extrabold ink-1 tracking-tight font-display leading-[1.15]">
               {selectedGroup ? (selectedGroup.title || selectedGroup.name) : (calendar.title || t.schedule)}
             </h1>
             {selectedGroup && (
               <div className="mt-2.5">
-                <span className="inline-flex items-center text-slate-500 font-bold text-xs bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/50">
+                <span className="inline-flex items-center ink-3 font-bold text-xs srf-sunken px-2.5 py-1 rounded-lg border hairline">
                   {calendar.title || 'Servicio'}
                 </span>
               </div>
             )}
           </div>
 
-          <p className="text-slate-600 mb-6 flex items-center text-sm font-semibold">
-            <Clock className="w-4 h-4 mr-2.5 text-slate-900" />
+          <p className="ink-2 mb-6 flex items-center text-sm font-semibold">
+            <Clock className="w-4 h-4 mr-2.5 ink-1" />
             {selectedGroup 
               ? `${selectedGroup.sessionDurationMinutes || (parseInt(selectedGroup.sessionTimeHours, 10)*60 + parseInt(selectedGroup.sessionTimeMinutes, 10)) || 30} minutos`
               : (calendar?.section_BASIC?.duration || '30 minutos')}
@@ -819,22 +819,22 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
           })()}
 
           {selectedGroup?.description && (
-            <p className="text-sm text-slate-500 mb-6 leading-relaxed bg-white p-4 rounded-2xl border border-slate-100/80 shadow-sm relative italic">
+            <p className="text-sm ink-3 mb-6 leading-relaxed srf-panel p-4 rounded-2xl border hairline shadow-sm relative italic">
               "{selectedGroup.description}"
             </p>
           )}
 
           {/* Timezone Selector */}
-          <div className="mt-auto pt-6 border-t border-slate-100/85">
+          <div className="mt-auto pt-6 border-t hairline">
             {calendar?.section_BASIC?.tzMode === 'user' ? (
               <div className="mb-2">
-                <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 block">{t.timezone}</label>
+                <label className="text-[10px] font-extrabold ink-3 uppercase tracking-widest mb-2 block">{t.timezone}</label>
                 <div className="relative">
-                  <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <Globe className="w-4 h-4 ink-3 absolute left-3 top-3" />
                   <select 
                     value={selectedTimezone}
                     onChange={(e) => setSelectedTimezone(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200/70 hover:border-slate-300 rounded-xl text-xs text-slate-700 font-semibold outline-none focus:ring-2 focus:ring-slate-900/20 cursor-pointer shadow-sm transition-all"
+                    className="w-full pl-9 pr-4 py-2.5 srf-panel border hairline hover:border-slate-300 rounded-xl text-xs ink-1 font-semibold outline-none focus:ring-2 focus:ring-slate-900/20 cursor-pointer shadow-sm transition-all"
                   >
                     <option value="America/Mexico_City">America/Mexico City</option>
                     <option value="America/Guatemala">America/Guatemala</option>
@@ -861,8 +861,8 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
               </div>
             ) : (
               <div className="mb-2">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5 block">{t.timezone}</span>
-                <span className="text-xs text-slate-600 flex items-center font-bold"><Globe className="w-3.5 h-3.5 mr-2 text-slate-400" /> {selectedTimezone}</span>
+                <span className="text-[10px] font-extrabold ink-3 uppercase tracking-widest mb-1.5 block">{t.timezone}</span>
+                <span className="text-xs ink-2 flex items-center font-bold"><Globe className="w-3.5 h-3.5 mr-2 ink-3" /> {selectedTimezone}</span>
               </div>
             )}
           </div>
@@ -870,7 +870,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
           {/* Ticket Slot Card with high graphic detail */}
           {selectedDate && selectedTime && (
             <div className="mt-6 p-4 bg-gradient-to-br from-slate-800 to-slate-950 text-white rounded-2xl shadow-md shadow-slate-950/10 relative overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-24 h-24 srf-panel/10 rounded-full blur-xl pointer-events-none" />
               <p className="text-[9px] font-extrabold tracking-widest uppercase opacity-75 mb-1.5 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" /> Tu Selección
               </p>
@@ -887,14 +887,14 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
         </div>
 
         {/* Action Column */}
-        <div className="flex-1 flex flex-col p-8 sm:p-10 lg:p-12 bg-white relative">
+        <div className="flex-1 flex flex-col p-8 sm:p-10 lg:p-12 srf-panel relative">
           {step === 'date' && (
             <div className="h-full flex flex-col justify-between">
               
               <div className="space-y-8">
                 {/* Steps Header bar */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">{t.selectDateTime}</h2>
+                <div className="flex items-center justify-between border-b hairline pb-4">
+                  <h2 className="text-xl font-bold ink-1 tracking-tight font-display">{t.selectDateTime}</h2>
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-8 rounded-full bg-slate-900 transition-all duration-300" />
                     <span className="h-2 w-2 rounded-full bg-slate-200 transition-all duration-300" />
@@ -903,8 +903,8 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
                 {/* Service selector group */}
                 {calendar?.section_SCHEDULING?.groups && calendar.section_SCHEDULING.groups.length > 1 && (
-                  <div className="p-5 bg-slate-50/50 rounded-2xl border border-slate-200/50">
-                    <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-3.5">
+                  <div className="p-5 srf-sunken rounded-2xl border hairline">
+                    <span className="text-[10px] font-extrabold ink-3 uppercase tracking-wider block mb-3.5">
                       Selecciona un servicio o profesional
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -920,8 +920,8 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                             }}
                             className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all relative group cursor-pointer ${
                               isChosen
-                                ? 'border-slate-900 bg-white ring-4 ring-slate-100 shadow-md'
-                                : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                                ? 'border-slate-900 srf-panel ring-4 ring-slate-100 shadow-md'
+                                : 'hairline srf-panel hover:border-slate-300 hover:shadow-sm'
                             }`}
                           >
                             {isChosen && (
@@ -930,22 +930,22 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                               </div>
                             )}
                             <div>
-                              <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-slate-900 transition-colors">{g.title || g.name}</h4>
+                              <h4 className="font-extrabold ink-1 text-sm group-hover:ink-1 transition-colors">{g.title || g.name}</h4>
                               {g.description && (
-                                <p className="text-xs text-slate-400 mt-1.5 line-clamp-2 leading-relaxed font-medium">{g.description}</p>
+                                <p className="text-xs ink-3 mt-1.5 line-clamp-2 leading-relaxed font-medium">{g.description}</p>
                               )}
                             </div>
                             
                             {g.admins && g.admins.length > 0 && (
-                              <div className="flex gap-2 mt-4 items-center pt-3 border-t border-slate-100/85">
+                              <div className="flex gap-2 mt-4 items-center pt-3 border-t hairline">
                                 <div className="flex -space-x-1.5">
                                   {g.admins.map((adm: any, idx: number) => (
-                                    <div key={adm.id || idx} className="w-6 h-6 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 border-2 border-white text-[9px] flex items-center justify-center font-bold text-slate-700" title={adm.name}>
+                                    <div key={adm.id || idx} className="w-6 h-6 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 border-2 border-white text-[9px] flex items-center justify-center font-bold ink-1" title={adm.name}>
                                       {adm.name.charAt(0).toUpperCase()}
                                     </div>
                                   ))}
                                 </div>
-                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                <span className="text-[10px] ink-3 font-semibold uppercase tracking-wider">
                                   {g.admins.length === 1 ? '1 Especialista' : `${g.admins.length} Especialistas`}
                                 </span>
                               </div>
@@ -961,9 +961,9 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                   
                   {/* Calendar Widget Left */}
-                  <div className="lg:col-span-7 bg-white">
+                  <div className="lg:col-span-7 srf-panel">
                     {currentMonthYear && availableMonths.length > 0 && (
-                      <div className="flex items-center justify-between mb-5 bg-slate-50 border border-slate-200/50 p-2 rounded-2xl">
+                      <div className="flex items-center justify-between mb-5 srf-sunken border hairline p-2 rounded-2xl">
                         <button
                           type="button"
                           onClick={() => {
@@ -976,7 +976,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                             }
                           }}
                           disabled={availableMonths.findIndex(m => m.year === currentMonthYear.year && m.month === currentMonthYear.month) <= 0}
-                          className="p-2 rounded-xl border border-slate-200 bg-white shadow-sm text-slate-600 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-slate-50 transition-all cursor-pointer"
+                          className="p-2 rounded-xl border hairline srf-panel shadow-sm ink-2 disabled:opacity-20 disabled:cursor-not-allowed hover:srf-sunken transition-all cursor-pointer"
                         >
                           <ChevronLeft className="w-4 h-4" />
                         </button>
@@ -988,7 +988,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                               const [y, m] = e.target.value.split('-').map(Number);
                               setCurrentMonthYear({ year: y, month: m });
                             }}
-                            className="text-xs font-black text-slate-800 bg-transparent py-0.5 border-none outline-none focus:ring-0 cursor-pointer pr-1 uppercase tracking-wider font-display"
+                            className="text-xs font-black ink-1 bg-transparent py-0.5 border-none outline-none focus:ring-0 cursor-pointer pr-1 uppercase tracking-wider font-display"
                           >
                             {availableMonths.map((m) => (
                               <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
@@ -1010,7 +1010,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                             }
                           }}
                           disabled={availableMonths.findIndex(m => m.year === currentMonthYear.year && m.month === currentMonthYear.month) >= availableMonths.length - 1}
-                          className="p-2 rounded-xl border border-slate-200 bg-white shadow-sm text-slate-600 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-slate-50 transition-all cursor-pointer"
+                          className="p-2 rounded-xl border hairline srf-panel shadow-sm ink-2 disabled:opacity-20 disabled:cursor-not-allowed hover:srf-sunken transition-all cursor-pointer"
                         >
                           <ChevronRight className="w-4 h-4" />
                         </button>
@@ -1020,7 +1020,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                     {/* Day labels (Headers) */}
                     <div className="grid grid-cols-7 gap-1.5 text-center mb-3">
                       {(lang === 'es' ? ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'] : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']).map((wd) => (
-                        <span key={wd} className="text-[10px] font-black text-slate-400 tracking-widest py-1">
+                        <span key={wd} className="text-[10px] font-black ink-3 tracking-widest py-1">
                           {wd}
                         </span>
                       ))}
@@ -1049,17 +1049,17 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                               !isCurrentMonth
                                 ? 'opacity-0 pointer-events-none'
                                 : !active
-                                  ? 'opacity-20 bg-slate-50/50 border-transparent text-slate-300 cursor-not-allowed'
+                                  ? 'opacity-20 srf-sunken border-transparent text-slate-300 cursor-not-allowed'
                                   : isSelected
                                     ? 'border-slate-900 bg-slate-900 text-white font-extrabold shadow-md shadow-slate-950/20 scale-102 ring-2 ring-slate-100'
-                                    : 'border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold hover:scale-102'
+                                    : 'hairline srf-panel hover:border-slate-300 hover:srf-sunken ink-1 font-bold hover:scale-102'
                             }`}
                           >
                             <span className="text-xs tracking-tight">
                               {date.getDate()}
                             </span>
                             {isToday && isCurrentMonth && (
-                              <span className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-slate-900 animate-pulse'}`} />
+                              <span className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full ${isSelected ? 'srf-panel' : 'bg-slate-900 animate-pulse'}`} />
                             )}
                           </button>
                         );
@@ -1068,19 +1068,19 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                   </div>
 
                   {/* Right Side: Available schedules */}
-                  <div className="lg:col-span-5 bg-slate-50/50 p-5 rounded-2xl border border-slate-200/50 flex flex-col h-full min-h-[300px]">
-                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2 pb-3 border-b border-slate-200/40">
-                      <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">{t.availableTimes}</p>
+                  <div className="lg:col-span-5 srf-sunken p-5 rounded-2xl border hairline flex flex-col h-full min-h-[300px]">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2 pb-3 border-b hairline">
+                      <p className="text-[10px] font-extrabold ink-3 uppercase tracking-widest">{t.availableTimes}</p>
                       
                       {selectedDate && timeSlots.length > 0 && (
-                        <div className="inline-flex rounded-xl p-0.5 bg-slate-200/50 border border-slate-200/20 shadow-inner">
+                        <div className="inline-flex rounded-xl p-0.5 bg-slate-200/50 border hairline shadow-inner">
                           <button
                             type="button"
                             onClick={() => setTimeFilter('am')}
                             className={`px-3.5 py-1 text-[10px] font-black rounded-lg transition-all duration-200 cursor-pointer ${
                               timeFilter === 'am'
-                                ? 'bg-white text-slate-800 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'srf-panel ink-1 shadow-sm'
+                                : 'ink-3 hover:ink-1'
                             }`}
                           >
                             AM
@@ -1090,8 +1090,8 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                             onClick={() => setTimeFilter('pm')}
                             className={`px-3.5 py-1 text-[10px] font-black rounded-lg transition-all duration-200 cursor-pointer ${
                               timeFilter === 'pm'
-                                ? 'bg-white text-slate-800 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'srf-panel ink-1 shadow-sm'
+                                : 'ink-3 hover:ink-1'
                             }`}
                           >
                             PM
@@ -1115,7 +1115,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                                     className={`p-3 rounded-xl border text-xs font-extrabold transition-all text-center cursor-pointer ${
                                       isSelected
                                         ? 'border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-900/10'
-                                        : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700 hover:scale-101'
+                                        : 'hairline srf-panel hover:border-slate-300 hover:srf-sunken ink-1 hover:scale-101'
                                     }`}
                                   >
                                     {time}
@@ -1124,8 +1124,8 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                               })}
                             </div>
                           ) : (
-                            <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200/80 px-4">
-                              <p className="text-xs text-slate-400 font-bold">
+                            <div className="text-center py-10 srf-panel rounded-2xl border border-dashed hairline px-4">
+                              <p className="text-xs ink-3 font-bold">
                                 {lang === 'es'
                                   ? `No hay cupos disponibles por la ${timeFilter === 'am' ? 'mañana (AM)' : 'tarde/noche (PM)'}.`
                                   : `No spots left in the ${timeFilter.toUpperCase()}.`}
@@ -1133,14 +1133,14 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                             </div>
                           )
                         ) : (
-                          <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200/80 px-4">
-                            <p className="text-xs text-slate-400 font-bold">Sin horarios definidos para hoy.</p>
+                          <div className="text-center py-10 srf-panel rounded-2xl border border-dashed hairline px-4">
+                            <p className="text-xs ink-3 font-bold">Sin horarios definidos para hoy.</p>
                           </div>
                         )
                       ) : (
-                        <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200/80 px-4 flex flex-col items-center justify-center h-full">
+                        <div className="text-center py-12 srf-panel rounded-2xl border border-dashed hairline px-4 flex flex-col items-center justify-center h-full">
                           <CalendarIcon className="w-8 h-8 text-slate-300 mb-2 stroke-[1.5]" />
-                          <p className="text-xs text-slate-400 font-extrabold text-center">Selecciona un día en el calendario.</p>
+                          <p className="text-xs ink-3 font-extrabold text-center">Selecciona un día en el calendario.</p>
                         </div>
                       )}
                     </div>
@@ -1150,12 +1150,12 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
               </div>
 
               {/* Sticky bottom CTA and errors in date selection step */}
-              <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="mt-8 pt-6 border-t hairline flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="hidden sm:block">
                   {selectedDate && selectedTime ? (
-                    <p className="text-xs text-slate-400 font-semibold">Cita seleccionada. Haz clic en continuar para ingresar tus datos.</p>
+                    <p className="text-xs ink-3 font-semibold">Cita seleccionada. Haz clic en continuar para ingresar tus datos.</p>
                   ) : (
-                    <p className="text-xs text-slate-400 font-semibold">Selecciona una fecha y hora superiores antes de continuar.</p>
+                    <p className="text-xs ink-3 font-semibold">Selecciona una fecha y hora superiores antes de continuar.</p>
                   )}
                 </div>
                 <button
@@ -1174,16 +1174,16 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
           {step === 'form' && (
             <div className="animate-in fade-in slide-in-from-right-5 duration-300 h-full flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <div className="flex items-center justify-between border-b hairline pb-4 mb-6">
                   <div className="flex items-center">
                     <button 
                       type="button"
                       onClick={() => setStep('date')} 
-                      className="text-slate-400 hover:text-slate-900 transition-colors mr-3 p-1 rounded-lg hover:bg-slate-50 cursor-pointer"
+                      className="ink-3 hover:ink-1 transition-colors mr-3 p-1 rounded-lg hover:srf-sunken cursor-pointer"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">{t.details}</h2>
+                    <h2 className="text-xl font-bold ink-1 tracking-tight font-display">{t.details}</h2>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-slate-200 transition-all duration-300" />
@@ -1193,13 +1193,13 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
                 <form onSubmit={handleBooking} className="space-y-5">
                   <div>
-                    <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.name}</label>
+                    <label className="block text-[11px] font-extrabold ink-3 uppercase tracking-widest mb-1.5 ml-1">{t.name}</label>
                     <div className="relative group">
-                      <User className="absolute left-4 top-3.5 w-4.5 h-4.5 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
+                      <User className="absolute left-4 top-3.5 w-4.5 h-4.5 ink-3 group-focus-within:ink-1 transition-colors" />
                       <input
                         required
                         type="text"
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/85 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none transition-all font-semibold"
+                        className="w-full pl-11 pr-4 py-3 srf-sunken border hairline rounded-xl text-sm ink-1 placeholder-slate-400 focus:srf-panel focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none transition-all font-semibold"
                         placeholder="Ej. Juan Pérez"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -1208,13 +1208,13 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.email}</label>
+                    <label className="block text-[11px] font-extrabold ink-3 uppercase tracking-widest mb-1.5 ml-1">{t.email}</label>
                     <div className="relative group">
-                      <Mail className="absolute left-4 top-3.5 w-4.5 h-4.5 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
+                      <Mail className="absolute left-4 top-3.5 w-4.5 h-4.5 ink-3 group-focus-within:ink-1 transition-colors" />
                       <input
                         required
                         type="email"
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/85 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none transition-all font-semibold"
+                        className="w-full pl-11 pr-4 py-3 srf-sunken border hairline rounded-xl text-sm ink-1 placeholder-slate-400 focus:srf-panel focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none transition-all font-semibold"
                         placeholder="Ej. juan@correo.com"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -1223,10 +1223,10 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.phone}</label>
+                    <label className="block text-[11px] font-extrabold ink-3 uppercase tracking-widest mb-1.5 ml-1">{t.phone}</label>
                     <div className="flex gap-2.5">
                       <select
-                        className="w-24 bg-slate-50 border border-slate-200/85 rounded-xl px-3.5 py-3 text-xs text-slate-700 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none cursor-pointer transition-all font-extrabold"
+                        className="w-24 srf-sunken border hairline rounded-xl px-3.5 py-3 text-xs ink-1 focus:srf-panel focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none cursor-pointer transition-all font-extrabold"
                         value={formData.phoneCode}
                         onChange={(e) => setFormData({ ...formData, phoneCode: e.target.value })}
                       >
@@ -1241,7 +1241,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                       <input
                         required
                         type="tel"
-                        className="flex-1 px-4.5 py-3 bg-slate-50 border border-slate-200/85 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none transition-all font-semibold"
+                        className="flex-1 px-4.5 py-3 srf-sunken border hairline rounded-xl text-sm ink-1 placeholder-slate-400 focus:srf-panel focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none transition-all font-semibold"
                         placeholder="Ej. 12345678"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -1249,18 +1249,18 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                     </div>
                   </div>
 
-                  <div className="flex items-start bg-slate-50 border border-slate-200/55 p-3.5 rounded-2xl mt-6">
+                  <div className="flex items-start srf-sunken border hairline p-3.5 rounded-2xl mt-6">
                     <div className="flex items-center h-5 mt-0.5">
                       <input
                         id="terms"
                         type="checkbox"
                         required
-                        className="w-4 h-4 text-slate-950 bg-white border-slate-300 rounded focus:ring-slate-950 focus:ring-2 cursor-pointer transition-all"
+                        className="w-4 h-4 text-slate-950 srf-panel border-slate-300 rounded focus:ring-slate-950 focus:ring-2 cursor-pointer transition-all"
                         checked={formData.termsAccepted}
                         onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
                       />
                     </div>
-                    <label htmlFor="terms" className="ml-3 text-xs font-semibold text-slate-500 leading-normal select-none cursor-pointer">
+                    <label htmlFor="terms" className="ml-3 text-xs font-semibold ink-3 leading-normal select-none cursor-pointer">
                       {t.terms}
                     </label>
                   </div>
@@ -1272,11 +1272,11 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                     </div>
                   )}
 
-                  <div className="pt-6 border-t border-slate-100 flex items-center justify-between gap-4">
+                  <div className="pt-6 border-t hairline flex items-center justify-between gap-4">
                     <button
                       type="button"
                       onClick={() => setStep('date')}
-                      className="px-5 py-3.5 bg-slate-100 hover:bg-slate-200 transition-colors text-slate-700 rounded-xl text-sm font-bold cursor-pointer"
+                      className="px-5 py-3.5 srf-sunken hover:bg-slate-200 transition-colors ink-1 rounded-xl text-sm font-bold cursor-pointer"
                     >
                       Atrás
                     </button>
@@ -1320,16 +1320,16 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
             return (
               <div className="animate-in fade-in slide-in-from-right-5 duration-300 h-full flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <div className="flex items-center justify-between border-b hairline pb-4 mb-6">
                   <div className="flex items-center">
                     <button
                       type="button"
                       onClick={() => { setStep('form'); setPaypalError(null); }}
-                      className="text-slate-400 hover:text-slate-900 transition-colors mr-3 p-1 rounded-lg hover:bg-slate-50 cursor-pointer"
+                      className="ink-3 hover:ink-1 transition-colors mr-3 p-1 rounded-lg hover:srf-sunken cursor-pointer"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">Pago seguro</h2>
+                    <h2 className="text-xl font-bold ink-1 tracking-tight font-display">Pago seguro</h2>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-slate-200" />
@@ -1340,32 +1340,32 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
                 <div className="flex-1 flex flex-col gap-5 max-w-md mx-auto w-full">
                   {/* Resumen de la cita */}
-                  <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 space-y-3">
-                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Resumen de tu reserva</p>
+                  <div className="srf-sunken border hairline rounded-2xl p-4 space-y-3">
+                    <p className="text-[10px] font-extrabold ink-3 uppercase tracking-widest">Resumen de tu reserva</p>
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
                         <CalendarDays className="w-4 h-4 text-white" />
                       </div>
                       <div className="text-sm">
-                        <p className="font-extrabold text-slate-900 capitalize">
+                        <p className="font-extrabold ink-1 capitalize">
                           {selectedDate?.toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'long' })}
                         </p>
-                        <p className="text-slate-500 font-semibold">{selectedTime}</p>
+                        <p className="ink-3 font-semibold">{selectedTime}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                        <User className="w-4 h-4 text-slate-600" />
+                      <div className="w-8 h-8 rounded-xl srf-sunken flex items-center justify-center shrink-0">
+                        <User className="w-4 h-4 ink-2" />
                       </div>
-                      <p className="text-sm font-semibold text-slate-700">{formData.name} · {formData.email}</p>
+                      <p className="text-sm font-semibold ink-1">{formData.name} · {formData.email}</p>
                     </div>
-                    <div className="pt-3 border-t border-slate-200/60 space-y-1.5">
+                    <div className="pt-3 border-t hairline space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-500">Total a pagar</span>
+                        <span className="text-xs font-bold ink-3">Total a pagar</span>
                         <span className="text-lg font-black text-emerald-700">{payCurrency} {parseFloat(payPrice).toFixed(2)}</span>
                       </div>
                       {paymentConfig?.altCurrency && paymentConfig?.exchangeRate && parseFloat(paymentConfig.exchangeRate) > 0 && (
-                        <div className="flex items-center justify-between text-xs text-slate-400">
+                        <div className="flex items-center justify-between text-xs ink-3">
                           <span className="font-semibold">Conversión aproximada</span>
                           <span className="font-bold text-emerald-600">
                             {paymentConfig.altCurrency} {(parseFloat(payPrice) * parseFloat(paymentConfig.exchangeRate)).toFixed(2)}
@@ -1376,13 +1376,13 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                   </div>
 
                   {/* Botones PayPal */}
-                  <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm">
-                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">Selecciona tu método de pago</p>
+                  <div className="srf-panel border hairline rounded-2xl p-5 shadow-sm">
+                    <p className="text-[10px] font-extrabold ink-3 uppercase tracking-widest mb-4">Selecciona tu método de pago</p>
                     {submitting ? (
                       <div className="flex flex-col items-center gap-3 py-6">
                         <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                        <p className="text-sm font-bold text-slate-700">Verificando pago con el servidor...</p>
-                        <p className="text-xs text-slate-400">Esto puede tomar unos segundos</p>
+                        <p className="text-sm font-bold ink-1">Verificando pago con el servidor...</p>
+                        <p className="text-xs ink-3">Esto puede tomar unos segundos</p>
                       </div>
                     ) : (
                       <PayPalButton
@@ -1415,7 +1415,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                   )}
 
                   {/* Badge de seguridad */}
-                  <div className="flex items-center justify-center gap-2 text-slate-400 py-2">
+                  <div className="flex items-center justify-center gap-2 ink-3 py-2">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <p className="text-[11px] font-semibold">Pago 100% seguro · Procesado por PayPal</p>
                   </div>
@@ -1429,10 +1429,10 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
               <div className="w-20 h-20 bg-emerald-500/[0.08] text-emerald-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-emerald-500/[0.02]">
                 <CheckCircle2 className="w-11 h-11" />
               </div>
-              <h2 className="text-2xl font-black text-slate-900 mb-2 font-display">{t.success}</h2>
-              <p className="text-slate-500 max-w-md mb-8 text-sm font-semibold leading-relaxed">
+              <h2 className="text-2xl font-black ink-1 mb-2 font-display">{t.success}</h2>
+              <p className="ink-3 max-w-md mb-8 text-sm font-semibold leading-relaxed">
                 {t.scheduledAt}{' '}
-                <span className="text-slate-800 font-extrabold bg-slate-100 px-2.5 py-1 rounded-lg inline-block my-1 capitalize">
+                <span className="ink-1 font-extrabold srf-sunken px-2.5 py-1 rounded-lg inline-block my-1 capitalize">
                   {selectedDate?.toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'long', timeZone: safeTimezone })}
                 </span>{' '}
                 a las <span className="text-slate-950 font-extrabold">{selectedTime}</span> ({selectedTimezone}).
@@ -1446,7 +1446,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                   setSelectedTime(null);
                   setFormData({ name: '', email: '', phoneCode: '+504', phone: '', termsAccepted: false });
                 }}
-                className="px-6 py-3 bg-slate-100 hover:bg-slate-200/80 hover:text-slate-900 text-slate-600 rounded-xl font-bold transition-all cursor-pointer text-xs uppercase tracking-wider"
+                className="px-6 py-3 srf-sunken hover:bg-slate-200/80 hover:ink-1 ink-2 rounded-xl font-bold transition-all cursor-pointer text-xs uppercase tracking-wider"
               >
                 {t.scheduleAnother}
               </button>

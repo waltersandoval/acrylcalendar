@@ -40,9 +40,27 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
+          // OJO: NO precacheamos `**/*.html`. Workbox guardaba la respuesta de
+          // `index.html` junto con sus headers HTTP (incluido el CSP). Como el
+          // CSP se define en `vercel.json` y no cambia el contenido del HTML, el
+          // service worker servía indefinidamente una copia vieja con un CSP
+          // desactualizado (rompía el iframe de vista previa). Sirviendo las
+          // navegaciones con NetworkFirst, el documento (y sus headers) se
+          // traen siempre frescos del servidor; la caché es solo respaldo offline.
+          globPatterns: ['**/*.{js,css,png,svg,woff2}'],
           navigateFallbackDenylist: [/^\/booking\//],
           cleanupOutdatedCaches: true,
+          runtimeCaching: [
+            {
+              urlPattern: ({request}) => request.mode === 'navigate',
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'html-shell',
+                expiration: {maxEntries: 10, maxAgeSeconds: 60 * 60 * 24},
+                cacheableResponse: {statuses: [200]},
+              },
+            },
+          ],
         },
       }),
     ],

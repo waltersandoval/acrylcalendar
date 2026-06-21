@@ -120,16 +120,16 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
 
   // ---------- ESCRITORIO ----------
   return (
-    <div className="flex flex-col flex-1 h-full max-w-4xl mx-auto w-full pt-8">
-      <div className="flex flex-col items-center mt-6">
-        <div className="text-center max-w-2xl mb-10">
+    <div className="flex flex-col flex-1 max-w-3xl mx-auto w-full">
+      <div className="srf-panel r-window border hairline shadow-sm p-8 md:p-10 flex flex-col items-center">
+        <div className="text-center max-w-2xl mb-8">
           <h1 className="text-3xl font-black ink-1 mb-3">Configurar calendario de consulta</h1>
           <p className="ink-3 font-medium text-sm leading-relaxed max-w-lg mx-auto">
             Usted establece su horario de apertura y sus clientes eligen el horario en el que prefieren ser atendidos.
           </p>
         </div>
 
-        <div className="w-full max-w-2xl mb-8">
+        <div className="w-full max-w-xl">
           <div className="relative w-full">
             <input
               type="text"

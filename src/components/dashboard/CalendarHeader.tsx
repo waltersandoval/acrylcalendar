@@ -91,20 +91,20 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   }, []);
 
   return (
-    <div className="px-5 py-4 border-b hairline glass-strong sticky top-0 z-10">
-      {/* Fila 1: título (la acción "Nueva Cita" vive en el header flotante) */}
-      <div className="mb-3">
-        <h2 className="text-[20px] font-bold tracking-tight ink-1">Lista de Citas</h2>
-        <p className="text-[12px] ink-3 font-medium mt-0.5">{counts.all || 0} {(counts.all || 0) === 1 ? 'cita' : 'citas'} en total</p>
+    <div className="flex flex-col gap-4">
+      {/* Título (la acción "Nueva Cita" vive en el header flotante) */}
+      <div>
+        <h2 className="text-[22px] font-bold tracking-tight ink-1">Lista de Citas</h2>
+        <p className="text-[13px] ink-3 font-medium mt-0.5">{counts.all || 0} {(counts.all || 0) === 1 ? 'cita' : 'citas'} en total</p>
       </div>
 
-      {/* Fila 2: toolbar de filtros unificada (pista hundida con controles elevados) */}
-      <div className="srf-sunken rounded-[14px] p-2 flex flex-wrap items-center gap-2" style={{ border: '1px solid var(--hairline)' }}>
+      {/* Toolbar de filtros: tarjeta independiente que flota sobre el fondo */}
+      <div className="srf-panel rounded-[16px] p-2.5 flex flex-wrap items-center gap-2 border hairline shadow-sm">
         {/* Estado */}
         <div className="relative group" ref={statusRef}>
           <div
             onClick={() => setIsStatusOpen(!isStatusOpen)}
-            className="flex items-center justify-between srf-panel ink-1 text-[13px] font-medium rounded-[10px] pl-8 pr-10 py-2 transition-all duration-200 cursor-pointer min-w-[170px] hover:brightness-95"
+            className="flex items-center justify-between srf-sunken ink-1 text-[13px] font-medium rounded-[10px] pl-8 pr-10 py-2 transition-all duration-200 cursor-pointer min-w-[170px] hover:brightness-95"
             style={{ border: '1px solid var(--hairline)' }}
           >
             <span>{selectedStatus.label}</span>
@@ -136,7 +136,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           <select
             value={selectedCalendarFilter || ''}
             onChange={(e) => setSelectedCalendarFilter?.(e.target.value || null)}
-            className="appearance-none srf-panel ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-10 py-2 transition-all duration-200 cursor-pointer hover:brightness-95"
+            className="appearance-none srf-sunken ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-10 py-2 transition-all duration-200 cursor-pointer hover:brightness-95"
             style={{ border: '1px solid var(--hairline)' }}
           >
             <option value="">Todos los calendarios</option>
@@ -152,7 +152,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           <select
             value={adminFilter}
             onChange={(e) => setAdminFilter(e.target.value)}
-            className="appearance-none srf-panel ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-10 py-2 transition-all duration-200 cursor-pointer hover:brightness-95"
+            className="appearance-none srf-sunken ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-10 py-2 transition-all duration-200 cursor-pointer hover:brightness-95"
             style={{ border: '1px solid var(--hairline)' }}
           >
             <option value="">Administradores</option>
@@ -164,7 +164,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         </div>
 
         {/* Rango de fechas */}
-        <div className="flex items-center gap-2 srf-panel rounded-[10px] px-3 py-1.5" style={{ border: '1px solid var(--hairline)' }}>
+        <div className="flex items-center gap-2 srf-sunken rounded-[10px] px-3 py-1.5" style={{ border: '1px solid var(--hairline)' }}>
           <input
             type="date"
             value={dateFrom}
@@ -196,7 +196,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar citas..."
-            className="w-full srf-panel ink-1 text-[13px] font-medium rounded-[10px] pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all duration-200"
+            className="w-full srf-sunken ink-1 text-[13px] font-medium rounded-[10px] pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all duration-200"
             style={{ border: '1px solid var(--hairline)' }}
           />
           <Search className="absolute left-3.5 top-2.5 h-4 w-4 ink-3 pointer-events-none" />

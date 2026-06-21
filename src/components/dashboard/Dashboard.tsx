@@ -223,7 +223,7 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-       <div className={`flex-1 p-4 md:p-6 flex flex-col no-scrollbar ${activeSidebarItem !== 'Escritorio' ? 'srf-panel mx-4 md:mx-6 mt-4 mb-6 r-window shadow-sm' : 'mt-4'}`} style={activeSidebarItem !== 'Escritorio' ? { border: '1px solid var(--hairline)' } : undefined}>
+       <div className="flex-1 p-4 md:p-6 flex flex-col no-scrollbar mt-4">
           <div className="flex-1 w-full mx-auto flex flex-col">
             {activeSidebarItem === 'Escritorio' && <Escritorio activeActivityTab={activeActivityTab} setActiveActivityTab={setActiveActivityTab} onViewAll={() => setActiveSidebarItem('Lista de Citas')} />}
             {activeSidebarItem === 'Nuevo calendario' && <NewCalendar onCreate={(title, type, id) => {

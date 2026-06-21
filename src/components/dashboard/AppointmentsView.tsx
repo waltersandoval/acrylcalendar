@@ -269,24 +269,28 @@ const AppointmentsView: React.FC<AppointmentsViewProps> = ({ calendarFilter, set
 
   // ─── ESCRITORIO ────────────────────────────────────────────────────────────
   return (
-    <div className="srf-panel border hairline shadow-sm flex flex-col overflow-hidden flex-1 mt-4 mb-6 r-window mx-4 md:mx-6">
-      <CalendarHeader
-        selectedCalendarFilter={calendarFilter}
-        setSelectedCalendarFilter={setCalendarFilter}
-        status={status}
-        setStatus={setStatus}
-        counts={counts}
-        search={search}
-        setSearch={setSearch}
-        dateFrom={dateFrom}
-        setDateFrom={setDateFrom}
-        dateTo={dateTo}
-        setDateTo={setDateTo}
-        adminFilter={adminFilter}
-        setAdminFilter={setAdminFilter}
-        admins={admins}
-      />
-      <EventList events={filteredEvents} loading={loading} />
+    <div className="flex-1 p-4 md:p-6 mt-4 flex flex-col no-scrollbar">
+      <div className="max-w-6xl w-full mx-auto flex flex-col gap-5 flex-1">
+        <CalendarHeader
+          selectedCalendarFilter={calendarFilter}
+          setSelectedCalendarFilter={setCalendarFilter}
+          status={status}
+          setStatus={setStatus}
+          counts={counts}
+          search={search}
+          setSearch={setSearch}
+          dateFrom={dateFrom}
+          setDateFrom={setDateFrom}
+          dateTo={dateTo}
+          setDateTo={setDateTo}
+          adminFilter={adminFilter}
+          setAdminFilter={setAdminFilter}
+          admins={admins}
+        />
+        <div className="srf-panel r-window border hairline shadow-sm overflow-hidden">
+          <EventList events={filteredEvents} loading={loading} />
+        </div>
+      </div>
       <NewEventModal isOpen={showNewEvent} onClose={() => setShowNewEvent(false)} calendarId={calendarFilter} />
     </div>
   );

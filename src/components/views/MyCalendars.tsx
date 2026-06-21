@@ -327,13 +327,13 @@ const MyCalendars: React.FC<{ onViewSubscribers?: (id: string) => void, onEdit?:
 
       {/* Toolbar de filtros unificada (solo escritorio) */}
       {!isMobileApp && (
-        <div className="srf-sunken rounded-[14px] p-2 flex flex-wrap items-center gap-2 mb-5" style={{ border: '1px solid var(--hairline)' }}>
+        <div className="srf-panel rounded-[16px] p-2.5 flex flex-wrap items-center gap-2 mb-5 border hairline shadow-sm">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ink-3 pointer-events-none" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por título..." className="w-full srf-panel ink-1 text-[13px] font-medium rounded-[10px] pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10" style={{ border: '1px solid var(--hairline)' }} />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por título..." className="w-full srf-sunken ink-1 text-[13px] font-medium rounded-[10px] pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10" style={{ border: '1px solid var(--hairline)' }} />
           </div>
           <div className="relative">
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="appearance-none srf-panel ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-9 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10" style={{ border: '1px solid var(--hairline)' }}>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="appearance-none srf-sunken ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-9 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10" style={{ border: '1px solid var(--hairline)' }}>
               <option value="all">Todos los estados</option>
               <option value="active">Activos</option>
               <option value="inactive">Inactivos</option>
@@ -440,10 +440,10 @@ const MyCalendars: React.FC<{ onViewSubscribers?: (id: string) => void, onEdit?:
       </div>
       )}
 
-      {/* Tabla (solo escritorio) — plana, sin contenedor propio */}
+      {/* Tabla (solo escritorio) — tarjeta independiente que flota sobre el fondo */}
       {!isMobileApp && (
-      <div className="flex flex-1 flex-col">
-        <div className="overflow-x-auto flex-1">
+      <div className="srf-panel r-window border hairline shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="srf-sunken border-b hairline">

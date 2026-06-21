@@ -161,21 +161,21 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
   useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
 
   return (
-    <div className="srf-panel pb-10 rounded-b-2xl">
+    <div className="srf-panel pb-6 rounded-b-2xl">
       {/* Header logic */}
-      <div className="builder-embedded-toolbar flex flex-col md:flex-row justify-between items-start md:items-center px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-4 md:gap-0">
+      <div className="builder-embedded-toolbar flex flex-col justify-between items-start px-4 py-3 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-2">
          <div className="flex-1">
-           <h3 className="ink-1 font-semibold text-[15px] tracking-tight">Datos a solicitar en la programación de citas</h3>
+            <h3 className="ink-1 font-semibold text-[13px] tracking-tight">Datos a solicitar en la programación de citas</h3>
          </div>
-         <div className="flex gap-4 items-center w-full md:w-auto justify-end">
-            <button className="text-black text-xs font-semibold flex items-center tracking-wider hover:ink-1 cursor-pointer transition-colors shadow-sm srf-panel px-3 py-1.5 rounded-lg border hairline h-10">
-               <SettingsIcon className="w-4 h-4 mr-1.5" /> RÁPIDA
+         <div className="flex gap-4 items-center w-full justify-end">
+            <button className="text-black text-xs font-semibold flex items-center tracking-wider hover:ink-1 cursor-pointer transition-colors shadow-sm srf-panel px-3 py-1.5 rounded-lg border hairline h-9">
+               <SettingsIcon className="w-3.5 h-3.5 mr-1.5" /> RÁPIDA
             </button>
          </div>
       </div>
 
       <div>
-        <div className="flex border-b hairline px-6 pt-3 srf-panel overflow-x-auto no-scrollbar shadow-sm relative z-0">
+        <div className="flex border-b hairline px-4 pt-3 srf-panel overflow-x-auto no-scrollbar shadow-sm relative z-0">
            {groupsData.map(g => (
              <button 
                key={g.id}
@@ -187,7 +187,7 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
            ))}
         </div>
 
-        <div className="p-8 max-w-4xl mx-auto">
+        <div className="p-4 max-w-4xl mx-auto">
            <div className="space-y-6">
               {activeGroup.fields.map(field => (
                 <div key={field.id} className="relative group srf-panel border hairline p-5 rounded-2xl shadow-sm hover:border-slate-300 transition-colors">
@@ -255,12 +255,12 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
 
       {/* Action after subscription */}
       <div>
-         <div className="px-8 pb-2">
+         <div className="px-4 pb-2">
             <h3 className="ink-1 font-semibold text-lg tracking-tight">Acción después de la suscripción</h3>
          </div>
 
-         <div className="p-8 pb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+         <div className="p-4 pb-4">
+            <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto">
                
                <div className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col items-center ${activeGroup.postAction === 'message' ? 'border-transparent shadow-none' : 'border-transparent hover:srf-sunken'}`}>
                  <div 

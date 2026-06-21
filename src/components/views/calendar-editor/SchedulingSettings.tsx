@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Info, Save, PlusCircle, Trash2, Copy, Settings as SettingsIcon, Clock, X, ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronUp, ChevronDown, Globe, Lightbulb } from 'lucide-react';
-import { useIsMobileApp } from '../../../hooks/useMediaQuery';
+// Removed useIsMobileApp import to prevent unused import warnings
+// import { useIsMobileApp } from '../../../hooks/useMediaQuery';
 
 const CustomDatePicker = ({ value, onChange, placeholder, className }: { value: string, onChange: (val: string) => void, placeholder: string, className?: string }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -523,7 +524,7 @@ const findCrossGroupOverlap = (groupsList: any[]): OverlapError | null => {
 };
 
 const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, calendarGroups, onGroupsChange }) => {
-  const isMobileApp = useIsMobileApp();
+  const isMobileApp = true; // Force mobile/stacked layout inside properties sidebar
   const [timezone, setTimezone] = useState('America/Guatemala');
   const [groups, setGroups] = useState<GroupSettings[]>(
     initialData?.groups && initialData.groups.length > 0 
@@ -752,7 +753,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
   };
 
   return (
-    <div className="srf-panel pb-10 rounded-b-2xl">
+    <div className="srf-panel pb-6 rounded-b-2xl">
       {/* ── Sticky Action Bar ─────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 srf-sunken/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
         {/* Row 1: Group tabs */}
@@ -781,9 +782,9 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
 
       </div>
 
-      <div className="p-8 space-y-10 srf-panel max-w-5xl mx-auto">
+      <div className="p-4 space-y-6 srf-panel max-w-5xl mx-auto">
         {errorMessage && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-rose-600 text-[13px] font-semibold flex items-center gap-3">
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-rose-600 text-[13px] font-semibold flex items-center gap-3">
             <Info className="w-5 h-5 flex-shrink-0 text-rose-500" />
             <span>{errorMessage}</span>
           </div>
@@ -810,7 +811,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
            </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+         <div className="grid grid-cols-1 gap-6">
            <div className="space-y-7">
              <div>
                <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5">
@@ -852,25 +853,24 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
                   </button>
                </div>
              </div>
-           </div>
-           
-           <div>
-             <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5">
-               Descripción <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
-             </label>
-             <textarea 
-               rows={6} 
-               value={activeGroup.description}
-               onChange={(e) => updateGroup({ description: e.target.value })}
-               placeholder="Añade una descripción sobre los servicios o el equipo asignado a este grupo..."
-               className="w-full srf-sunken border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/20 focus:border-slate-300 transition-all duration-200 outline-none resize-none" 
-             />
+             <div>
+               <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5">
+                 Descripción <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+               </label>
+               <textarea 
+                 rows={6} 
+                 value={activeGroup.description}
+                 onChange={(e) => updateGroup({ description: e.target.value })}
+                 placeholder="Añade una descripción sobre los servicios o el equipo asignado a este grupo..."
+                 className="w-full srf-sunken border border-transparent focus:srf-panel rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/20 focus:border-slate-300 transition-all duration-200 outline-none resize-none" 
+               />
+             </div>
            </div>
         </div>
 
-        {/* Configurations grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-           <div className="md:col-span-1">
+        {/* Configurations grid - stacked for sidebar */}
+        <div className="flex flex-col gap-5">
+           <div>
                <div className="flex justify-between items-center mb-2.5 ml-1">
                   <label className="flex items-center text-[13px] font-semibold ink-1">
                      Punto de partida <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
@@ -1190,7 +1190,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
               </h3>
            </div>
 
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 max-w-4xl px-7 py-7 srf-sunken/50 border hairline rounded-2xl">
+           <div className="grid grid-cols-2 gap-x-4 gap-y-4 max-w-4xl px-4 py-4 srf-sunken/50 border hairline rounded-2xl">
               {activeGroup.months.map((month, monthIndex) => (
                  <div key={month.name} className="flex flex-col gap-2">
                     <label className="flex items-center cursor-pointer mb-1">
@@ -1235,7 +1235,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
         <hr className="border-t hairline my-10" />
 
         {/* Lower specs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl">
+        <div className="grid grid-cols-1 gap-6 max-w-4xl">
            <div>
               <label className="flex items-center text-xs font-semibold ink-2 mb-2.5 ml-1">
                  Cantidad de Sesiones <Info className="w-3.5 h-3.5 ink-3 ml-1 cursor-help" />

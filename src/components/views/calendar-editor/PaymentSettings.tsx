@@ -157,7 +157,7 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave, onR
       </div>
 
       {/* ── Content ────────────────────────────────────────────────────── */}
-      <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-8">
+      <div className="p-4 max-w-2xl mx-auto space-y-6">
 
         {/* Sección: Precio */}
         <div className="space-y-4">
@@ -300,10 +300,10 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave, onR
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                <div className="grid grid-cols-1 gap-6 items-start">
                   
                   {/* Columna Izquierda: Instrucciones */}
-                  <div className="md:col-span-5 space-y-3 srf-panel p-5 rounded-2xl border hairline shadow-sm">
+                  <div className="space-y-3 srf-panel p-4 rounded-2xl border hairline shadow-sm">
                     <p className="text-[12px] font-extrabold ink-3 uppercase tracking-wider">Instrucciones</p>
                     <ul className="text-[12px] ink-2 space-y-2.5 list-disc pl-4 font-semibold leading-relaxed">
                       <li>Por favor, ingrese una breve <strong>Descripción</strong> para esta configuración.</li>
@@ -317,7 +317,7 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave, onR
                   </div>
 
                   {/* Columna Derecha: Formulario */}
-                  <div className="md:col-span-7 space-y-4">
+                  <div className="space-y-4">
                     
                     {/* Input: Descripción */}
                     <div>

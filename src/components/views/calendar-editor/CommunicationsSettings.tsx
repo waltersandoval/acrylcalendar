@@ -364,12 +364,12 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
     <div className="srf-panel pb-4 rounded-b-2xl">
       {/* Container header */}
       <div className="srf-panel rounded-t-2xl">
-        <div className="flex border-b hairline px-6 pt-3 overflow-x-auto no-scrollbar relative z-0">
+        <div className="flex border-b hairline px-4 pt-3 overflow-x-auto no-scrollbar relative z-0">
            {groupsData.map(g => (
              <button 
-               key={g.id} 
-               onClick={() => setActiveGroupId(g.id)}
-               className={`px-6 py-4 text-[14px] font-semibold border-b-2 transition-all duration-200 whitespace-nowrap cursor-pointer ${activeGroupId === g.id ? 'border-black text-black' : 'border-transparent ink-3 hover:ink-1'}`}
+                key={g.id} 
+                onClick={() => setActiveGroupId(g.id)}
+                className={`px-4 py-3 text-[13px] font-semibold border-b-2 transition-all duration-200 whitespace-nowrap cursor-pointer ${activeGroupId === g.id ? 'border-black text-black' : 'border-transparent ink-3 hover:ink-1'}`}
              >
                {g.name}
              </button>
@@ -377,17 +377,17 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
         </div>
       </div>
 
-      <div className="p-8 space-y-12">
+      <div className="p-4 space-y-8">
         {/* Notificación de Confirmación de Citas */}
         <section>
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="ink-1 font-bold text-[17px]">Notificación de Confirmación de Citas</h3>
-            <button className="flex items-center ink-1 hover:text-black text-[13px] font-bold uppercase tracking-wider cursor-pointer">
-              <SettingsIcon className="w-4 h-4 mr-2" /> PASOS DE CONFIGURACIÓN RÁPIDA
+          <div className="flex flex-col gap-2 mb-6">
+            <h3 className="ink-1 font-bold text-[16px]">Notificación de Confirmación de Citas</h3>
+            <button className="flex items-center ink-1 hover:text-black text-[11px] font-bold uppercase tracking-wider cursor-pointer">
+              <SettingsIcon className="w-3.5 h-3.5 mr-1.5" /> PASOS DE CONFIGURACIÓN RÁPIDA
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6 mt-4">
+          <div className="grid grid-cols-1 gap-6 mb-6 mt-4">
             {/* Box 1 */}
             <div className="flex flex-col">
               <div 
@@ -440,7 +440,7 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
               </div>
 
               {activeGroup.confirmMode === 'yes' && (
-                 <div className="ml-[136px] bg-[#f5f7f9] border hairline rounded-md p-4 flex items-center justify-between">
+                 <div className="ml-0 mt-3 bg-[#f5f7f9] border hairline rounded-md p-4 flex items-center justify-between">
                     <div>
                       <span className="text-[13px] ink-3 font-medium">Canales: Email, WhatsApp</span>
                       <div className="flex items-center mt-1 text-[13px] font-medium text-[#20c997]">
@@ -482,8 +482,8 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
                    <Info className="w-4 h-4 ink-3 ml-2" />
                 </div>
                 {activeGroup.adminNotify && (
-                  <div className="p-4 srf-sunken">
-                     <div className="bg-[#f5f7f9] border hairline rounded-md p-4 flex items-center justify-between ml-9">
+                  <div className="p-3 srf-sunken">
+                     <div className="bg-[#f5f7f9] border hairline rounded-md p-3 flex items-center justify-between ml-0 mt-2">
                         <div>
                           <span className="text-[13px] ink-3 font-medium">Canales: Email</span>
                           <div className="flex items-center mt-1 text-[13px] font-medium text-[#20c997]">
@@ -536,7 +536,7 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
             <span className="bg-[#20c997] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">New</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+          <div className="grid grid-cols-1 gap-6 mb-6">
             <div className="flex flex-col">
               <div 
                 onClick={() => updateActiveGroup({ cancelMode: 'no'})}
@@ -591,7 +591,7 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
               </div>
 
               {activeGroup.cancelMode === 'yes' && (
-                 <div className="ml-[136px] bg-[#f5f7f9] border hairline rounded-md p-4 flex items-center justify-between">
+                 <div className="ml-0 mt-3 bg-[#f5f7f9] border hairline rounded-md p-4 flex items-center justify-between">
                     <div>
                       <span className="text-[13px] ink-3 font-medium">Canales: Email, WhatsApp</span>
                       <div className="flex items-center mt-1 text-[13px] font-medium text-[#20c997]">
@@ -637,7 +637,7 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
             <h3 className="ink-1 font-bold text-[17px]">Recordatorios</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+          <div className="grid grid-cols-1 gap-6 mb-6">
             <div className="flex flex-col">
               <div 
                 onClick={() => updateActiveGroup({ remindMode: 'no'})}
@@ -764,7 +764,7 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
             <h3 className="ink-1 font-bold text-[17px]">Remitente del correo electrónico</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+          <div className="grid grid-cols-1 gap-6 mb-6">
             <div className="flex flex-col">
               <div 
                 onClick={() => updateActiveGroup({ senderMode: 'default' })}

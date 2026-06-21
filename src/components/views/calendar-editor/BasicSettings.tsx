@@ -89,10 +89,10 @@ const BasicSettings: React.FC<Props> = ({ onSave, onRegisterSave, initialTitle =
   useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
 
   return (
-    <div className="srf-panel pb-10">
-      <div className="p-8 space-y-12 max-w-5xl mx-auto">
+    <div className="srf-panel pb-6">
+      <div className="p-4 space-y-6 max-w-5xl mx-auto">
         {/* Title & Desc */}
-        <div className="flex flex-col md:flex-row gap-10">
+        <div className="flex flex-col gap-6">
           <div className="flex-1 space-y-7">
             <div>
               <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5">
@@ -128,7 +128,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, onRegisterSave, initialTitle =
           </div>
 
           {/* Logo */}
-          <div className="w-full md:w-72">
+          <div className="w-full">
             <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5">
               Logo Institucional <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
             </label>
@@ -201,7 +201,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, onRegisterSave, initialTitle =
               <option value="Europe/Madrid">Europe/Madrid (España)</option>
             </select>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-4">
             
             <div 
               onClick={() => setTzMode('user')}
@@ -243,7 +243,7 @@ const BasicSettings: React.FC<Props> = ({ onSave, onRegisterSave, initialTitle =
         {/* Idioma */}
         <div>
           <h3 className="text-lg font-semibold ink-1 mb-6 tracking-tight">Idioma de Visualización</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-4">
             
             <div 
               onClick={() => setLangMode('auto')}

@@ -91,17 +91,17 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
   React.useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
 
   return (
-    <div className="srf-panel pb-10 rounded-b-2xl">
-      <div className="builder-embedded-toolbar flex flex-col md:flex-row justify-between items-start md:items-center px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-4 md:gap-0">
-         <h3 className="ink-1 font-semibold text-[15px] tracking-tight">Sincronización y Automatizaciones</h3>
-         <div className="flex gap-4 items-center w-full md:w-auto justify-end">
-            <button className="ink-1 text-xs font-semibold flex items-center tracking-wider hover:text-black cursor-pointer transition-colors shadow-sm srf-panel px-3 py-1.5 rounded-lg border hairline h-10">
-               <Settings className="w-4 h-4 mr-1.5" /> RÁPIDA
+    <div className="srf-panel pb-6 rounded-b-2xl">
+      <div className="builder-embedded-toolbar flex flex-col justify-between items-start px-4 py-3 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-2">
+         <h3 className="ink-1 font-semibold text-[13px] tracking-tight">Sincronización y Automatizaciones</h3>
+         <div className="flex gap-4 items-center w-full justify-end">
+            <button className="ink-1 text-xs font-semibold flex items-center tracking-wider hover:text-black cursor-pointer transition-colors shadow-sm srf-panel px-3 py-1.5 rounded-lg border hairline h-9">
+               <Settings className="w-3.5 h-3.5 mr-1.5" /> RÁPIDA
             </button>
          </div>
       </div>
 
-      <div className="flex border-b hairline px-6 pt-3 srf-panel overflow-x-auto no-scrollbar shadow-sm relative z-0">
+      <div className="flex border-b hairline px-4 pt-3 srf-panel overflow-x-auto no-scrollbar shadow-sm relative z-0">
          {groupsData.map(g => (
            <button 
              key={g.id} 
@@ -115,13 +115,13 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
 
       {/* Sync google */}
       <div>
-        <div className="px-8 pt-8 pb-3">
+        <div className="px-4 pt-4 pb-2">
            <h3 className="ink-1 font-semibold text-sm tracking-tight flex items-center">
              Sincronizar con Google Calendar
            </h3>
         </div>
-        <div className="px-8 pb-8 border-b hairline">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+        <div className="px-4 pb-4 border-b hairline">
+           <div className="grid grid-cols-1 gap-4 max-w-4xl">
               <div onClick={() => updateActiveGroup({ syncMode: 'no'})} className={`flex items-center gap-4 cursor-pointer group p-4 rounded-2xl border transition-all duration-300 ${activeGroup.syncMode==='no'?'border-black srf-sunken shadow-sm':'hairline srf-panel hover:border-slate-300 hover:srf-sunken'}`}>
                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeGroup.syncMode==='no'?'srf-panel border text-black shadow-sm hairline':'srf-sunken ink-3 group-hover:srf-panel border border-transparent group-hover:hairline'}`}> 
                    <span className="font-bold text-lg">No</span> 
@@ -140,13 +140,13 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
 
       {/* Reuniones */}
       <div>
-        <div className="px-8 pt-8 pb-3">
+        <div className="px-4 pt-4 pb-2">
            <h3 className="ink-1 font-semibold text-sm tracking-tight flex items-center">
              Reuniones (Google Meet y Zoom)
            </h3>
         </div>
-        <div className="px-8 pb-8 border-b hairline">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+        <div className="px-4 pb-4 border-b hairline">
+           <div className="grid grid-cols-1 gap-4 max-w-4xl">
               <div onClick={() => updateActiveGroup({ meetMode: 'no'})} className={`flex items-center gap-4 cursor-pointer group p-4 rounded-2xl border transition-all duration-300 ${activeGroup.meetMode==='no'?'border-black srf-sunken shadow-sm':'hairline srf-panel hover:border-slate-300 hover:srf-sunken'}`}>
                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeGroup.meetMode==='no'?'srf-panel border text-black shadow-sm hairline':'srf-sunken ink-3 group-hover:srf-panel border border-transparent group-hover:hairline'}`}> 
                    <span className="font-bold text-lg">No</span> 
@@ -165,13 +165,13 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
 
       {/* Suscripcion Lista */}
       <div>
-        <div className="px-8 pt-8 pb-3">
+        <div className="px-4 pt-4 pb-2">
            <h3 className="ink-1 font-semibold text-sm tracking-tight flex items-center">
              Suscripción a lista de correo
            </h3>
         </div>
-        <div className="px-8 pb-8 border-b hairline">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mb-6">
+        <div className="px-4 pb-4 border-b hairline">
+           <div className="grid grid-cols-1 gap-4 max-w-4xl mb-4">
               <div onClick={() => updateActiveGroup({ subMode: 'no'})} className={`flex items-center gap-4 cursor-pointer group p-4 rounded-2xl border transition-all duration-300 ${activeGroup.subMode==='no'?'border-black srf-sunken shadow-sm':'hairline srf-panel hover:border-slate-300 hover:srf-sunken'}`}>
                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeGroup.subMode==='no'?'srf-panel border text-black shadow-sm hairline':'srf-sunken ink-3 group-hover:srf-panel border border-transparent group-hover:hairline'}`}> 
                    <span className="font-bold text-lg">No</span> 
@@ -215,13 +215,13 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
 
       {/* Social Proof */}
       <div>
-        <div className="px-8 pt-8 pb-3">
+        <div className="px-4 pt-4 pb-2">
            <h3 className="ink-1 font-semibold text-sm tracking-tight flex items-center">
              Prueba social
            </h3>
         </div>
-        <div className="px-8 pb-8">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+        <div className="px-4 pb-4">
+           <div className="grid grid-cols-1 gap-4 max-w-4xl">
               <div onClick={() => updateActiveGroup({ socialMode: 'no'})} className={`flex items-center gap-4 cursor-pointer group p-4 rounded-2xl border transition-all duration-300 ${activeGroup.socialMode==='no'?'border-black srf-sunken shadow-sm':'hairline srf-panel hover:border-slate-300 hover:srf-sunken'}`}>
                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeGroup.socialMode==='no'?'srf-panel border text-black shadow-sm hairline':'srf-sunken ink-3 group-hover:srf-panel border border-transparent group-hover:hairline'}`}> 
                    <span className="font-bold text-lg">No</span> 

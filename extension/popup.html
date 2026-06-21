@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Auditor de Seguridad Frontend</title>
+<style>
+  :root {
+    --critica: #dc2626;
+    --alta: #ea580c;
+    --media: #ca8a04;
+    --baja: #2563eb;
+    --info: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    width: 380px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    color: #1e293b;
+    background: #f8fafc;
+  }
+  header {
+    padding: 14px 16px;
+    background: #0f172a;
+    color: white;
+  }
+  header h1 { font-size: 14px; margin: 0 0 2px; }
+  header p { font-size: 11px; margin: 0; opacity: .75; }
+  .content { padding: 14px 16px; }
+  button#auditBtn {
+    width: 100%;
+    padding: 10px;
+    background: #0f172a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button#auditBtn:disabled { opacity: .6; cursor: default; }
+  #status { font-size: 12px; color: #64748b; margin-top: 8px; min-height: 16px; }
+  #summary { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    color: white;
+  }
+  #findings { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; }
+  .finding {
+    border-left: 4px solid var(--info);
+    background: white;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .finding.critica { border-color: var(--critica); }
+  .finding.alta { border-color: var(--alta); }
+  .finding.media { border-color: var(--media); }
+  .finding.baja { border-color: var(--baja); }
+  .finding.info { border-color: var(--info); }
+  .finding .sev {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .finding.critica .sev { color: var(--critica); }
+  .finding.alta .sev { color: var(--alta); }
+  .finding.media .sev { color: var(--media); }
+  .finding.baja .sev { color: var(--baja); }
+  .finding.info .sev { color: var(--info); }
+  .finding .title { font-weight: 700; margin: 2px 0 4px; }
+  .finding .detail { color: #475569; white-space: pre-wrap; }
+  #actions { display: flex; gap: 8px; margin-top: 10px; }
+  #actions button {
+    flex: 1;
+    padding: 7px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    cursor: pointer;
+  }
+  #empty { font-size: 12px; color: #64748b; text-align: center; padding: 20px 0; }
+  footer { padding: 8px 16px 12px; font-size: 10px; color: #94a3b8; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Auditor de Seguridad Frontend</h1>
+    <p>Revisa la pestaña activa — úsalo solo en sitios propios o que tengas autorización de probar.</p>
+  </header>
+  <div class="content">
+    <button id="auditBtn">Auditar esta pestaña</button>
+    <div id="status"></div>
+    <div id="summary"></div>
+    <div id="findings"></div>
+    <div id="actions" style="display:none;">
+      <button id="copyBtn">Copiar reporte</button>
+      <button id="downloadBtn">Descargar .md</button>
+    </div>
+  </div>
+  <footer>Solo analiza lo que el navegador ve en esta pestaña (HTML, JS cargado, cabeceras, cookies, storage). No accede a tu backend, base de datos ni código del servidor — eso requiere una auditoría aparte.</footer>
+  <script src="popup.js"></script>
+</body>
+</html>

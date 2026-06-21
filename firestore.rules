@@ -1,0 +1,147 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(data) {
+      return signedIn() && data.ownerUid == request.auth.uid;
+    }
+
+    function hasMemberAccess(data) {
+      return signedIn()
+        && ('memberUids' in data)
+        && data.memberUids.hasAny([request.auth.uid]);
+    }
+
+    function roleFor(data) {
+      return signedIn() && ('roles' in data) ? data.roles[request.auth.uid] : null;
+    }
+
+    function canReadCalendar(data) {
+      return isOwner(data) || hasMemberAccess(data);
+    }
+
+    function canEditCalendar(data) {
+      return isOwner(data) || roleFor(data) in ['owner', 'admin', 'editor'];
+    }
+
+    function calendarData(calendarId) {
+      return get(/databases/$(database)/documents/calendars/$(calendarId)).data;
+    }
+
+    function isActiveCalendar(data) {
+      return data.get('status', false) == true && data.get('deletedAt', null) == null;
+    }
+
+    match /users/{uid} {
+      allow read, create, update, delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /calendars/{calendarId} {
+      allow get: if isActiveCalendar(resource.data) || canReadCalendar(resource.data);
+      allow list: if signedIn() && canReadCalendar(resource.data);
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.memberUids.hasAny([request.auth.uid])
+        && request.resource.data.roles[request.auth.uid] == 'owner';
+      allow update: if signedIn()
+        && canEditCalendar(resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        // Solo el dueño real puede cambiar quién tiene acceso al calendario o
+        // con qué rol. Un admin/editor puede editar el resto de la
+        // configuración, pero no puede tocar `roles` ni `memberUids` (eso
+        // sería auto-asignarse o asignarle a otros más permisos).
+        && (
+          isOwner(resource.data) ||
+          (
+            request.resource.data.roles == resource.data.roles &&
+            request.resource.data.memberUids == resource.data.memberUids
+          )
+        );
+      allow delete: if isOwner(resource.data);
+
+      match /{subdocument=**} {
+        allow read, write: if canEditCalendar(calendarData(calendarId)) && !('private_settings' in request.path);
+      }
+
+      match /private_settings/{settingId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /events/{eventId} {
+      allow read: if signedIn() && (
+        resource.data.ownerUid == request.auth.uid ||
+        canReadCalendar(calendarData(resource.data.calendarId))
+      );
+      // La disponibilidad pública (horarios ya ocupados) se sirve mediante la
+      // Cloud Function `getCalendarAvailability`, que devuelve solo
+      // fecha/hora/duración (sin nombre/email/teléfono del cliente). La
+      // página de reserva pública nunca lee esta colección directamente, así
+      // que no existe ninguna regla de lectura anónima aquí.
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.calendarId is string
+        && canEditCalendar(calendarData(request.resource.data.calendarId));
+      allow update, delete: if signedIn() && (
+        resource.data.ownerUid == request.auth.uid ||
+        canEditCalendar(calendarData(resource.data.calendarId))
+      );
+    }
+
+    match /appSettings/{uid} {
+      allow read, create, update, delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /notifications/{notificationId} {
+      allow read, update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /administrators/{adminId} {
+      allow read: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /integrations/{integrationId} {
+      allow read: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /payment_configs/{configId} {
+      // Acotado al calendario activo al que pertenece el documento, en vez de
+      // `if true`: evita que cualquiera pueda listar la configuración de pago
+      // (precio, calendarId, ownerUid) de toda la plataforma de una sola vez.
+      allow get, list: if resource.data.calendarId is string && isActiveCalendar(calendarData(resource.data.calendarId));
+      // No basta con validar que `ownerUid` sea el propio uid: sin exigir
+      // además que `calendarId` apunte a un calendario que el caller puede
+      // editar, cualquier usuario autenticado podría crear/redirigir una
+      // configuración de pago hacia el calendario de otra persona (con su
+      // propio clientId de PayPal) y robar los pagos de los clientes de esa
+      // víctima en la página pública de reservas.
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.calendarId is string
+        && canEditCalendar(calendarData(request.resource.data.calendarId));
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.calendarId == resource.data.calendarId
+        && canEditCalendar(calendarData(resource.data.calendarId));
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+
+      match /private/{docId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

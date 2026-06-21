@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Auditor de Seguridad Frontend",
+  "version": "1.0.0",
+  "description": "Audita, desde el navegador, los problemas de seguridad visibles en el frontend de la pestaña activa: cabeceras HTTP, secretos expuestos en el código, cookies, contenido mixto y archivos sensibles accesibles públicamente.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Auditor de Seguridad Frontend"
+  },
+  "permissions": ["activeTab", "scripting", "cookies", "downloads"]
+}

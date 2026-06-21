@@ -756,28 +756,25 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
     <div className="srf-panel pb-6 rounded-b-2xl">
       {/* ── Sticky Action Bar ─────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 srf-sunken/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
-        {/* Row 1: Group tabs */}
-        <div className="flex items-end overflow-x-auto no-scrollbar pt-3 px-4 gap-1">
+        {/* Row 1: Group selector dropdown */}
+        <div className="flex items-center justify-between px-4 py-3 gap-3">
+          <div className="flex-1 min-w-0">
+            <select
+              value={activeGroupId}
+              onChange={(e) => setActiveGroupId(e.target.value)}
+              className="w-full srf-panel border hairline rounded-xl px-3 py-2 text-sm font-semibold cursor-pointer outline-none bg-transparent"
+            >
+              {groups.map(g => (
+                <option key={g.id} value={g.id}>{g.title || g.name}</option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={handleAddGroup}
-            className="flex items-center shrink-0 text-white bg-slate-900 hover:accent-bg px-3.5 py-2 text-[12px] font-bold rounded-t-xl transition-colors cursor-pointer gap-1.5 shadow-sm"
+            className="flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-xl transition-all cursor-pointer shadow-sm text-xs font-semibold gap-1.5 shrink-0 h-9"
           >
-            <PlusCircle className="w-3.5 h-3.5" /> Nuevo Grupo
+            <PlusCircle className="w-3.5 h-3.5" /> Nuevo
           </button>
-
-          {groups.map(g => (
-            <button
-              key={g.id}
-              onClick={() => setActiveGroupId(g.id)}
-              className={`px-5 py-2 text-[13px] font-semibold border-t border-x rounded-t-xl -mb-px transition-all duration-150 cursor-pointer whitespace-nowrap shrink-0 ${
-                activeGroupId === g.id
-                  ? 'srf-panel hairline text-black border-t-[2.5px] border-t-black shadow-[0_-2px_6px_rgba(0,0,0,0.02)]'
-                  : 'srf-sunken border-transparent ink-3 hover:srf-sunken hover:ink-1'
-              }`}
-            >
-              {g.title || g.name}
-            </button>
-          ))}
         </div>
 
       </div>

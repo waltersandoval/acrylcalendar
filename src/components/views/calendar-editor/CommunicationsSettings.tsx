@@ -362,19 +362,16 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
 
   return (
     <div className="srf-panel pb-4 rounded-b-2xl">
-      {/* Container header */}
-      <div className="srf-panel rounded-t-2xl">
-        <div className="flex border-b hairline px-4 pt-3 overflow-x-auto no-scrollbar relative z-0">
-           {groupsData.map(g => (
-             <button 
-                key={g.id} 
-                onClick={() => setActiveGroupId(g.id)}
-                className={`px-4 py-3 text-[13px] font-semibold border-b-2 transition-all duration-200 whitespace-nowrap cursor-pointer ${activeGroupId === g.id ? 'border-black text-black' : 'border-transparent ink-3 hover:ink-1'}`}
-             >
-               {g.name}
-             </button>
-           ))}
-        </div>
+      <div className="px-4 py-3 bg-slate-50 border-b hairline">
+        <select
+          value={activeGroupId}
+          onChange={(e) => setActiveGroupId(e.target.value)}
+          className="w-full srf-panel border hairline rounded-xl px-3 py-2 text-sm font-semibold cursor-pointer outline-none bg-transparent"
+        >
+          {groupsData.map(g => (
+            <option key={g.id} value={g.id}>{g.name}</option>
+          ))}
+        </select>
       </div>
 
       <div className="p-4 space-y-8">

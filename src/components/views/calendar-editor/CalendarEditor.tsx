@@ -32,7 +32,6 @@ const SECTION_COPY: Record<string, { title: string; eyebrow: string }> = {
   AUTO: { title: 'Automatizaciones', eyebrow: 'Flujos' },
   PAYMENT: { title: 'Pagos', eyebrow: 'Checkout' },
   DOMAIN: { title: 'Dominio y URL', eyebrow: 'Enlace público' },
-  PUBLISH: { title: 'Publicación', eyebrow: 'Estado' },
 };
 
 function ContextPanel({ section, bookingUrl }: { section: string; bookingUrl: string }) {
@@ -49,19 +48,6 @@ function ContextPanel({ section, bookingUrl }: { section: string; bookingUrl: st
     );
   }
 
-  if (section === 'PUBLISH') {
-    return (
-      <div className="space-y-5 p-5">
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-emerald-800"><Check className="w-4 h-4" /> Calendario publicado</div>
-          <p className="mt-2 text-xs leading-5 text-emerald-700">Tu enlace público está activo. Guarda cualquier cambio antes de compartirlo.</p>
-        </div>
-        <button type="button" onClick={() => openExternalUrl(bookingUrl)} className="builder-secondary-button">
-          <ExternalLink className="w-4 h-4" /> Abrir calendario
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4 p-5">

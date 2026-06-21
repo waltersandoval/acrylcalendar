@@ -28,7 +28,6 @@ const editorItems = [
   { id: 'AUTO', name: 'Automatizaciones', icon: Bot },
   { id: 'PAYMENT', name: 'Pagos', icon: CircleDollarSign },
   { id: 'DOMAIN', name: 'Dominio y URL', icon: Globe2 },
-  { id: 'PUBLISH', name: 'Publicación', icon: Send },
 ] as const;
 
 const Sidebar: React.FC<SidebarProps> = ({

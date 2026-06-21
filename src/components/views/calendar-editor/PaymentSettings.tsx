@@ -168,11 +168,11 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave, onR
             </p>
           </div>
 
-          {/* Moneda + Precio en fila */}
-          <div className="flex gap-3">
+          {/* Moneda + Precio en columna */}
+          <div className="flex flex-col gap-4">
             {/* Selector de moneda */}
-            <div className="w-48 shrink-0">
-              <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
+            <div className="w-full">
+              <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 ml-1">
                 Moneda
               </label>
               <select
@@ -187,8 +187,8 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave, onR
             </div>
 
             {/* Campo de precio */}
-            <div className="flex-1">
-              <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 block mb-1.5 ml-1">
+            <div className="w-full">
+              <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 ml-1">
                 Precio
               </label>
               <div className="relative">

@@ -175,16 +175,16 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
       </div>
 
       <div>
-        <div className="flex border-b hairline px-4 pt-3 srf-panel overflow-x-auto no-scrollbar shadow-sm relative z-0">
-           {groupsData.map(g => (
-             <button 
-               key={g.id}
-               onClick={() => setActiveGroupId(g.id)}
-               className={`px-6 py-3 text-[13px] font-semibold border-b-[3px] transition-all duration-200 whitespace-nowrap cursor-pointer rounded-t-xl ${activeGroupId === g.id ? 'border-black text-black srf-sunken' : 'border-transparent ink-3 hover:ink-1 hover:srf-sunken'}`}
-             >
-               {g.name}
-             </button>
-           ))}
+        <div className="px-4 py-3 bg-slate-50 border-b hairline">
+          <select
+            value={activeGroupId}
+            onChange={(e) => setActiveGroupId(e.target.value)}
+            className="w-full srf-panel border hairline rounded-xl px-3 py-2 text-sm font-semibold cursor-pointer outline-none bg-transparent"
+          >
+            {groupsData.map(g => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className="p-4 max-w-4xl mx-auto">

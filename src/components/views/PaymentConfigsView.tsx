@@ -6,10 +6,11 @@
  * Cada configuración puede vincularse a un calendario y a un grupo/servicio específico,
  * permitiendo configurar el método de pago a nivel granular.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PlusCircle, Trash2, Edit2, ChevronLeft, Save, CreditCard, Eye, EyeOff, AlertCircle, CheckCircle, HelpCircle, DollarSign, Globe, ToggleLeft, ToggleRight, Info } from 'lucide-react';
 import { db, functions } from '../../lib/firebase';
 import { useAuth } from '../../lib/auth';
+import { useHeaderActions } from '../../lib/headerActions';
 import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 
 const SECRET_PLACEHOLDER = "••••••••••••••••••••••••";
@@ -157,8 +158,8 @@ const PaymentConfigsView: React.FC = () => {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setError(null);
     setSuccess(false);
 
@@ -211,28 +212,30 @@ const PaymentConfigsView: React.FC = () => {
     }
   };
 
+  // Acciones publicadas en el header flotante (posición fija, reutilizable).
+  // Refs para evitar closures obsoletas: el botón del header siempre invoca la
+  // última versión del handler con el estado actual del formulario.
+  const saveRef = useRef<() => void>(() => {});
+  const createRef = useRef<() => void>(() => {});
+  saveRef.current = () => { handleSave(); };
+  createRef.current = () => { handleCreate(); };
+  useHeaderActions(
+    isEditing
+      ? [
+          { label: 'Cancelar', variant: 'ghost', onClick: () => setIsEditing(false) },
+          { label: 'Guardar', variant: 'primary', icon: <Save className="w-4 h-4" />, onClick: () => saveRef.current(), loading: saving },
+        ]
+      : [
+          { label: 'Configurar pagos', variant: 'primary', icon: <PlusCircle className="w-4 h-4" />, onClick: () => createRef.current() },
+        ],
+    [isEditing, saving],
+  );
+
   if (isEditing) {
     return (
       <div className="srf-panel pb-10 rounded-2xl border hairline shadow-sm animate-in fade-in duration-300">
-        
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-20 srf-sunken backdrop-blur-sm border-b hairline rounded-t-2xl">
-          <div className="flex items-center justify-between px-6 py-4">
-            <button
-              onClick={() => setIsEditing(false)}
-              className="ink-3 hover:ink-1 flex items-center gap-1.5 text-xs font-bold srf-panel border hairline px-3 py-2 rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
-            >
-              <ChevronLeft className="w-4 h-4" /> Volver a la Lista
-            </button>
-            <div className="flex items-center gap-3">
-              <h3 className="ink-1 font-extrabold text-sm tracking-tight hidden md:block">
-                {editingConfig ? 'Editar Configuración' : 'Nueva Configuración de Pagos'}
-              </h3>
-            </div>
-          </div>
-        </div>
 
-        {/* Form Body */}
+        {/* Form Body (las acciones Guardar/Cancelar viven en el header flotante) */}
         <form onSubmit={handleSave} className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
           
           <div className="border-b hairline pb-4">
@@ -534,34 +537,6 @@ const PaymentConfigsView: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex gap-3 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(false)}
-                    className="px-5 py-3 text-[13px] font-bold ink-2 hover:ink-1 srf-sunken rounded-xl transition-all cursor-pointer shadow-sm hover:bg-slate-200"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-6 py-3 text-[13px] font-bold accent-bg text-white hover:bg-slate-900 rounded-xl flex items-center gap-2 transition-all shadow-md shadow-black/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {saving ? (
-                      <>
-                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Guardando y Validando...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4.5 h-4.5" /> Guardar Configuración
-                      </>
-                    )}
-                  </button>
-                </div>
               </div>
 
             </div>
@@ -575,25 +550,8 @@ const PaymentConfigsView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
-      {/* Header Bar */}
-      <div className="srf-panel border hairline rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
-        <div>
-          <h2 className="text-xl font-bold ink-1 tracking-tight flex items-center gap-2 font-display">
-            <CreditCard className="w-5.5 h-5.5 ink-1" />
-            Configuraciones de Cobro
-          </h2>
-          <p className="text-xs ink-3 font-semibold mt-1">
-            Administra tus métodos de pago por PayPal, precios por calendario y conversiones informativas de moneda.
-          </p>
-        </div>
-        <button
-          onClick={handleCreate}
-          className="px-5 py-2.5 accent-bg hover:brightness-110 text-white rounded-xl text-[13px] font-bold flex items-center gap-2 transition-all shadow-md shadow-black/15 cursor-pointer active:scale-95 shrink-0"
-        >
-          <PlusCircle className="w-4.5 h-4.5" /> Crear Configuración
-        </button>
-      </div>
+
+      {/* La acción "Configurar pagos" vive en el header flotante (reutilizable) */}
 
       {/* List configs */}
       {configs.length === 0 ? (

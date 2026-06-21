@@ -23,6 +23,7 @@ import { db } from '../../lib/firebase';
 import { useAuth } from '../../lib/auth';
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import Sheet from '../ui/Sheet';
+import { HeaderActionsProvider, HeaderActionsSlot } from '../../lib/headerActions';
 
 const Dashboard: React.FC = () => {
   const [activeSidebarItem, setActiveSidebarItem] = useState('Escritorio');
@@ -120,8 +121,8 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-      <div className="glass-strong flex mx-4 md:mx-6 mt-4 md:mt-6 r-window px-5 py-3.5 items-center justify-between flex-shrink-0 z-10 sticky top-4 md:top-6">
-         <div className="flex items-center text-sm font-medium ink-2">
+      <div className="glass-strong flex mx-4 md:mx-6 mt-4 md:mt-6 r-window px-5 py-3.5 items-center justify-between flex-shrink-0 z-30 sticky top-4 md:top-6">
+         <div className="flex items-center text-sm font-medium ink-2 min-w-0">
             <span className="flex items-center p-1.5 srf-sunken ink-3 rounded-[9px] mr-3" style={{ border: '1px solid var(--hairline)' }}>
               <CalendarIcon className="w-4 h-4" />
             </span>
@@ -134,7 +135,9 @@ const Dashboard: React.FC = () => {
             <span className="ink-1 font-semibold">{breadcrumbTitle}</span>
          </div>
 
-         <div className="flex items-center gap-3">
+         <div className="flex items-center gap-3 shrink-0">
+            {/* Acciones de la sección (reutilizable, posición fija junto a la campana) */}
+            <HeaderActionsSlot />
             <button
               onClick={() => setShowNotifications(true)}
               className="w-10 h-10 rounded-full srf-raised ink-2 flex items-center justify-center shadow-sm relative active:scale-95 transition-all cursor-pointer hover:brightness-95"
@@ -161,15 +164,16 @@ const Dashboard: React.FC = () => {
     if (isDetailView) return null;
     return (
       <div
-        className="fixed z-40 pointer-events-none"
+        className="fixed z-40 pointer-events-none flex items-center gap-2"
         style={{
           top: 'calc(env(safe-area-inset-top, 0px) + 0.6rem)',
           right: '1rem',
         }}
       >
+        <div className="pointer-events-auto"><HeaderActionsSlot compact /></div>
         <button
           onClick={() => setShowNotifications(true)}
-          className="pointer-events-auto w-9 h-9 rounded-2xl srf-panel/90 backdrop-blur-md border hairline/50 ink-2 flex items-center justify-center shadow-sm relative active:scale-95 transition-all cursor-pointer"
+          className="pointer-events-auto w-9 h-9 rounded-2xl glass-strong ink-2 flex items-center justify-center shadow-sm relative active:scale-95 transition-all cursor-pointer"
           title="Notificaciones"
           aria-label="Notificaciones"
         >
@@ -274,6 +278,7 @@ const Dashboard: React.FC = () => {
   );
 
   return (
+    <HeaderActionsProvider>
     <div className="flex h-screen srf-window ink-2 font-sans overflow-hidden selection:bg-slate-200 selection:text-black">
       {/* Sidebar (desktop only) */}
       {!isMobileApp && (
@@ -412,6 +417,7 @@ const Dashboard: React.FC = () => {
         </div>
       </Sheet>
     </div>
+    </HeaderActionsProvider>
   );
 };
 

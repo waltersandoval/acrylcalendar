@@ -144,7 +144,7 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
       return <BasicSettings key={activeSection} initialTitle={calendarTitle} initialData={calendarData?.section_BASIC} onSave={(data) => handleSaveSection('BASIC', data)} onRegisterSave={registerSave} />;
     }
     if (['SCHEDULING', 'SERVICES', 'GROUPS'].includes(activeSection)) {
-      return <SchedulingSettings key={activeSection} initialData={calendarData?.section_SCHEDULING} onSave={(data) => handleSaveSection('SCHEDULING', data)} calendarGroups={calendarGroups} onGroupsChange={setCalendarGroups} onRegisterSave={registerSave} />;
+      return <SchedulingSettings key={activeSection} mode={activeSection} initialData={calendarData?.section_SCHEDULING} onSave={(data) => handleSaveSection('SCHEDULING', data)} calendarGroups={calendarGroups} onGroupsChange={setCalendarGroups} onRegisterSave={registerSave} />;
     }
     if (activeSection === 'FORMS') {
       return <FormsSettings initialData={calendarData?.section_FORMS} onSave={(data) => handleSaveSection('FORMS', data)} calendarGroups={calendarGroups} onRegisterSave={registerSave} />;

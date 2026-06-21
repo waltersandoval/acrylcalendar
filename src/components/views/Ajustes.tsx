@@ -89,8 +89,8 @@ const Ajustes: React.FC<{ embedded?: boolean }> = ({ embedded }) => {
 
   // ─── ESCRITORIO ────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 flex flex-col h-full srf-panel rounded-b-3xl">
-      <div className="border-b hairline px-6 py-4">
+    <div className="flex-1 flex flex-col h-full srf-panel r-window border hairline shadow-sm overflow-hidden">
+      <div className="border-b hairline px-6 py-4 glass-strong">
         <h2 className="text-2xl font-bold ink-1 tracking-tight">Ajustes del Sistema</h2>
         <p className="ink-3 text-sm mt-1">Configura preferencias, integraciones y accesos</p>
       </div>

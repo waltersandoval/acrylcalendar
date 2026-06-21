@@ -277,27 +277,14 @@ const MyCalendars: React.FC<{ onViewSubscribers?: (id: string) => void, onEdit?:
           </button>
         </div>
       ) : (
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-          <div className="w-full md:w-1/3">
-             <h2 className="text-xl font-bold ink-1 mb-2">Calendarios</h2>
-             <div className="h-0.5 w-full bg-slate-200 rounded-full relative">
-                <div className="absolute top-0 left-0 h-full accent-bg w-1/3 rounded-full"></div>
-             </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4">
+          <div>
+             <h2 className="text-[22px] font-bold tracking-tight ink-1">Calendarios</h2>
+             <p className="text-[13px] ink-3 font-medium mt-0.5">{filteredCalendars.length} {filteredCalendars.length === 1 ? 'calendario' : 'calendarios'}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:min-w-[200px]">
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por título..." className="w-full srf-panel border hairline ink-1 text-sm font-semibold rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-black focus:border-black" />
-              <Search className="absolute right-2.5 top-2.5 h-4 w-4 ink-3 pointer-events-none" />
-            </div>
-            <div className="relative">
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="appearance-none srf-panel border hairline ink-1 text-sm font-semibold rounded-lg px-3 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-black focus:border-black cursor-pointer">
-                <option value="all">Todos los estados</option>
-                <option value="active">Activos</option>
-                <option value="inactive">Inactivos</option>
-              </select>
-              <ChevronDown className="absolute right-2 top-3 h-4 w-4 ink-3 pointer-events-none" />
-            </div>
-          </div>
+          <button onClick={onNewCalendar} className="accent-fill hover:brightness-110 px-5 py-2.5 rounded-[11px] text-[13px] font-bold flex items-center gap-2 shadow-sm active:scale-[0.98] transition-all">
+            <CalendarPlus className="w-4 h-4" /> Nuevo calendario
+          </button>
         </div>
       )}
 
@@ -336,6 +323,24 @@ const MyCalendars: React.FC<{ onViewSubscribers?: (id: string) => void, onEdit?:
           </button>
         ))}
       </div>
+
+      {/* Toolbar de filtros unificada (solo escritorio) */}
+      {!isMobileApp && (
+        <div className="srf-sunken rounded-[14px] p-2 flex flex-wrap items-center gap-2 mb-5" style={{ border: '1px solid var(--hairline)' }}>
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ink-3 pointer-events-none" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por título..." className="w-full srf-panel ink-1 text-[13px] font-medium rounded-[10px] pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10" style={{ border: '1px solid var(--hairline)' }} />
+          </div>
+          <div className="relative">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="appearance-none srf-panel ink-1 text-[13px] font-medium rounded-[10px] px-4 pr-9 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10" style={{ border: '1px solid var(--hairline)' }}>
+              <option value="all">Todos los estados</option>
+              <option value="active">Activos</option>
+              <option value="inactive">Inactivos</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 ink-3 pointer-events-none" />
+          </div>
+        </div>
+      )}
 
       {/* Tarjetas (solo dispositivos móviles) */}
       {isMobileApp && (

@@ -4,6 +4,7 @@ import { Save, Settings } from 'lucide-react';
 interface Props {
   initialData?: any;
   onSave?: (data: any) => void;
+  onRegisterSave?: (fn: () => void) => void;
   calendarGroups?: {id: string; name: string}[];
 }
 
@@ -29,7 +30,7 @@ const defaultGroupAutomation: GroupAutomation = {
   socialCampaign: ''
 };
 
-const AutomationSettings: React.FC<Props> = ({ initialData, onSave, calendarGroups }) => {
+const AutomationSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, calendarGroups }) => {
   const [activeGroupId, setActiveGroupId] = useState(
     initialData?.groupsData && initialData.groupsData.length > 0 
       ? initialData.groupsData[0].id 
@@ -84,6 +85,11 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
     setGroupsData(prev => prev.map(g => g.id === activeGroupId ? { ...g, ...updates } : g));
   };
 
+  // Registra el guardado de esta sección para el botón único del header.
+  const saveImpl = React.useRef<() => void>(() => {});
+  saveImpl.current = () => onSave?.(groupsData);
+  React.useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
+
   return (
     <div className="srf-panel pb-10 rounded-b-2xl">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-4 md:gap-0">
@@ -92,14 +98,6 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
             <button className="ink-1 text-xs font-semibold flex items-center tracking-wider hover:text-black cursor-pointer transition-colors shadow-sm srf-panel px-3 py-1.5 rounded-lg border hairline h-10">
                <Settings className="w-4 h-4 mr-1.5" /> RÁPIDA
             </button>
-            <div className="flex gap-3 border-l hairline pl-5">
-              <button className="px-5 py-2.5 srf-panel border hairline ink-2 rounded-xl text-[13px] font-semibold transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer hover:srf-sunken">
-                Cancelar
-              </button>
-              <button onClick={() => onSave?.(groupsData)} className="px-5 py-2.5 accent-bg hover:brightness-110 text-white rounded-xl text-[13px] font-semibold flex items-center transition-all duration-200 shadow-sm cursor-pointer">
-                <Save className="w-4 h-4 mr-2"/> Guardar Cambios
-              </button>
-            </div>
          </div>
       </div>
 

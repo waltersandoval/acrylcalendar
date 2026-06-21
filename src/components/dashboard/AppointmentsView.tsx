@@ -12,6 +12,7 @@ import { db } from '../../lib/firebase';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { useIsMobileApp } from '../../hooks/useMediaQuery';
 import { useAuth } from '../../lib/auth';
+import { useHeaderActions } from '../../lib/headerActions';
 import { PlusCircle, SlidersHorizontal, Calendar as CalendarIcon, Users, Search, ChevronDown, ListFilter, X } from 'lucide-react';
 
 interface AppointmentsViewProps {
@@ -138,24 +139,24 @@ const AppointmentsView: React.FC<AppointmentsViewProps> = ({ calendarFilter, set
     !!dateFrom || !!dateTo,
   ].filter(Boolean).length;
 
+  // Acción primaria en el header flotante (posición fija, reutilizable).
+  useHeaderActions(
+    [{ label: 'Nueva Cita', variant: 'primary', icon: <PlusCircle className="w-4 h-4" />, onClick: () => setShowNewEvent(true) }],
+    [],
+  );
+
   // ─── MÓVIL ────────────────────────────────────────────────────────────────
   if (isMobileApp) {
     return (
       <div className="flex flex-col gap-4 pb-4">
         {/* Large title header (pr-12 para no chocar con el bell de notificaciones) */}
-        <div className="flex items-start justify-between gap-3 pt-1 pr-12">
+        <div className="flex items-start justify-between gap-3 pt-1 pr-24">
           <div className="min-w-0">
             <h1 className="text-[32px] leading-[1.05] font-extrabold tracking-tight ink-1 font-display">Citas</h1>
             <p className="ink-3 font-medium text-[14px] mt-0.5">
               {filteredEvents.length} {filteredEvents.length === 1 ? 'resultado' : 'resultados'}
             </p>
           </div>
-          <button
-            onClick={() => setShowNewEvent(true)}
-            className="shrink-0 accent-bg text-white h-10 px-4 rounded-2xl text-[14px] font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-transform"
-          >
-            <PlusCircle className="w-4 h-4" /> Nueva
-          </button>
         </div>
 
         {/* Search + filter toggle */}
@@ -286,6 +287,7 @@ const AppointmentsView: React.FC<AppointmentsViewProps> = ({ calendarFilter, set
         admins={admins}
       />
       <EventList events={filteredEvents} loading={loading} />
+      <NewEventModal isOpen={showNewEvent} onClose={() => setShowNewEvent(false)} calendarId={calendarFilter} />
     </div>
   );
 };

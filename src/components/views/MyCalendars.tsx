@@ -12,6 +12,7 @@ import Sheet from '../ui/Sheet';
 import { useIsMobileApp } from '../../hooks/useMediaQuery';
 import { useAuth } from '../../lib/auth';
 import { openExternalUrl } from '../../lib/device';
+import { useHeaderActions } from '../../lib/headerActions';
 
 const MyCalendars: React.FC<{ onViewSubscribers?: (id: string) => void, onEdit?: (id: string, title: string) => void, onNewCalendar?: () => void }> = ({ onViewSubscribers, onEdit, onNewCalendar }) => {
   const isMobileApp = useIsMobileApp();
@@ -43,6 +44,12 @@ const MyCalendars: React.FC<{ onViewSubscribers?: (id: string) => void, onEdit?:
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   };
+
+  // Acción primaria en el header flotante (posición fija, reutilizable).
+  useHeaderActions(
+    [{ label: 'Nuevo calendario', variant: 'primary', icon: <CalendarPlus className="w-4 h-4" />, onClick: () => onNewCalendar?.() }],
+    [onNewCalendar],
+  );
 
   useEffect(() => {
     let unsubscribeCalendars: () => void;
@@ -267,14 +274,11 @@ const MyCalendars: React.FC<{ onViewSubscribers?: (id: string) => void, onEdit?:
     <div className={`flex flex-col flex-1 h-full w-full ${isMobileApp ? 'pt-3' : 'max-w-6xl mx-auto'}`}>
       {/* Header */}
       {isMobileApp ? (
-      <div className="flex items-start justify-between gap-3 mb-5 pr-12">
+      <div className="flex items-start justify-between gap-3 mb-5 pr-24">
           <div className="min-w-0">
             <h1 className="text-[30px] leading-[1.1] font-extrabold tracking-tight ink-1 font-display">Calendarios</h1>
             <p className="ink-3 font-medium text-[14px] mt-0.5">Administra todos tus calendarios y preferencias</p>
           </div>
-          <button onClick={onNewCalendar} className="shrink-0 w-10 h-10 rounded-2xl srf-panel border hairline shadow-sm flex items-center justify-center ink-1 hover:text-black active:scale-95 transition-transform" aria-label="Nuevo calendario">
-            <CalendarPlus className="w-5 h-5" />
-          </button>
         </div>
       ) : (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4">
@@ -282,9 +286,6 @@ const MyCalendars: React.FC<{ onViewSubscribers?: (id: string) => void, onEdit?:
              <h2 className="text-[22px] font-bold tracking-tight ink-1">Calendarios</h2>
              <p className="text-[13px] ink-3 font-medium mt-0.5">{filteredCalendars.length} {filteredCalendars.length === 1 ? 'calendario' : 'calendarios'}</p>
           </div>
-          <button onClick={onNewCalendar} className="accent-fill hover:brightness-110 px-5 py-2.5 rounded-[11px] text-[13px] font-bold flex items-center gap-2 shadow-sm active:scale-[0.98] transition-all">
-            <CalendarPlus className="w-4 h-4" /> Nuevo calendario
-          </button>
         </div>
       )}
 

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Edit2, Loader2, Settings, Calendar, FileText, Mail, Zap, CreditCard } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Edit2, Loader2, Settings, Calendar, FileText, Mail, Zap, CreditCard, Save } from 'lucide-react';
 import { openExternalUrl } from '../../../lib/device';
+import { useHeaderActions } from '../../../lib/headerActions';
 import BasicSettings from './BasicSettings';
 import SchedulingSettings from './SchedulingSettings';
 import FormsSettings from './FormsSettings';
@@ -109,6 +110,18 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({ calendarId, calendarTit
     setOpenSection('');
   };
 
+  // Botón ÚNICO de guardado en el header: dispara el save de la sub-sección
+  // activa, que se registra aquí vía onRegisterSave. Posición fija para todas
+  // las secciones del editor.
+  const sectionSaveRef = useRef<() => void>(() => {});
+  useHeaderActions(
+    [
+      ...(onBack ? [{ label: 'Volver', variant: 'ghost' as const, onClick: onBack }] : []),
+      { label: 'Guardar Cambios', variant: 'primary' as const, icon: <Save className="w-4 h-4" />, onClick: () => sectionSaveRef.current(), loading: savingSection !== null },
+    ],
+    [openSection, savingSection, onBack],
+  );
+
   return (
     <div className="flex flex-col flex-1 h-full max-w-5xl mx-auto w-full pb-20">
       
@@ -206,43 +219,48 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({ calendarId, calendarTit
 
       {/* Componentes Directos Sin Contenedores Desplegables */}
       {openSection === 'BASIC' && (
-        <BasicSettings 
+        <BasicSettings
           initialTitle={calendarTitle}
           initialData={calendarData?.section_BASIC}
-          onSave={(data) => handleSaveSection('BASIC', 'SCHEDULING', data)} 
+          onSave={(data) => handleSaveSection('BASIC', 'SCHEDULING', data)}
+          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
         />
       )}
 
       {openSection === 'SCHEDULING' && (
-        <SchedulingSettings 
+        <SchedulingSettings
           initialData={calendarData?.section_SCHEDULING}
-          onSave={(data) => handleSaveSection('SCHEDULING', 'FORMS', data)} 
+          onSave={(data) => handleSaveSection('SCHEDULING', 'FORMS', data)}
           calendarGroups={calendarGroups}
           onGroupsChange={setCalendarGroups}
+          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
         />
       )}
 
       {openSection === 'FORMS' && (
-        <FormsSettings 
+        <FormsSettings
           initialData={calendarData?.section_FORMS}
-          onSave={(data) => handleSaveSection('FORMS', 'COMMS', data)} 
+          onSave={(data) => handleSaveSection('FORMS', 'COMMS', data)}
           calendarGroups={calendarGroups}
+          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
         />
       )}
 
       {openSection === 'COMMS' && (
-        <CommunicationsSettings 
+        <CommunicationsSettings
           initialData={calendarData?.section_COMMS}
-          onSave={(data) => handleSaveSection('COMMS', 'AUTO', data)} 
+          onSave={(data) => handleSaveSection('COMMS', 'AUTO', data)}
           calendarGroups={calendarGroups}
+          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
         />
       )}
 
       {openSection === 'AUTO' && (
-        <AutomationSettings 
+        <AutomationSettings
           initialData={calendarData?.section_AUTO}
-          onSave={(data) => handleSaveSection('AUTO', null, data)} 
+          onSave={(data) => handleSaveSection('AUTO', null, data)}
           calendarGroups={calendarGroups}
+          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
         />
       )}
 

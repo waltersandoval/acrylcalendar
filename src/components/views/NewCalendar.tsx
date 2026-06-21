@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { CalendarDays, Loader2, ChevronLeft, Info } from 'lucide-react';
 import { useIsMobileApp } from '../../hooks/useMediaQuery';
 import { useAuth } from '../../lib/auth';
+import { useHeaderActions } from '../../lib/headerActions';
 
 const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: string) => void; onBack?: () => void }> = ({ onCreate, onBack }) => {
   const isMobileApp = useIsMobileApp();
@@ -43,6 +44,15 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
       setLoading(false);
     }
   };
+
+  // Acción primaria en el header flotante (solo escritorio; en móvil se usa el
+  // CTA central de la tarjeta de creación).
+  useHeaderActions(
+    isMobileApp
+      ? []
+      : [{ label: 'Crear calendario', variant: 'primary', icon: <CalendarDays className="w-4 h-4" />, onClick: () => handleCreate(), disabled: !calendarTitle.trim() || loading, loading }],
+    [isMobileApp, calendarTitle, loading],
+  );
 
   // ---------- MÓVIL ----------
   if (isMobileApp) {
@@ -119,8 +129,8 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-2xl mb-8">
-          <div className="relative flex-1 w-full">
+        <div className="w-full max-w-2xl mb-8">
+          <div className="relative w-full">
             <input
               type="text"
               placeholder="Nombre de su calendario (ej. Mentoría 1:1, Citas Online)"
@@ -131,14 +141,7 @@ const NewCalendar: React.FC<{ onCreate?: (title: string, type: string, id: strin
             />
             <span className="absolute right-3 top-4 text-[10px] font-bold text-slate-300">{calendarTitle.length}/100</span>
           </div>
-          <button
-            onClick={handleCreate}
-            disabled={!calendarTitle.trim() || loading}
-            className="w-full sm:w-auto accent-bg hover:brightness-110 text-white px-8 py-3.5 rounded-xl text-sm font-bold tracking-wide shadow-sm transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-w-[220px]"
-          >
-            {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <CalendarDays className="h-5 w-5 mr-2" />}
-            {loading ? 'CREANDO...' : 'CREAR CALENDARIO'}
-          </button>
+          <p className="text-[12px] ink-3 font-medium mt-3 text-center">Usa el botón <strong className="ink-1">“Crear calendario”</strong> arriba a la derecha para continuar.</p>
         </div>
         {error && <p className="text-red-500 text-sm font-medium -mt-4 mb-8">{error}</p>}
       </div>

@@ -92,22 +92,11 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
 
   return (
     <div className="px-5 py-4 border-b hairline glass-strong sticky top-0 z-10">
-      {/* Fila 1: título + acción */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
-        <div>
-          <h2 className="text-[20px] font-bold tracking-tight ink-1">Lista de Citas</h2>
-          <p className="text-[12px] ink-3 font-medium mt-0.5">{counts.all || 0} {(counts.all || 0) === 1 ? 'cita' : 'citas'} en total</p>
-        </div>
-
-        <button
-          className="accent-fill hover:brightness-110 px-5 py-2.5 rounded-[11px] text-[13px] font-bold tracking-wide flex items-center shadow-sm transition-all duration-200 cursor-pointer whitespace-nowrap active:scale-[0.98]"
-          onClick={() => setIsNewEventModalOpen(true)}
-        >
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Nueva Cita
-        </button>
+      {/* Fila 1: título (la acción "Nueva Cita" vive en el header flotante) */}
+      <div className="mb-3">
+        <h2 className="text-[20px] font-bold tracking-tight ink-1">Lista de Citas</h2>
+        <p className="text-[12px] ink-3 font-medium mt-0.5">{counts.all || 0} {(counts.all || 0) === 1 ? 'cita' : 'citas'} en total</p>
       </div>
-      <NewEventModal isOpen={isNewEventModalOpen} onClose={() => setIsNewEventModalOpen(false)} calendarId={selectedCalendarFilter} />
 
       {/* Fila 2: toolbar de filtros unificada (pista hundida con controles elevados) */}
       <div className="srf-sunken rounded-[14px] p-2 flex flex-wrap items-center gap-2" style={{ border: '1px solid var(--hairline)' }}>

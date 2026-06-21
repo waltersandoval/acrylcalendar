@@ -4,6 +4,7 @@ import { Settings as SettingsIcon, Save, Info, Plus, Trash2, Edit2, Mail, Bell, 
 interface Props {
   initialData?: any;
   onSave?: (data: any) => void;
+  onRegisterSave?: (fn: () => void) => void;
   calendarGroups?: {id: string; name: string}[];
 }
 
@@ -280,7 +281,7 @@ const NotificationModal = ({
   );
 };
 
-const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, calendarGroups }) => {
+const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, calendarGroups }) => {
   const [activeGroupId, setActiveGroupId] = useState(
     initialData?.groupsData && initialData.groupsData.length > 0 
       ? initialData.groupsData[0].id 
@@ -354,18 +355,13 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, calendar
     updateActiveGroup({ reminders: activeGroup.reminders.filter(r => r.id !== id) });
   };
 
-  return (
-    <div className="bg-[#f8f9fa] pb-4 rounded-b-2xl">
-      {/* Action Bar */}
-      <div className="flex justify-end gap-3 px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300">
-        <button className="px-5 py-2.5 srf-panel border hairline ink-2 rounded-xl text-[13px] font-semibold transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer hover:srf-sunken">
-          Cancelar
-        </button>
-        <button onClick={() => onSave?.(groupsData)} className="px-5 py-2.5 accent-bg hover:brightness-110 text-white rounded-xl text-[13px] font-semibold flex items-center transition-all duration-200 shadow-sm cursor-pointer">
-          <Save className="w-4 h-4 mr-2" /> Guardar Cambios
-        </button>
-      </div>
+  // Registra el guardado de esta sección para el botón único del header.
+  const saveImpl = React.useRef<() => void>(() => {});
+  saveImpl.current = () => onSave?.(groupsData);
+  useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
 
+  return (
+    <div className="srf-panel pb-4 rounded-b-2xl">
       {/* Container header */}
       <div className="srf-panel rounded-t-2xl">
         <div className="flex border-b hairline px-6 pt-3 overflow-x-auto no-scrollbar relative z-0">

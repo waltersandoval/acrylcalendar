@@ -3,12 +3,13 @@ import { Info, Clock, Globe2, Save } from 'lucide-react';
 
 interface Props {
   onSave?: (data: any) => void;
+  onRegisterSave?: (fn: () => void) => void;
   initialTitle?: string;
   initialDescription?: string;
   initialData?: any;
 }
 
-const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDescription = '', initialData }) => {
+const BasicSettings: React.FC<Props> = ({ onSave, onRegisterSave, initialTitle = '', initialDescription = '', initialData }) => {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
   const [logoBase64, setLogoBase64] = useState<string | null>(null);
@@ -82,18 +83,13 @@ const BasicSettings: React.FC<Props> = ({ onSave, initialTitle = '', initialDesc
     }
   };
 
+  // Registra el guardado de esta sección para el botón único del header.
+  const saveImpl = useRef<() => void>(() => {});
+  saveImpl.current = handleSave;
+  useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
+
   return (
     <div className="srf-panel pb-10">
-      {/* Action Bar */}
-      <div className="flex justify-end gap-3 px-6 py-4 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10">
-        <button className="px-6 py-2.5 srf-panel border hairline ink-2 rounded-xl text-[13px] font-semibold transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer hover:srf-sunken">
-          Cancelar
-        </button>
-        <button onClick={handleSave} className="px-6 py-2.5 accent-bg hover:brightness-110 text-white rounded-xl text-[13px] font-semibold flex items-center transition-all duration-200 shadow-sm cursor-pointer">
-          <Save className="w-4 h-4 mr-2" /> Guardar Cambios
-        </button>
-      </div>
-
       <div className="p-8 space-y-12 max-w-5xl mx-auto">
         {/* Title & Desc */}
         <div className="flex flex-col md:flex-row gap-10">

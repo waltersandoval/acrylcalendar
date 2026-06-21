@@ -308,6 +308,7 @@ const CustomTimePicker = ({ value, onChange, disabled = false }: { value: string
 interface Props {
   initialData?: any;
   onSave?: (data: any) => void;
+  onRegisterSave?: (fn: () => void) => void;
   calendarGroups?: {id: string; name: string}[];
   onGroupsChange?: (groups: {id: string; name: string}[]) => void;
 }
@@ -521,7 +522,7 @@ const findCrossGroupOverlap = (groupsList: any[]): OverlapError | null => {
   return null;
 };
 
-const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGroups, onGroupsChange }) => {
+const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, calendarGroups, onGroupsChange }) => {
   const isMobileApp = useIsMobileApp();
   const [timezone, setTimezone] = useState('America/Guatemala');
   const [groups, setGroups] = useState<GroupSettings[]>(
@@ -665,13 +666,18 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
         intervalBetweenSessionsMinutes: timeToMinutes(g.intervalHours, g.intervalMinutes)
       }));
       if (onSave) {
-        onSave({ 
+        onSave({
           groups: updatedGroups,
-          preventCrossGroupOverlaps 
+          preventCrossGroupOverlaps
         });
       }
     }
   };
+
+  // Registra el guardado de esta sección para el botón único del header.
+  const saveImpl = useRef<() => void>(() => {});
+  saveImpl.current = handleSave;
+  useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
 
   const handleCancel = (e?: React.MouseEvent) => {
     if (e) {
@@ -773,21 +779,6 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, calendarGrou
           ))}
         </div>
 
-        {/* Row 2: Save / Cancel — clear primary/secondary hierarchy */}
-        <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t hairline srf-panel/60">
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 ink-2 text-[13px] font-semibold rounded-xl transition-colors hover:srf-sunken cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-5 py-2 accent-bg hover:brightness-110 text-white rounded-xl text-[13px] font-bold flex items-center gap-2 transition-all shadow-md shadow-black/20 cursor-pointer"
-          >
-            <Save className="w-4 h-4" /> Guardar Cambios
-          </button>
-        </div>
       </div>
 
       <div className="p-8 space-y-10 srf-panel max-w-5xl mx-auto">

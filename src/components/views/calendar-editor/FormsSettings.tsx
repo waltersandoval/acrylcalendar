@@ -4,6 +4,7 @@ import { Settings as SettingsIcon, Save, Info, Plus, Trash2, Edit2 } from 'lucid
 interface Props {
   initialData?: any;
   onSave?: (data: any) => void;
+  onRegisterSave?: (fn: () => void) => void;
   calendarGroups?: {id: string; name: string}[];
 }
 
@@ -34,7 +35,7 @@ const defaultFields: FormField[] = [
   { id: '3', label: 'Teléfono', type: 'text', required: true, isDefault: true },
 ];
 
-const FormsSettings: React.FC<Props> = ({ initialData, onSave, calendarGroups }) => {
+const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, calendarGroups }) => {
   const [activeGroupId, setActiveGroupId] = useState(
     initialData?.groupsData && initialData.groupsData.length > 0 
       ? initialData.groupsData[0].id 
@@ -154,6 +155,11 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, calendarGroups })
     updateActiveGroup({ fields: activeGroup.fields.filter(f => f.id !== id) });
   };
 
+  // Registra el guardado de esta sección para el botón único del header.
+  const saveImpl = React.useRef<() => void>(() => {});
+  saveImpl.current = () => onSave?.(groupsData);
+  useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
+
   return (
     <div className="srf-panel pb-10 rounded-b-2xl">
       {/* Header logic */}
@@ -165,14 +171,6 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, calendarGroups })
             <button className="text-black text-xs font-semibold flex items-center tracking-wider hover:ink-1 cursor-pointer transition-colors shadow-sm srf-panel px-3 py-1.5 rounded-lg border hairline h-10">
                <SettingsIcon className="w-4 h-4 mr-1.5" /> RÁPIDA
             </button>
-            <div className="flex gap-3 border-l hairline pl-5">
-              <button className="px-5 py-2.5 srf-panel border hairline ink-2 rounded-xl text-[13px] font-semibold transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer hover:srf-sunken">
-                Cancelar
-              </button>
-              <button onClick={() => onSave?.(groupsData)} className="px-5 py-2.5 accent-bg hover:brightness-110 text-white rounded-xl text-[13px] font-semibold flex items-center transition-all duration-200 shadow-md shadow-slate-950/20 cursor-pointer">
-                <Save className="w-4 h-4 mr-2" /> Guardar Cambios
-              </button>
-            </div>
          </div>
       </div>
 

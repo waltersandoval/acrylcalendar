@@ -14,7 +14,7 @@
  *   paypalEnabled:  boolean — si el checkout PayPal está activo
  * }
  */
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Save, CreditCard, DollarSign, ShieldCheck, ToggleLeft, ToggleRight, Info, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { functions } from '../../../lib/firebase';
 
@@ -23,6 +23,7 @@ interface Props {
   initialData?: any;
   onSave?: (data?: any) => void;
   calendarGroups?: { id: string; name: string }[];
+  onRegisterSave?: (fn: () => void) => void;
 }
 
 const CURRENCY_OPTIONS = [
@@ -38,7 +39,7 @@ const PAYPAL_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'MXN', 'GTQ'];
 
 const SECRET_PLACEHOLDER = "••••••••••••••••••••••••";
 
-const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) => {
+const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave, onRegisterSave }) => {
   const [price,         setPrice]         = useState<string>(String(initialData?.price         || ''));
   const [currency,      setCurrency]      = useState<string>(initialData?.currency             || 'USD');
   const [paypalEnabled, setPaypalEnabled] = useState<boolean>(!!initialData?.paypalEnabled);
@@ -117,11 +118,15 @@ const PaymentSettings: React.FC<Props> = ({ calendarId, initialData, onSave }) =
     }
   };
 
+  const saveImpl = useRef<() => void>(() => {});
+  saveImpl.current = handleSave;
+  useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
+
   return (
     <div className="srf-panel pb-10 rounded-b-2xl">
 
       {/* ── Sticky Action Bar ─────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 srf-sunken/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
+      <div className="builder-embedded-toolbar sticky top-0 z-20 srf-sunken/95 backdrop-blur-md border-b hairline shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between px-5 py-3 gap-4">
           <div className="flex items-center gap-2 min-w-0">
             <CreditCard className="w-4 h-4 ink-3 shrink-0" />

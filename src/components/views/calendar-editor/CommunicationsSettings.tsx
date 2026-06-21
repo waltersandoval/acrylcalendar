@@ -863,7 +863,7 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
             </div>
           </div>
           
-          <div className="mt-8 flex justify-end gap-4 max-w-4xl">
+          <div className="builder-embedded-toolbar mt-8 flex justify-end gap-4 max-w-4xl">
              <button className="px-6 py-2.5 text-[13px] font-bold ink-1 hover:bg-slate-200/50 rounded-xl transition-colors cursor-pointer text-center srf-panel border hairline shadow-sm">
                CANCELAR
              </button>

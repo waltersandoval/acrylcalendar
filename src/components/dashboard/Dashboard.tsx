@@ -33,6 +33,7 @@ const Dashboard: React.FC = () => {
   const [mainView, setMainView] = useState('list');
   const [editingCalendarTitle, setEditingCalendarTitle] = useState('Nuevo Calendario');
   const [editingCalendarId, setEditingCalendarId] = useState('');
+  const [editorSection, setEditorSection] = useState('BASIC');
   const [selectedCalendarIdForList, setSelectedCalendarIdForList] = useState<string | null>(null);
   const isMobileApp = useIsMobileApp();
 
@@ -189,6 +190,20 @@ const Dashboard: React.FC = () => {
   };
 
   const renderContent = () => {
+    if (activeSidebarItem === 'Editor de calendario') {
+      return (
+        <div className="flex-1 min-h-0 mt-4 md:mt-6 overflow-hidden flex flex-col">
+          <CalendarEditor
+            calendarId={editingCalendarId}
+            calendarTitle={editingCalendarTitle}
+            activeSection={editorSection}
+            onSectionChange={setEditorSection}
+            onBack={() => setActiveSidebarItem('Mis calendarios')}
+          />
+        </div>
+      );
+    }
+
     if (activeSidebarItem === 'Lista de Citas') {
        return (
           <AppointmentsView
@@ -232,7 +247,6 @@ const Dashboard: React.FC = () => {
               setActiveSidebarItem('Editor de calendario');
             }} />}
             {activeSidebarItem === 'Mis calendarios' && <MyCalendars onViewSubscribers={(calId) => { setSelectedCalendarIdForList(calId); setActiveSidebarItem('Lista de Citas'); }} onEdit={(id, title) => { setEditingCalendarId(id); setEditingCalendarTitle(title); setActiveSidebarItem('Editor de calendario'); }} onNewCalendar={() => setActiveSidebarItem('Nuevo calendario')} />}
-            {activeSidebarItem === 'Editor de calendario' && <CalendarEditor calendarId={editingCalendarId} calendarTitle={editingCalendarTitle} onBack={() => setActiveSidebarItem('Mis calendarios')} />}
           </div>
        </div>
     );
@@ -266,7 +280,7 @@ const Dashboard: React.FC = () => {
         />
       )}
       {activeSidebarItem === 'Editor de calendario' && (
-        <CalendarEditor calendarId={editingCalendarId} calendarTitle={editingCalendarTitle} onBack={() => setActiveSidebarItem('Mis calendarios')} />
+        <CalendarEditor calendarId={editingCalendarId} calendarTitle={editingCalendarTitle} activeSection={editorSection} onSectionChange={setEditorSection} onBack={() => setActiveSidebarItem('Mis calendarios')} />
       )}
       {activeSidebarItem === 'Lista de Citas' && (
         <AppointmentsView calendarFilter={selectedCalendarIdForList} setCalendarFilter={setSelectedCalendarIdForList} />
@@ -288,12 +302,15 @@ const Dashboard: React.FC = () => {
              setActiveSidebarItem={setActiveSidebarItem}
              isCollapsed={isSidebarCollapsed}
              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+             editorMode={activeSidebarItem === 'Editor de calendario'}
+             editorSection={editorSection}
+             onEditorSectionChange={setEditorSection}
            />
         </div>
       )}
 
       {/* Main content */}
-      <main className={`flex-1 flex flex-col overflow-y-auto w-full no-scrollbar ${isMobileApp && !isDetailView ? 'pb-safe-nav' : isMobileApp ? 'pb-6' : ''}`}>
+      <main className={`flex-1 flex flex-col w-full no-scrollbar ${activeSidebarItem === 'Editor de calendario' ? 'overflow-hidden' : 'overflow-y-auto'} ${isMobileApp && !isDetailView ? 'pb-safe-nav' : isMobileApp ? 'pb-6' : ''}`}>
          {isMobileApp ? (
            <>
              {renderMobileHeader()}

@@ -1,5 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Edit2, Loader2, Settings, Calendar, FileText, Mail, Zap, CreditCard, Save } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Check, Copy, ExternalLink, Eye, Loader2, Monitor,
+  RefreshCw, Save, Send,
+} from 'lucide-react';
 import { openExternalUrl } from '../../../lib/device';
 import { useHeaderActions } from '../../../lib/headerActions';
 import BasicSettings from './BasicSettings';
@@ -7,263 +10,216 @@ import SchedulingSettings from './SchedulingSettings';
 import FormsSettings from './FormsSettings';
 import CommunicationsSettings from './CommunicationsSettings';
 import AutomationSettings from './AutomationSettings';
+import PaymentSettings from './PaymentSettings';
 
 interface CalendarEditorProps {
   calendarId?: string;
   calendarTitle?: string;
+  activeSection: string;
+  onSectionChange: (section: string) => void;
   onBack?: () => void;
 }
 
-const CalendarEditor: React.FC<CalendarEditorProps> = ({ calendarId, calendarTitle = 'Nuevo Calendario', onBack }) => {
+const SECTION_COPY: Record<string, { title: string; eyebrow: string }> = {
+  BASIC: { title: 'Información general', eyebrow: 'Contenido' },
+  DESIGN: { title: 'Diseño visual', eyebrow: 'Apariencia' },
+  SCHEDULING: { title: 'Horarios', eyebrow: 'Disponibilidad' },
+  SERVICES: { title: 'Servicios', eyebrow: 'Oferta' },
+  GROUPS: { title: 'Grupos', eyebrow: 'Organización' },
+  FORMS: { title: 'Formularios', eyebrow: 'Datos del cliente' },
+  COMMS: { title: 'Comunicaciones', eyebrow: 'Mensajería' },
+  AUTO: { title: 'Automatizaciones', eyebrow: 'Flujos' },
+  PAYMENT: { title: 'Pagos', eyebrow: 'Checkout' },
+  DOMAIN: { title: 'Dominio y URL', eyebrow: 'Enlace público' },
+  PUBLISH: { title: 'Publicación', eyebrow: 'Estado' },
+};
+
+function ContextPanel({ section, bookingUrl }: { section: string; bookingUrl: string }) {
+  if (section === 'DOMAIN') {
+    return (
+      <div className="space-y-5 p-5">
+        <label className="block text-[11px] font-extrabold uppercase tracking-[0.12em] ink-3">URL pública</label>
+        <div className="srf-sunken rounded-xl border hairline p-3 text-xs font-semibold ink-2 break-all">{bookingUrl}</div>
+        <button type="button" onClick={() => navigator.clipboard.writeText(bookingUrl)} className="builder-secondary-button">
+          <Copy className="w-4 h-4" /> Copiar enlace
+        </button>
+        <p className="text-xs leading-5 ink-3">Los dominios personalizados estarán disponibles en una siguiente iteración del constructor.</p>
+      </div>
+    );
+  }
+
+  if (section === 'PUBLISH') {
+    return (
+      <div className="space-y-5 p-5">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-emerald-800"><Check className="w-4 h-4" /> Calendario publicado</div>
+          <p className="mt-2 text-xs leading-5 text-emerald-700">Tu enlace público está activo. Guarda cualquier cambio antes de compartirlo.</p>
+        </div>
+        <button type="button" onClick={() => openExternalUrl(bookingUrl)} className="builder-secondary-button">
+          <ExternalLink className="w-4 h-4" /> Abrir calendario
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 p-5">
+      <div className="rounded-2xl srf-sunken border hairline p-4">
+        <p className="text-xs font-bold ink-1">Propiedades avanzadas</p>
+        <p className="mt-2 text-xs leading-5 ink-3">Selecciona elementos dentro de la vista previa para editar aquí sus propiedades específicas.</p>
+      </div>
+      <div className="space-y-3 opacity-60">
+        <div className="h-9 rounded-xl srf-sunken" />
+        <div className="h-20 rounded-xl srf-sunken" />
+      </div>
+    </div>
+  );
+}
+
+const CalendarEditor: React.FC<CalendarEditorProps> = ({
+  calendarId,
+  calendarTitle = 'Nuevo Calendario',
+  activeSection,
+  onSectionChange,
+  onBack,
+}) => {
   const persistentId = calendarId || 'nuevo-calendario';
-  const initialLink = `${window.location.origin}/booking/${persistentId}`;
-  
-  const [openSection, setOpenSection] = useState<string>('BASIC');
-  const [isLinkGenerated, setIsLinkGenerated] = useState<boolean>(true);
-  const [generatedLink, setGeneratedLink] = useState<string>(initialLink);
+  const bookingUrl = `${window.location.origin}/booking/${persistentId}`;
   const [savingSection, setSavingSection] = useState<string | null>(null);
   const [calendarData, setCalendarData] = useState<any>(null);
+  const [calendarGroups, setCalendarGroups] = useState<{ id: string; name: string }[]>([{ id: 'group-1', name: 'Grupo 1' }]);
+  const [previewVersion, setPreviewVersion] = useState(0);
+  const [previewLoading, setPreviewLoading] = useState(true);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const sectionSaveRef = useRef<() => void>(() => {});
 
-  React.useEffect(() => {
-    setGeneratedLink(`${window.location.origin}/booking/${persistentId}`);
-  }, [persistentId]);
-
-  React.useEffect(() => {
-    const fetchCal = async () => {
+  useEffect(() => {
+    let cancelled = false;
+    const fetchCalendar = async () => {
       if (!calendarId) return;
       try {
         const { db } = await import('../../../lib/firebase');
         const { doc, getDoc } = await import('firebase/firestore');
-        const d = await getDoc(doc(db, 'calendars', calendarId));
-        if (d.exists()) {
-          const data = d.data();
+        const snapshot = await getDoc(doc(db, 'calendars', calendarId));
+        if (!cancelled && snapshot.exists()) {
+          const data = snapshot.data();
           setCalendarData(data);
-          
           if (data?.section_SCHEDULING?.groups) {
-            setCalendarGroups(data.section_SCHEDULING.groups.map((g: any) => ({
-              id: g.id,
-              name: g.name
-            })));
+            setCalendarGroups(data.section_SCHEDULING.groups.map((group: any) => ({ id: group.id, name: group.title || group.name })));
           }
         }
-      } catch (err) { }
+      } catch (error) {
+        console.error('No se pudo cargar el calendario:', error);
+      }
     };
-    fetchCal();
+    fetchCalendar();
+    return () => { cancelled = true; };
   }, [calendarId]);
 
-  // Create shared groups state for scheduling and forms components
-  const [calendarGroups, setCalendarGroups] = useState<{id: string, name: string}[]>([
-    { id: 'group-1', name: 'Grupo 1' }
-  ]);
+  useEffect(() => {
+    sectionSaveRef.current = () => {};
+  }, [activeSection]);
 
-  const toggleSection = (section: string) => {
-    if (!section) return;
-    setOpenSection(section);
-  };
-
-  const handleSaveSection = async (sectionId: string, nextSectionId: string | null, data?: any) => {
-    if (!calendarId) {
-      console.warn('No calendarId provided, skipping save.');
-      if (nextSectionId) toggleSection(nextSectionId);
-      return;
-    }
-
+  const handleSaveSection = async (sectionId: string, data?: any) => {
+    if (!calendarId) return;
     setSavingSection(sectionId);
     try {
       const { db } = await import('../../../lib/firebase');
       const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
       await setDoc(doc(db, 'calendars', calendarId), {
-         [`section_${sectionId}`]: data || true,
-         updatedAt: serverTimestamp()
+        [`section_${sectionId}`]: data || true,
+        updatedAt: serverTimestamp(),
       }, { merge: true });
-      console.log(`Saved section ${sectionId}`);
 
-      // Update local calendarData state
-      setCalendarData((prev: any) => ({
-        ...prev,
-        [`section_${sectionId}`]: data || true
-      }));
-
-      // If we saved scheduling, update calendarGroups state reactively
+      setCalendarData((previous: any) => ({ ...previous, [`section_${sectionId}`]: data || true }));
       if (sectionId === 'SCHEDULING' && data?.groups) {
-        setCalendarGroups(data.groups.map((g: any) => ({
-          id: g.id,
-          name: g.title || g.name
-        })));
+        setCalendarGroups(data.groups.map((group: any) => ({ id: group.id, name: group.title || group.name })));
       }
-    } catch(e) {
-      console.error('Error saving calendar section:', e);
+      setLastSavedAt(new Date());
+      setPreviewLoading(true);
+      setPreviewVersion((version) => version + 1);
+    } catch (error) {
+      console.error('Error guardando la sección:', error);
     } finally {
       setSavingSection(null);
-      if (nextSectionId) {
-         toggleSection(nextSectionId);
-      } else {
-         generateLink(); // For the last payment step
-      }
     }
   };
 
-  const generateLink = () => {
-    const persistentId = calendarId || 'nuevo-calendario';
-    setGeneratedLink(`${window.location.origin}/booking/${persistentId}`);
-    setIsLinkGenerated(true);
-    setOpenSection('');
+  const saveCurrentSection = () => sectionSaveRef.current();
+  useHeaderActions([
+    ...(onBack ? [{ label: 'Volver', variant: 'ghost' as const, onClick: onBack }] : []),
+    { label: 'Guardar cambios', variant: 'ghost' as const, icon: <Save className="w-4 h-4" />, onClick: saveCurrentSection, loading: savingSection !== null },
+    { label: 'Publicar', variant: 'primary' as const, icon: <Send className="w-4 h-4" />, onClick: saveCurrentSection, loading: savingSection !== null },
+  ], [activeSection, savingSection, onBack]);
+
+  const sectionMeta = SECTION_COPY[activeSection] || SECTION_COPY.BASIC;
+  const registerSave = (save: () => void) => { sectionSaveRef.current = save; };
+
+  const renderSettings = () => {
+    if (activeSection === 'BASIC' || activeSection === 'DESIGN') {
+      return <BasicSettings key={activeSection} initialTitle={calendarTitle} initialData={calendarData?.section_BASIC} onSave={(data) => handleSaveSection('BASIC', data)} onRegisterSave={registerSave} />;
+    }
+    if (['SCHEDULING', 'SERVICES', 'GROUPS'].includes(activeSection)) {
+      return <SchedulingSettings key={activeSection} initialData={calendarData?.section_SCHEDULING} onSave={(data) => handleSaveSection('SCHEDULING', data)} calendarGroups={calendarGroups} onGroupsChange={setCalendarGroups} onRegisterSave={registerSave} />;
+    }
+    if (activeSection === 'FORMS') {
+      return <FormsSettings initialData={calendarData?.section_FORMS} onSave={(data) => handleSaveSection('FORMS', data)} calendarGroups={calendarGroups} onRegisterSave={registerSave} />;
+    }
+    if (activeSection === 'COMMS') {
+      return <CommunicationsSettings initialData={calendarData?.section_COMMS} onSave={(data) => handleSaveSection('COMMS', data)} calendarGroups={calendarGroups} onRegisterSave={registerSave} />;
+    }
+    if (activeSection === 'AUTO') {
+      return <AutomationSettings initialData={calendarData?.section_AUTO} onSave={(data) => handleSaveSection('AUTO', data)} calendarGroups={calendarGroups} onRegisterSave={registerSave} />;
+    }
+    if (activeSection === 'PAYMENT') {
+      return <PaymentSettings calendarId={calendarId} initialData={calendarData?.section_PAYMENT} onSave={(data) => handleSaveSection('PAYMENT', data)} onRegisterSave={registerSave} />;
+    }
+    return <ContextPanel section={activeSection} bookingUrl={bookingUrl} />;
   };
 
-  // Botón ÚNICO de guardado en el header: dispara el save de la sub-sección
-  // activa, que se registra aquí vía onRegisterSave. Posición fija para todas
-  // las secciones del editor.
-  const sectionSaveRef = useRef<() => void>(() => {});
-  useHeaderActions(
-    [
-      ...(onBack ? [{ label: 'Volver', variant: 'ghost' as const, onClick: onBack }] : []),
-      { label: 'Guardar Cambios', variant: 'primary' as const, icon: <Save className="w-4 h-4" />, onClick: () => sectionSaveRef.current(), loading: savingSection !== null },
-    ],
-    [openSection, savingSection, onBack],
-  );
-
   return (
-    <div className="flex flex-col flex-1 h-full max-w-5xl mx-auto w-full pb-20">
-      
-      {/* Header */}
-      <div className="flex justify-between items-center mb-10 pt-4">
-        <div className="flex items-center gap-4">
-          {onBack && (
-            <button onClick={onBack} className="w-10 h-10 flex items-center justify-center srf-panel hover:srf-sunken ink-3 hover:ink-1 rounded-full border hairline transition-all duration-200 cursor-pointer shadow-sm">
-              <svg className="w-5 h-5 -ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          )}
-          <h2 className="text-2xl font-bold tracking-tight ink-1 flex items-center">
-            {calendarTitle}
-            <div className="ml-3 w-8 h-8 flex items-center justify-center srf-sunken ink-1 rounded-lg text-sm border hairline shadow-sm">👤</div>
-          </h2>
-        </div>
-        
-        <label className="flex items-center cursor-pointer group">
-          <div className="relative">
-             <input type="checkbox" className="sr-only peer" defaultChecked />
-             <div className="block bg-slate-300 peer-checked:accent-bg w-12 h-7 rounded-full transition-colors border border-slate-300/20 peer-checked:border-slate-900/20 shadow-inner"></div>
-             <div className="dot absolute left-1 top-1 srf-panel w-5 h-5 rounded-full transition-transform duration-300 transform peer-checked:translate-x-5 shadow-[0_2px_5px_rgba(0,0,0,0.2)]"></div>
+    <div className="calendar-builder flex flex-1 min-h-0 w-full h-full overflow-hidden">
+      <section className="calendar-builder-preview flex-1 min-w-0 min-h-0 flex flex-col bg-slate-50">
+        <div className="h-14 px-5 flex items-center justify-between gap-4 border-b hairline bg-white/75 backdrop-blur-xl shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="flex items-center gap-2 text-xs font-bold ink-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Publicado</span>
+            <span className="w-px h-4 bg-slate-200" />
+            <span className="text-xs ink-3 truncate">{savingSection ? 'Guardando…' : lastSavedAt ? 'Guardado hace un momento' : 'Listo para editar'}</span>
           </div>
-        </label>
-      </div>
-
-      {/* URL Box */}
-      {isLinkGenerated ? (
-        <div className="srf-panel border hairline rounded-2xl p-4 flex flex-col md:flex-row items-center shadow-sm mb-10 gap-4 transition-all duration-500 animate-in fade-in slide-in-from-top-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0 border border-emerald-100">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-          </div>
-          <div className="flex-1 w-full srf-sunken border border-transparent hover:border-slate-300 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-black/20 rounded-xl px-4 py-3 flex items-center transition-all">
-             <input 
-               type="text" 
-               readOnly 
-               value={generatedLink}
-               className="w-full bg-transparent ink-1 text-[13px] font-semibold outline-none"
-             />
-          </div>
-          <div className="flex rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-slate-800/10">
-            <button className="accent-bg hover:brightness-110 px-4 py-3 text-white transition-colors cursor-pointer group tooltip-trigger relative">
-              <Edit2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            </button>
-            <button onClick={() => navigator.clipboard.writeText(generatedLink)} className="accent-bg hover:brightness-110 px-4 py-3 text-white border-l border-slate-800/50 transition-colors cursor-pointer group tooltip-trigger relative">
-              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-            </button>
-            <button onClick={() => openExternalUrl(generatedLink)} className="accent-bg hover:brightness-110 px-4 py-3 text-white border-l border-slate-800/50 transition-colors cursor-pointer group tooltip-trigger relative">
-              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="hidden xl:flex items-center h-9 rounded-xl srf-sunken border hairline p-1">
+              <button type="button" className="h-7 px-3 rounded-lg srf-panel shadow-sm text-xs font-bold ink-1 flex items-center gap-2"><Monitor className="w-3.5 h-3.5" /> Escritorio</button>
+            </div>
+            <button type="button" title="Recargar vista previa" onClick={() => { setPreviewLoading(true); setPreviewVersion((version) => version + 1); }} className="builder-icon-button"><RefreshCw className="w-4 h-4" /></button>
           </div>
         </div>
-      ) : (
-        <div className="srf-sunken border hairline rounded-2xl p-6 flex items-center shadow-sm mb-10 gap-6 transition-colors hover:srf-sunken">
-           <div className="w-14 h-14 rounded-2xl srf-panel border hairline flex items-center justify-center ink-3 shadow-sm">
-             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-           </div>
-           <div>
-             <h3 className="font-semibold ink-1 text-[15px] tracking-tight">Enlace del calendario no generado</h3>
-             <p className="text-[13px] ink-3 mt-1">Completa todas las configuraciones obligatorias para generar el enlace final permanente.</p>
-           </div>
+
+        <div className="flex-1 min-h-0 relative bg-white">
+          {previewLoading && <div className="absolute inset-0 z-10 bg-white/85 backdrop-blur-sm flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin ink-3" /></div>}
+          <iframe key={previewVersion} src={bookingUrl} title={`Vista previa de ${calendarTitle}`} onLoad={() => setPreviewLoading(false)} className="w-full h-full border-0" />
         </div>
-      )}
 
-      {/* Selector de Pasos */}
-      <div className="flex flex-nowrap gap-1 srf-sunken p-1 rounded-xl border hairline mb-6 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
-        {[
-          { id: 'BASIC', title: 'Configuración Básica', icon: <Settings className="w-4 h-4" /> },
-          { id: 'SCHEDULING', title: 'Programación', icon: <Calendar className="w-4 h-4" /> },
-          { id: 'FORMS', title: 'Formularios & Redirección', icon: <FileText className="w-4 h-4" /> },
-          { id: 'COMMS', title: 'Comunicaciones', icon: <Mail className="w-4 h-4" /> },
-          { id: 'AUTO', title: 'Automatización', icon: <Zap className="w-4 h-4" /> },
-        ].map((sec) => {
-          const isActive = openSection === sec.id;
-          return (
-            <button
-              key={sec.id}
-              onClick={() => setOpenSection(sec.id)}
-              className={`flex-1 min-w-max md:min-w-0 px-4 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
-                isActive
-                  ? 'srf-panel ink-1 shadow-sm border hairline font-extrabold scale-102'
-                  : 'ink-3 hover:ink-1 hover:srf-panel/50'
-              }`}
-            >
-              {sec.icon}
-              <span className="hidden lg:inline">{sec.title}</span>
-            </button>
-          );
-        })}
-      </div>
+        <div className="h-10 px-5 border-t hairline bg-white/75 flex items-center justify-between text-[11px] ink-3 shrink-0">
+          <span className="flex items-center gap-2"><Eye className="w-3.5 h-3.5" /> Vista previa del calendario público</span>
+          <button type="button" onClick={() => openExternalUrl(bookingUrl)} className="font-bold ink-2 hover:ink-1 flex items-center gap-1.5 cursor-pointer"><ExternalLink className="w-3.5 h-3.5" /> Abrir en otra pestaña</button>
+        </div>
+      </section>
 
-      {/* Componentes Directos Sin Contenedores Desplegables */}
-      {openSection === 'BASIC' && (
-        <BasicSettings
-          initialTitle={calendarTitle}
-          initialData={calendarData?.section_BASIC}
-          onSave={(data) => handleSaveSection('BASIC', 'SCHEDULING', data)}
-          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
-        />
-      )}
-
-      {openSection === 'SCHEDULING' && (
-        <SchedulingSettings
-          initialData={calendarData?.section_SCHEDULING}
-          onSave={(data) => handleSaveSection('SCHEDULING', 'FORMS', data)}
-          calendarGroups={calendarGroups}
-          onGroupsChange={setCalendarGroups}
-          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
-        />
-      )}
-
-      {openSection === 'FORMS' && (
-        <FormsSettings
-          initialData={calendarData?.section_FORMS}
-          onSave={(data) => handleSaveSection('FORMS', 'COMMS', data)}
-          calendarGroups={calendarGroups}
-          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
-        />
-      )}
-
-      {openSection === 'COMMS' && (
-        <CommunicationsSettings
-          initialData={calendarData?.section_COMMS}
-          onSave={(data) => handleSaveSection('COMMS', 'AUTO', data)}
-          calendarGroups={calendarGroups}
-          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
-        />
-      )}
-
-      {openSection === 'AUTO' && (
-        <AutomationSettings
-          initialData={calendarData?.section_AUTO}
-          onSave={(data) => handleSaveSection('AUTO', null, data)}
-          calendarGroups={calendarGroups}
-          onRegisterSave={(fn) => { sectionSaveRef.current = fn; }}
-        />
-      )}
-
+      <aside className="calendar-builder-properties w-[380px] shrink-0 srf-panel border-l hairline min-h-0 overflow-hidden flex flex-col">
+        <div className="px-5 py-4 border-b hairline shrink-0 srf-panel">
+          <p className="text-[10px] uppercase tracking-[0.14em] font-extrabold ink-3">{sectionMeta.eyebrow}</p>
+          <h2 className="mt-1 font-display text-lg font-bold ink-1">{sectionMeta.title}</h2>
+          <label className="calendar-builder-mobile-section mt-3">
+            <span className="sr-only">Sección del editor</span>
+            <select value={activeSection} onChange={(event) => onSectionChange(event.target.value)} className="w-full srf-sunken border hairline rounded-xl px-3 py-2 text-sm font-semibold">
+              {Object.entries(SECTION_COPY).map(([id, item]) => <option key={id} value={id}>{item.title}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="calendar-builder-properties-content flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain">
+          {renderSettings()}
+        </div>
+      </aside>
     </div>
   );
 };

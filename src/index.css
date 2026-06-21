@@ -222,4 +222,75 @@
   .tap-highlight {
     -webkit-tap-highlight-color: transparent;
   }
+
+  .builder-icon-button {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 1px solid var(--hairline);
+    background: var(--srf-panel);
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 160ms ease;
+  }
+  .builder-icon-button:hover { color: var(--ink-1); filter: brightness(.97); }
+
+  .builder-secondary-button {
+    width: 100%;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    border-radius: .75rem;
+    border: 1px solid var(--hairline);
+    background: var(--srf-panel);
+    color: var(--ink-1);
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Los modificadores viven únicamente en el inspector derecho. Se fuerzan a
+     una columna para que los formularios heredados no desborden el panel. */
+  .calendar-builder-mobile-section { display: none; }
+  .calendar-builder-properties-content .md\:p-8,
+  .calendar-builder-properties-content .p-8 { padding: 1.25rem; }
+  .calendar-builder-properties-content .md\:grid-cols-2,
+  .calendar-builder-properties-content .md\:grid-cols-5,
+  .calendar-builder-properties-content .md\:grid-cols-12 { grid-template-columns: minmax(0, 1fr); }
+  .calendar-builder-properties-content .md\:col-span-1,
+  .calendar-builder-properties-content .md\:col-span-2,
+  .calendar-builder-properties-content .md\:col-span-5,
+  .calendar-builder-properties-content .md\:col-span-7 { grid-column: auto; }
+  .calendar-builder-properties-content .md\:flex-row { flex-direction: column; }
+  .calendar-builder-properties-content .md\:items-center { align-items: stretch; }
+  .calendar-builder-properties-content .md\:w-72,
+  .calendar-builder-properties-content .w-48 { width: 100%; }
+  .calendar-builder-properties-content .max-w-5xl,
+  .calendar-builder-properties-content .max-w-2xl { max-width: 100%; }
+  .calendar-builder-properties-content .builder-embedded-toolbar { display: none; }
+  .calendar-builder-properties-content > div > div.sticky { position: static; }
+  .calendar-builder-properties-content input,
+  .calendar-builder-properties-content select,
+  .calendar-builder-properties-content textarea,
+  .calendar-builder-properties-content button { min-width: 0; max-width: 100%; }
+  .calendar-builder-properties-content .justify-between { gap: .75rem; flex-wrap: wrap; }
+  .calendar-builder-properties-content .gap-10 { gap: 1.25rem; }
+  .calendar-builder-properties-content .gap-8 { gap: 1rem; }
+  .calendar-builder-properties-content .space-y-12 > :not(:last-child) { margin-bottom: 1.75rem; }
+
+  @media (max-width: 1280px) {
+    .calendar-builder-properties { width: 340px; }
+  }
+
+  @media (max-width: 900px) {
+    .calendar-builder { flex-direction: column; }
+    .calendar-builder-preview { flex: 0 0 55%; min-height: 360px; }
+    .calendar-builder-properties { width: 100%; flex: 1 1 45%; min-height: 300px; border-left: 0; border-top: 1px solid var(--hairline); }
+    .calendar-builder-mobile-section { display: block; }
+  }
 }

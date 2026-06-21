@@ -192,13 +192,15 @@ const Dashboard: React.FC = () => {
   const renderContent = () => {
     if (activeSidebarItem === 'Editor de calendario') {
       return (
-        <div className="flex-1 min-h-0 mt-4 md:mt-6 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           <CalendarEditor
             calendarId={editingCalendarId}
             calendarTitle={editingCalendarTitle}
             activeSection={editorSection}
             onSectionChange={setEditorSection}
             onBack={() => setActiveSidebarItem('Mis calendarios')}
+            unreadCount={unreadCount}
+            onShowNotifications={() => setShowNotifications(true)}
           />
         </div>
       );
@@ -280,7 +282,15 @@ const Dashboard: React.FC = () => {
         />
       )}
       {activeSidebarItem === 'Editor de calendario' && (
-        <CalendarEditor calendarId={editingCalendarId} calendarTitle={editingCalendarTitle} activeSection={editorSection} onSectionChange={setEditorSection} onBack={() => setActiveSidebarItem('Mis calendarios')} />
+        <CalendarEditor
+          calendarId={editingCalendarId}
+          calendarTitle={editingCalendarTitle}
+          activeSection={editorSection}
+          onSectionChange={setEditorSection}
+          onBack={() => setActiveSidebarItem('Mis calendarios')}
+          unreadCount={unreadCount}
+          onShowNotifications={() => setShowNotifications(true)}
+        />
       )}
       {activeSidebarItem === 'Lista de Citas' && (
         <AppointmentsView calendarFilter={selectedCalendarIdForList} setCalendarFilter={setSelectedCalendarIdForList} />
@@ -318,7 +328,7 @@ const Dashboard: React.FC = () => {
            </>
          ) : (
            <>
-             {renderTopBar()}
+             {activeSidebarItem !== 'Editor de calendario' && renderTopBar()}
              {renderContent()}
            </>
          )}

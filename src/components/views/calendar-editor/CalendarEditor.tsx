@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Check, Copy, ExternalLink, Eye, Loader2, Monitor,
-  RefreshCw, Save, Send,
+  RefreshCw, Save, Send, Bell, Calendar as CalendarIcon, ChevronRight
 } from 'lucide-react';
 import { openExternalUrl } from '../../../lib/device';
-import { useHeaderActions } from '../../../lib/headerActions';
 import BasicSettings from './BasicSettings';
 import SchedulingSettings from './SchedulingSettings';
 import FormsSettings from './FormsSettings';
@@ -18,6 +17,8 @@ interface CalendarEditorProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
   onBack?: () => void;
+  unreadCount?: number;
+  onShowNotifications?: () => void;
 }
 
 const SECTION_COPY: Record<string, { title: string; eyebrow: string }> = {
@@ -82,6 +83,8 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
   activeSection,
   onSectionChange,
   onBack,
+  unreadCount = 0,
+  onShowNotifications,
 }) => {
   const persistentId = calendarId || 'nuevo-calendario';
   const bookingUrl = `${window.location.origin}/booking/${persistentId}`;
@@ -146,11 +149,6 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
   };
 
   const saveCurrentSection = () => sectionSaveRef.current();
-  useHeaderActions([
-    ...(onBack ? [{ label: 'Volver', variant: 'ghost' as const, onClick: onBack }] : []),
-    { label: 'Guardar cambios', variant: 'ghost' as const, icon: <Save className="w-4 h-4" />, onClick: saveCurrentSection, loading: savingSection !== null },
-    { label: 'Publicar', variant: 'primary' as const, icon: <Send className="w-4 h-4" />, onClick: saveCurrentSection, loading: savingSection !== null },
-  ], [activeSection, savingSection, onBack]);
 
   const sectionMeta = SECTION_COPY[activeSection] || SECTION_COPY.BASIC;
   const registerSave = (save: () => void) => { sectionSaveRef.current = save; };
@@ -180,21 +178,40 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
   return (
     <div className="calendar-builder flex flex-1 min-h-0 w-full h-full overflow-hidden">
       <section className="calendar-builder-preview flex-1 min-w-0 min-h-0 flex flex-col bg-slate-50">
-        <div className="h-14 px-5 flex items-center justify-between gap-4 border-b hairline bg-white/75 backdrop-blur-xl shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="flex items-center gap-2 text-xs font-bold ink-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Publicado</span>
-            <span className="w-px h-4 bg-slate-200" />
-            <span className="text-xs ink-3 truncate">{savingSection ? 'Guardando…' : lastSavedAt ? 'Guardado hace un momento' : 'Listo para editar'}</span>
+        {/* Custom top bar inside preview area (reduced width since it's next to right properties sidebar) */}
+        <div className="glass-strong flex mx-4 md:mx-6 mt-4 md:mt-6 r-window px-5 py-3.5 items-center justify-between flex-shrink-0 z-30">
+          <div className="flex items-center text-sm font-medium ink-2 min-w-0">
+            <span className="flex items-center p-1.5 srf-sunken ink-3 rounded-[9px] mr-3" style={{ border: '1px solid var(--hairline)' }}>
+              <CalendarIcon className="w-4 h-4" />
+            </span>
+            <span className="hover:ink-1 cursor-pointer transition-colors duration-200">Calendarios</span>
+            <ChevronRight className="w-4 h-4 mx-2 ink-3 opacity-60" />
+            <span className="ink-1 font-semibold">Editor de calendario</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden xl:flex items-center h-9 rounded-xl srf-sunken border hairline p-1">
+
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Toggle device button (Escritorio) */}
+            <div className="hidden xl:flex items-center h-9 rounded-xl srf-sunken border hairline p-1 bg-slate-100/50">
               <button type="button" className="h-7 px-3 rounded-lg srf-panel shadow-sm text-xs font-bold ink-1 flex items-center gap-2"><Monitor className="w-3.5 h-3.5" /> Escritorio</button>
             </div>
+            {/* Refresh preview button */}
             <button type="button" title="Recargar vista previa" onClick={() => { setPreviewLoading(true); setPreviewVersion((version) => version + 1); }} className="builder-icon-button"><RefreshCw className="w-4 h-4" /></button>
+            
+            {/* Back button (Volver) */}
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-4 text-[13px] srf-raised ink-1 hover:brightness-95 border hairline"
+              >
+                Volver
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 relative bg-white">
+        {/* Preview Iframe (Directly fills space, no rounded container outer wrapper) */}
+        <div className="flex-1 min-h-0 relative bg-white mt-4">
           {previewLoading && <div className="absolute inset-0 z-10 bg-white/85 backdrop-blur-sm flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin ink-3" /></div>}
           <iframe key={previewVersion} src={bookingUrl} title={`Vista previa de ${calendarTitle}`} onLoad={() => setPreviewLoading(false)} className="w-full h-full border-0" />
         </div>
@@ -206,6 +223,44 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
       </section>
 
       <aside className="calendar-builder-properties w-[380px] shrink-0 srf-panel border-l hairline min-h-0 overflow-hidden flex flex-col">
+        {/* Right sidebar header containing Guardar, Publicar, and Bell */}
+        <div className="h-[76px] px-5 flex items-center justify-between border-b hairline bg-white shrink-0">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={saveCurrentSection}
+              disabled={savingSection !== null}
+              className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-3 text-[12px] srf-raised ink-1 hover:brightness-95 border hairline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingSection !== null ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Guardar cambios
+            </button>
+            <button
+              type="button"
+              onClick={saveCurrentSection}
+              disabled={savingSection !== null}
+              className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-3.5 text-[12px] accent-fill hover:brightness-110 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingSection !== null ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              Publicar
+            </button>
+          </div>
+          <button
+            onClick={onShowNotifications}
+            className="w-10 h-10 rounded-full srf-raised ink-2 flex items-center justify-center shadow-sm relative active:scale-95 transition-all cursor-pointer hover:brightness-95 border hairline"
+            title="Notificaciones"
+            aria-label="Notificaciones"
+          >
+            <Bell className="w-4.5 h-4.5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full border border-white flex items-center justify-center leading-none animate-pulse">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Existing Section Header */}
         <div className="px-5 py-4 border-b hairline shrink-0 srf-panel">
           <p className="text-[10px] uppercase tracking-[0.14em] font-extrabold ink-3">{sectionMeta.eyebrow}</p>
           <h2 className="mt-1 font-display text-lg font-bold ink-1">{sectionMeta.title}</h2>

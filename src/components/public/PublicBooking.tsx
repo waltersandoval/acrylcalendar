@@ -44,12 +44,13 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [step, setStep] = useState<'date' | 'form' | 'payment' | 'success'>('date');
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    email: '', 
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
     phoneCode: '+504',
     phone: '',
-    termsAccepted: false
+    termsAccepted: false,
+    custom: {} as Record<string, string>,
   });
   const [submitting, setSubmitting] = useState(false);
   // Estado de pago: guarda los datos del form para usarlos en la verificación post-pago
@@ -608,6 +609,7 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
       email: formData.email,
       phone: `${formData.phoneCode}-${formData.phone}`,
       termsAccepted: formData.termsAccepted,
+      customFields: formData.custom || {},
       fullDate: selectedDate.toISOString(),
     };
   };
@@ -768,10 +770,16 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
           <p className="ink-2 mb-6 flex items-center text-sm font-semibold">
             <Clock className="w-4 h-4 mr-2.5 ink-1" />
-            {selectedGroup 
+            {selectedGroup
               ? `${selectedGroup.sessionDurationMinutes || (parseInt(selectedGroup.sessionTimeHours, 10)*60 + parseInt(selectedGroup.sessionTimeMinutes, 10)) || 30} minutos`
               : (calendar?.section_BASIC?.duration || '30 minutos')}
           </p>
+
+          {calendar?.section_BASIC?.description && (
+            <p className="text-sm ink-2 mb-6 leading-relaxed whitespace-pre-line">
+              {calendar.section_BASIC.description}
+            </p>
+          )}
 
           {(() => {
             const hasActiveConfig = !!paymentConfig && !!paymentConfig.enabled;
@@ -1248,6 +1256,33 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                       />
                     </div>
                   </div>
+
+                  {(() => {
+                    const formsData = calendar?.section_FORMS;
+                    const formGroups = Array.isArray(formsData) ? formsData : (formsData?.groupsData || []);
+                    const groupForm = formGroups.find((g: any) => g.id === selectedGroup?.id) || formGroups[0];
+                    const customFields = (groupForm?.fields || []).filter((f: any) => !f.isDefault);
+                    return customFields.map((field: any) => {
+                      const isLong = String(field.type || '').toLowerCase().includes('larga');
+                      const common = {
+                        required: !!field.required,
+                        placeholder: field.label,
+                        value: formData.custom[field.id] || '',
+                        onChange: (e: any) => setFormData({ ...formData, custom: { ...formData.custom, [field.id]: e.target.value } }),
+                        className: 'w-full px-4 py-3 srf-sunken border hairline rounded-xl text-sm ink-1 placeholder-slate-400 focus:srf-panel focus:ring-4 focus:ring-slate-100 focus:border-slate-950 outline-none transition-all font-semibold',
+                      };
+                      return (
+                        <div key={field.id}>
+                          <label className="block text-[11px] font-extrabold ink-3 uppercase tracking-widest mb-1.5 ml-1">
+                            {field.label}{field.required && <span className="text-rose-500 ml-1">*</span>}
+                          </label>
+                          {isLong
+                            ? <textarea rows={3} {...common} className={common.className + ' resize-none'} />
+                            : <input type="text" {...common} />}
+                        </div>
+                      );
+                    });
+                  })()}
 
                   <div className="flex items-start srf-sunken border hairline p-3.5 rounded-2xl mt-6">
                     <div className="flex items-center h-5 mt-0.5">

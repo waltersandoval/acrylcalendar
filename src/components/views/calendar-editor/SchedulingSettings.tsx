@@ -1096,9 +1096,11 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                                     type="checkbox"
                                     checked={day.active}
                                     onChange={(e) => updateDay(dayIndex, { active: e.target.checked })}
-                                    className="peer appearance-none w-[20px] h-[20px] rounded-md border-2 border-slate-300 checked:accent-bg checked:border-black transition-all cursor-pointer shadow-sm"
+                                    className="sr-only"
                                   />
-                                  <svg className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                  <span className={`w-[20px] h-[20px] rounded-md border-2 flex items-center justify-center transition-all shadow-sm ${day.active ? 'accent-bg border-transparent' : 'border-slate-300 srf-panel'}`}>
+                                    {day.active && <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                                  </span>
                                </div>
                                <span className={`text-[14px] font-semibold select-none ${day.active ? 'ink-1' : 'ink-3'}`}>{day.name}</span>
                             </label>
@@ -1163,13 +1165,15 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                         <div className="w-[130px] flex-shrink-0 pt-2 relative z-10">
                           <label className="flex items-center cursor-pointer group">
                             <div className="relative flex items-center justify-center">
-                              <input 
-                                type="checkbox" 
-                                checked={day.active} 
+                              <input
+                                type="checkbox"
+                                checked={day.active}
                                 onChange={(e) => updateDay(dayIndex, { active: e.target.checked })}
-                                className="peer appearance-none w-[22px] h-[22px] rounded-md border-2 border-slate-300 checked:accent-bg checked:border-black transition-all cursor-pointer shadow-sm" 
+                                className="sr-only"
                                />
-                              <svg className="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                              <span className={`w-[22px] h-[22px] rounded-md border-2 flex items-center justify-center transition-all shadow-sm ${day.active ? 'accent-bg border-transparent' : 'border-slate-300 srf-panel'}`}>
+                                {day.active && <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
+                              </span>
                             </div>
                             <span className={`ml-3.5 text-[14px] font-semibold select-none transition-colors ${day.active ? 'ink-1' : 'ink-3 group-hover:ink-1'}`}>{day.name}</span>
                           </label>
@@ -1247,13 +1251,15 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                      <div key={month.name} className="flex flex-col gap-2">
                         <label className="flex items-center cursor-pointer mb-1">
                           <div className="relative flex items-center justify-center">
-                            <input 
-                              type="checkbox" 
-                              checked={month.active} 
+                            <input
+                              type="checkbox"
+                              checked={month.active}
                               onChange={(e) => updateMonth(monthIndex, { active: e.target.checked })}
-                              className="peer appearance-none w-[18px] h-[18px] rounded-[5px] border border-slate-300 checked:accent-bg checked:border-transparent transition-all cursor-pointer shadow-sm" 
+                              className="sr-only"
                             />
-                            <svg className="absolute w-2.5 h-2.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <span className={`w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center transition-all shadow-sm ${month.active ? 'accent-bg border-transparent' : 'border-slate-300 srf-panel'}`}>
+                              {month.active && <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
+                            </span>
                           </div>
                           <span className={`ml-3 text-[13px] font-semibold select-none ${month.active ? 'ink-1' : 'ink-3'}`}>{month.name}</span>
                         </label>
@@ -1453,7 +1459,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                <svg className={`w-5 h-5 ink-3 transform transition-transform ${showAdvanced ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
             </div>
             
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showAdvanced ? 'max-h-[1200px] opacity-100 border-t hairline' : 'max-h-0 opacity-0'}`}>
+            <div className={`border-t hairline ${showAdvanced ? 'block' : 'hidden'}`}>
                <div className="p-7 space-y-7">
                  {/* Aprobación de nuevas citas */}
                  <div>
@@ -1593,18 +1599,6 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
 
                </div>
             </div>
-          </div>
-        )}
-
-        {mode === 'GROUPS' && (
-          <div className="mt-8 animate-fadeIn">
-             <button 
-               onClick={() => handleDeleteGroup(activeGroup.id)}
-               className="bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm px-6 py-3 rounded-lg shadow-sm flex items-center transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-               disabled={groups.length === 1}
-             >
-                <Trash2 className="w-4 h-4 mr-2" /> ELIMINAR GRUPO
-             </button>
           </div>
         )}
 

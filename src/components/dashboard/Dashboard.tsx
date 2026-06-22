@@ -201,6 +201,7 @@ const Dashboard: React.FC = () => {
             onBack={() => setActiveSidebarItem('Mis calendarios')}
             unreadCount={unreadCount}
             onShowNotifications={() => setShowNotifications(true)}
+            onTitleChange={setEditingCalendarTitle}
           />
         </div>
       );
@@ -290,6 +291,7 @@ const Dashboard: React.FC = () => {
           onBack={() => setActiveSidebarItem('Mis calendarios')}
           unreadCount={unreadCount}
           onShowNotifications={() => setShowNotifications(true)}
+          onTitleChange={setEditingCalendarTitle}
         />
       )}
       {activeSidebarItem === 'Lista de Citas' && (

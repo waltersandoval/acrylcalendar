@@ -19,6 +19,7 @@ interface CalendarEditorProps {
   onBack?: () => void;
   unreadCount?: number;
   onShowNotifications?: () => void;
+  onTitleChange?: (title: string) => void;
 }
 
 const SECTION_COPY: Record<string, { title: string; eyebrow: string }> = {
@@ -72,6 +73,7 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
   onBack,
   unreadCount = 0,
   onShowNotifications,
+  onTitleChange,
 }) => {
   const persistentId = calendarId || 'nuevo-calendario';
   const bookingUrl = `${window.location.origin}/booking/${persistentId}`;
@@ -116,12 +118,25 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
     try {
       const { db } = await import('../../../lib/firebase');
       const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
-      await setDoc(doc(db, 'calendars', calendarId), {
+      const docData: any = {
         [`section_${sectionId}`]: data || true,
         updatedAt: serverTimestamp(),
-      }, { merge: true });
+      };
+      if (sectionId === 'BASIC' && data?.title) {
+        docData.title = data.title;
+      }
+      await setDoc(doc(db, 'calendars', calendarId), docData, { merge: true });
 
-      setCalendarData((previous: any) => ({ ...previous, [`section_${sectionId}`]: data || true }));
+      setCalendarData((previous: any) => ({
+        ...previous,
+        title: sectionId === 'BASIC' && data?.title ? data.title : (previous?.title || ''),
+        [`section_${sectionId}`]: data || true
+      }));
+
+      if (sectionId === 'BASIC' && data?.title && onTitleChange) {
+        onTitleChange(data.title);
+      }
+
       if (sectionId === 'SCHEDULING' && data?.groups) {
         setCalendarGroups(data.groups.map((group: any) => ({ id: group.id, name: group.title || group.name })));
       }

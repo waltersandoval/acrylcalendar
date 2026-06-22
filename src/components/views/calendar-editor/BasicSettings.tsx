@@ -73,9 +73,9 @@ const BasicSettings: React.FC<Props> = ({ onSave, onRegisterSave, initialTitle =
       description,
       logoBase64,
       tzMode,
-      fixedTimezone: tzMode === 'fixed' ? fixedTimezone : null,
+      fixedTimezone,
       langMode,
-      fixedLanguage: langMode === 'fixed' ? fixedLanguage : null,
+      fixedLanguage,
     };
     
     if (onSave) {

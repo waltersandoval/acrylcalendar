@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Bell, Bot, CalendarClock, CircleDollarSign, FileText,
+  Bell, Bot, Calendar, CalendarClock, CircleDollarSign, Clock, FileText,
   FolderKanban, Globe2, HelpCircle, Image, Info, Menu, Send,
   Settings as SettingsIcon, Shapes,
 } from 'lucide-react';
@@ -20,7 +20,8 @@ interface SidebarProps {
 const editorItems = [
   { id: 'BASIC', name: 'Información general', icon: Info },
   { id: 'DESIGN', name: 'Diseño visual', icon: Image },
-  { id: 'SCHEDULING', name: 'Horarios', icon: CalendarClock },
+  { id: 'SCHEDULING', name: 'Horarios', icon: Clock },
+  { id: 'AVAILABILITY', name: 'Meses y disponibilidad', icon: Calendar },
   { id: 'SERVICES', name: 'Servicios', icon: Shapes },
   { id: 'GROUPS', name: 'Grupos', icon: FolderKanban },
   { id: 'FORMS', name: 'Formularios', icon: FileText },

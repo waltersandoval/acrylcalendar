@@ -308,6 +308,7 @@ const CustomTimePicker = ({ value, onChange, disabled = false }: { value: string
 
 interface Props {
   initialData?: any;
+  initialDataBasic?: any;
   onSave?: (data: any) => void;
   onRegisterSave?: (fn: () => void) => void;
   calendarGroups?: {id: string; name: string}[];
@@ -524,9 +525,16 @@ const findCrossGroupOverlap = (groupsList: any[]): OverlapError | null => {
   return null;
 };
 
-const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, calendarGroups, onGroupsChange, mode }) => {
+const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, onSave, onRegisterSave, calendarGroups, onGroupsChange, mode }) => {
   const isMobileApp = true; // Force mobile/stacked layout inside properties sidebar
   const [timezone, setTimezone] = useState('America/Guatemala');
+  const calendarTimezone = initialDataBasic?.fixedTimezone || 'America/Guatemala';
+
+  useEffect(() => {
+    if (initialDataBasic?.fixedTimezone) {
+      setTimezone(initialDataBasic.fixedTimezone);
+    }
+  }, [initialDataBasic]);
   const [groups, setGroups] = useState<GroupSettings[]>(
     initialData?.groups && initialData.groups.length > 0 
       ? initialData.groups 
@@ -642,6 +650,39 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
       if (intervalMins < 0) {
         setErrorMessage(`El intervalo entre sesiones para "${gName}" no puede ser negativo.`);
         return false;
+      }
+
+      // Validar solapamientos e intervalos duplicados en el mismo día para el grupo
+      for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+        const d = g.days?.[dayIdx];
+        if (d?.active && d.times) {
+          for (let ti = 0; ti < d.times.length; ti++) {
+            const t1 = d.times[ti];
+            const start1 = parseTimeToMinutes(t1.start);
+            const end1 = parseTimeToMinutes(t1.end);
+            
+            if (start1 >= end1) {
+              setErrorMessage(`En ${d.name} (${gName}), la hora de inicio (${t1.start}) debe ser anterior a la hora de fin (${t1.end}).`);
+              return false;
+            }
+            
+            for (let tj = ti + 1; tj < d.times.length; tj++) {
+              const t2 = d.times[tj];
+              const start2 = parseTimeToMinutes(t2.start);
+              const end2 = parseTimeToMinutes(t2.end);
+              
+              if (start1 === start2 && end1 === end2) {
+                setErrorMessage(`En ${d.name} (${gName}), el intervalo de ${t1.start} a ${t1.end} está duplicado.`);
+                return false;
+              }
+              
+              if (start1 < end2 && start2 < end1) {
+                setErrorMessage(`En ${d.name} (${gName}), el intervalo de ${t1.start} a ${t1.end} se solapa con el intervalo de ${t2.start} a ${t2.end}.`);
+                return false;
+              }
+            }
+          }
+        }
       }
     }
 
@@ -1015,14 +1056,14 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
               </div>
               <span className="ml-4 text-[13px] font-semibold ink-1 select-none">Bloquear horarios cruzados entre diferentes grupos del calendario.</span>
             </label>
-             <Info className="w-4 h-4 ink-3 ml-3 cursor-help hidden md:block" />
+            <Info className="w-4 h-4 ink-3 ml-3 cursor-help hidden md:block" />
           </div>
         )}
 
         {(!mode || mode === 'SCHEDULING') && (
-          <>
+          <div className="animate-fadeIn">
             {/* Horario Disponible */}
-            <div className="animate-fadeIn">
+            <div>
              {isMobileApp ? (
              <div>
                 <div className="flex items-center mb-4">
@@ -1031,13 +1072,13 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
                    </h3>
                 </div>
 
-                {/* Zona horaria — mismo estilo que Meses Disponibles */}
-                <div className="relative mb-4">
-                   <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 ink-3 pointer-events-none" />
-                   <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full appearance-none srf-panel border hairline rounded-xl pl-11 pr-10 py-3 text-[14px] font-medium ink-1 outline-none focus:ring-2 focus:ring-black/20 shadow-sm cursor-pointer">
-                      {['America/Guatemala', 'America/Tegucigalpa', 'America/Mexico_City', 'America/El_Salvador', 'America/Managua', 'America/Costa_Rica', 'America/Panama', 'America/Bogota', 'Europe/Madrid'].map((tz) => <option key={tz}>{tz}</option>)}
-                   </select>
-                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 ink-3 pointer-events-none" />
+                {/* Zona horaria — informativa y de solo lectura */}
+                <div className="flex items-center srf-sunken border hairline rounded-xl px-4 py-3 gap-3 mb-4">
+                   <Globe className="w-4.5 h-4.5 ink-3 shrink-0" />
+                   <div className="flex-1 min-w-0">
+                      <span className="block text-[13px] font-semibold ink-1 truncate">{calendarTimezone}</span>
+                      <span className="block text-[10px] font-semibold ink-3 leading-tight">Configurado en Información General</span>
+                   </div>
                 </div>
 
                 {/* Days card — same style as Meses Disponibles */}
@@ -1111,7 +1152,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
                      Horarios Habilitados <span className="text-red-500 ml-1 opacity-80">*</span> <Info className="w-4 h-4 ink-3 ml-2" />
                   </h3>
                   <span className="text-[13px] font-semibold ink-3 flex items-center srf-sunken px-3 py-1.5 rounded-lg border hairline">
-                     <div className="w-2 h-2 rounded-full bg-slate-400 mr-2"></div> America/Guatemala
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></div> {calendarTimezone}
                   </span>
                </div>
 
@@ -1127,7 +1168,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
                                 checked={day.active} 
                                 onChange={(e) => updateDay(dayIndex, { active: e.target.checked })}
                                 className="peer appearance-none w-[22px] h-[22px] rounded-md border-2 border-slate-300 checked:accent-bg checked:border-black transition-all cursor-pointer shadow-sm" 
-                              />
+                               />
                               <svg className="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                             </div>
                             <span className={`ml-3.5 text-[14px] font-semibold select-none transition-colors ${day.active ? 'ink-1' : 'ink-3 group-hover:ink-1'}`}>{day.name}</span>
@@ -1188,9 +1229,11 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
                </>
                )}
             </div>
+          </div>
+        )}
 
-            <hr className="border-t hairline my-10" />
-
+        {(!mode || mode === 'AVAILABILITY') && (
+          <div className="animate-fadeIn">
             {/* Fechas Disponible */}
             <div>
                <div className="mb-6">
@@ -1242,7 +1285,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
             </div>
 
             <hr className="border-t hairline my-10" />
-          </>
+          </div>
         )}
 
         {/* Lower specs */}
@@ -1262,143 +1305,143 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
              </div>
            )}
 
-           {(!mode || mode === 'SCHEDULING') && (
-             <>
-               <div className="animate-fadeIn">
-                  <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5 ml-1">
-                     Disponibilidad <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
-                  </label>
-                  
-                  {activeGroup.availabilityType === '... días corridos' ? (
-                    <div className="flex">
-                       <input 
-                         type="number"
-                         min="1"
-                         value={activeGroup.availabilityRollingDays}
-                         onChange={(e) => updateGroup({ availabilityRollingDays: e.target.value })}
-                         className="w-24 srf-panel border hairline border-r-0 rounded-l-xl px-4 py-3 text-sm focus:outline-none ink-1 font-semibold text-center z-10 focus:border-slate-300 focus:ring-2 focus:ring-black/20 shadow-sm"
-                       />
-                       <select 
-                         value={activeGroup.availabilityType}
-                         onChange={(e) => updateGroup({ availabilityType: e.target.value })}
-                         className="w-full srf-panel border hairline focus:border-slate-300 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 ink-1 font-semibold shadow-sm transition-all cursor-pointer"
-                       >
-                          <option value="Indefinidamente">Indefinidamente</option>
-                          <option value="Hasta cierto día...">Hasta cierto día...</option>
-                          <option value="... días corridos">... días corridos</option>
-                       </select>
-                    </div>
-                  ) : activeGroup.availabilityType === 'Hasta cierto día...' ? (
-                    <div className="flex">
-                       <select 
-                         value={activeGroup.availabilityType}
-                         onChange={(e) => updateGroup({ availabilityType: e.target.value })}
-                         className="w-full srf-panel border hairline border-r-0 focus:border-slate-300 rounded-l-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 ink-1 font-semibold shadow-sm transition-all cursor-pointer z-10"
-                       >
-                          <option value="Indefinidamente">Indefinidamente</option>
-                          <option value="Hasta cierto día...">Hasta cierto día...</option>
-                          <option value="... días corridos">... días corridos</option>
-                       </select>
-                       <div className="w-full relative srf-panel rounded-r-xl shadow-sm">
-                         <CustomDatePicker 
-                           value={activeGroup.availabilityDate}
-                           onChange={(val) => updateGroup({ availabilityDate: val })}
-                           placeholder="Seleccione fecha"
-                           className="flex items-center bg-transparent border hairline hover:border-slate-300 rounded-r-xl px-4 py-3 text-sm w-full transition-all cursor-pointer h-full border-l-0 focus-within:ring-2 focus-within:ring-black/20"
-                         />
-                       </div>
-                    </div>
-                  ) : (
-                    <select 
-                      value={activeGroup.availabilityType}
-                      onChange={(e) => updateGroup({ availabilityType: e.target.value })}
-                      className="w-full srf-panel border hairline focus:border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 ink-1 font-semibold shadow-sm transition-all cursor-pointer"
-                    >
-                       <option value="Indefinidamente">Indefinidamente</option>
-                       <option value="Hasta cierto día...">Hasta cierto día...</option>
-                       <option value="... días corridos">... días corridos</option>
-                    </select>
-                  )}
-
-                  {activeGroup.availabilityType === 'Hasta cierto día...' && activeGroup.availabilityDate && (
-                    <p className="text-[13px] ink-3 mt-2 font-medium leading-relaxed">Los horarios sólo pueden ser recibidos antes de las 11:59 pm del día {activeGroup.availabilityDate.split('-').reverse().join('/')}</p>
-                  )}
-                  {activeGroup.availabilityType === '... días corridos' && (
-                    <p className="text-[13px] ink-3 mt-2 font-medium leading-relaxed">Estás disponible para nuevas citas durante {activeGroup.availabilityRollingDays || 0} días calendario a partir de hoy</p>
-                  )}
-               </div>
-               
-               <div className="md:col-span-2">
-                  <label className="flex items-center text-[13px] font-semibold ink-1 mb-3 block">
-                     Anticipación mínima <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
-                  </label>
-                  <div className="flex max-w-sm">
-                     {['Día(s) y', 'Horas', 'Minutos'].includes(activeGroup.minAnticipationType) && (
-                       <input 
-                         type="number" 
-                         min="0"
-                         value={activeGroup.minAnticipationValue} 
-                         onChange={(e) => updateGroup({ minAnticipationValue: e.target.value })}
-                         className="w-24 srf-panel border hairline border-r-0 rounded-l-xl px-4 py-3 text-sm focus:outline-none ink-1 font-semibold text-center z-10 focus:border-slate-300 focus:ring-2 focus:ring-black/20 shadow-sm" 
-                       />
-                     )}
-                     <select 
-                       value={activeGroup.minAnticipationType}
-                       onChange={(e) => updateGroup({ minAnticipationType: e.target.value })}
-                       className={`w-full srf-panel border hairline focus:border-slate-300 px-4 py-3 text-sm ink-1 font-semibold outline-none cursor-pointer focus:ring-2 focus:ring-black/20 shadow-sm ${['Día(s) y', 'Horas', 'Minutos'].includes(activeGroup.minAnticipationType) ? 'rounded-r-xl border-l-0' : 'rounded-xl'}`}
-                     >
-                        <option value="Sin anticipación mínima">Sin anticipación mínima</option>
-                        <option value="No hay disponibilidad para hoy">No hay disponibilidad para hoy</option>
-                        <option value="No hay disponibilidad para hoy ni mañana">No hay disponibilidad para hoy ni mañana</option>
-                        <option value="Día(s) y">Día(s) y</option>
-                        <option value="Horas">Horas</option>
-                        <option value="Minutos">Minutos</option>
-                     </select>
-                  </div>
-                  {['Día(s) y', 'Horas', 'Minutos'].includes(activeGroup.minAnticipationType) && (
-                     <p className="text-[13px] ink-3 mt-2.5 font-medium leading-relaxed">Este grupo no recibirá citas para el próximo {activeGroup.minAnticipationValue || 0} {activeGroup.minAnticipationType.replace('Día(s) y', 'Día(s)').trim()}</p>
-                  )}
-               </div>
-
-               <div className="md:col-span-2">
-                  <label className="flex items-center text-[13px] font-semibold ink-1 mb-3">
-                     Bloqueos de calendario puntuales (Vacaciones / Festivos) <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                     <div className="min-w-[280px]">
-                       <CustomDatePicker 
-                         value={activeGroup.newBlockedDate} 
-                         onChange={(val) => updateGroup({ newBlockedDate: val })} 
-                         placeholder="Seleccione una fecha exacta" 
-                       />
+           {(!mode || mode === 'AVAILABILITY') && (
+              <>
+                <div className="animate-fadeIn">
+                   <label className="flex items-center text-[13px] font-semibold ink-1 mb-2.5 ml-1">
+                      Disponibilidad <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                   </label>
+                   
+                   {activeGroup.availabilityType === '... días corridos' ? (
+                     <div className="flex">
+                        <input 
+                          type="number"
+                          min="1"
+                          value={activeGroup.availabilityRollingDays}
+                          onChange={(e) => updateGroup({ availabilityRollingDays: e.target.value })}
+                          className="w-24 srf-panel border hairline border-r-0 rounded-l-xl px-4 py-3 text-sm focus:outline-none ink-1 font-semibold text-center z-10 focus:border-slate-300 focus:ring-2 focus:ring-black/20 shadow-sm"
+                        />
+                        <select 
+                          value={activeGroup.availabilityType}
+                          onChange={(e) => updateGroup({ availabilityType: e.target.value })}
+                          className="w-full srf-panel border hairline focus:border-slate-300 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 ink-1 font-semibold shadow-sm transition-all cursor-pointer"
+                        >
+                           <option value="Indefinidamente">Indefinidamente</option>
+                           <option value="Hasta cierto día...">Hasta cierto día...</option>
+                           <option value="... días corridos">... días corridos</option>
+                        </select>
                      </div>
-                     <button 
-                       onClick={addBlockedDate}
-                       disabled={!activeGroup.newBlockedDate}
-                       className="accent-bg hover:brightness-110 text-white font-bold text-[13px] px-6 py-3 rounded-xl transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
-                     >
-                       AGREGAR
-                     </button>
-                  </div>
-
-                  <div className="mt-5 border hairline rounded-xl p-4 flex flex-wrap gap-2.5 max-w-3xl min-h-[70px] srf-sunken/30 animate-fadeIn">
-                     {activeGroup.blockedDates.map(date => (
-                        <div key={date} className="srf-panel border border-rose-100 text-rose-500 text-[13px] font-semibold px-3 py-1.5 rounded-lg flex items-center shadow-sm">
-                           {date.split('-').reverse().join('/')}
-                           <button onClick={() => removeBlockedDate(date)} className="ml-2 bg-rose-50 rounded-md p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-100 cursor-pointer transition-colors"><X className="w-3.5 h-3.5" /></button>
+                   ) : activeGroup.availabilityType === 'Hasta cierto día...' ? (
+                     <div className="flex">
+                        <select 
+                          value={activeGroup.availabilityType}
+                          onChange={(e) => updateGroup({ availabilityType: e.target.value })}
+                          className="w-full srf-panel border hairline border-r-0 focus:border-slate-300 rounded-l-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 ink-1 font-semibold shadow-sm transition-all cursor-pointer z-10"
+                        >
+                           <option value="Indefinidamente">Indefinidamente</option>
+                           <option value="Hasta cierto día...">Hasta cierto día...</option>
+                           <option value="... días corridos">... días corridos</option>
+                        </select>
+                        <div className="w-full relative srf-panel rounded-r-xl shadow-sm">
+                          <CustomDatePicker 
+                            value={activeGroup.availabilityDate}
+                            onChange={(val) => updateGroup({ availabilityDate: val })}
+                            placeholder="Seleccione fecha"
+                            className="flex items-center bg-transparent border hairline hover:border-slate-300 rounded-r-xl px-4 py-3 text-sm w-full transition-all cursor-pointer h-full border-l-0 focus-within:ring-2 focus-within:ring-black/20"
+                          />
                         </div>
-                     ))}
-                     {activeGroup.blockedDates.length === 0 && (
-                       <span className="ink-3 text-[13px] font-medium flex items-center italic">Ninguna fecha específica bloqueada.</span>
-                     )}
+                     </div>
+                   ) : (
+                     <select 
+                       value={activeGroup.availabilityType}
+                       onChange={(e) => updateGroup({ availabilityType: e.target.value })}
+                       className="w-full srf-panel border hairline focus:border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 ink-1 font-semibold shadow-sm transition-all cursor-pointer"
+                     >
+                        <option value="Indefinidamente">Indefinidamente</option>
+                        <option value="Hasta cierto día...">Hasta cierto día...</option>
+                        <option value="... días corridos">... días corridos</option>
+                     </select>
+                   )}
+
+                   {activeGroup.availabilityType === 'Hasta cierto día...' && activeGroup.availabilityDate && (
+                     <p className="text-[13px] ink-3 mt-2 font-medium leading-relaxed">Los horarios sólo pueden ser recibidos antes de las 11:59 pm del día {activeGroup.availabilityDate.split('-').reverse().join('/')}</p>
+                   )}
+                   {activeGroup.availabilityType === '... días corridos' && (
+                     <p className="text-[13px] ink-3 mt-2 font-medium leading-relaxed">Estás disponible para nuevas citas durante {activeGroup.availabilityRollingDays || 0} días calendario a partir de hoy</p>
+                   )}
+                </div>
+                
+                <div className="md:col-span-2">
+                   <label className="flex items-center text-[13px] font-semibold ink-1 mb-3 block">
+                      Anticipación mínima <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                   </label>
+                   <div className="flex max-w-sm">
+                      {['Día(s) y', 'Horas', 'Minutos'].includes(activeGroup.minAnticipationType) && (
+                        <input 
+                          type="number" 
+                          min="0"
+                          value={activeGroup.minAnticipationValue} 
+                          onChange={(e) => updateGroup({ minAnticipationValue: e.target.value })}
+                          className="w-24 srf-panel border hairline border-r-0 rounded-l-xl px-4 py-3 text-sm focus:outline-none ink-1 font-semibold text-center z-10 focus:border-slate-300 focus:ring-2 focus:ring-black/20 shadow-sm" 
+                        />
+                      )}
+                      <select 
+                        value={activeGroup.minAnticipationType}
+                        onChange={(e) => updateGroup({ minAnticipationType: e.target.value })}
+                        className={`w-full srf-panel border hairline focus:border-slate-300 px-4 py-3 text-sm ink-1 font-semibold outline-none cursor-pointer focus:ring-2 focus:ring-black/20 shadow-sm ${['Día(s) y', 'Horas', 'Minutos'].includes(activeGroup.minAnticipationType) ? 'rounded-r-xl border-l-0' : 'rounded-xl'}`}
+                      >
+                         <option value="Sin anticipación mínima">Sin anticipación mínima</option>
+                         <option value="No hay disponibilidad para hoy">No hay disponibilidad para hoy</option>
+                         <option value="No hay disponibilidad para hoy ni mañana">No hay disponibilidad para hoy ni mañana</option>
+                         <option value="Día(s) y">Día(s) y</option>
+                         <option value="Horas">Horas</option>
+                         <option value="Minutos">Minutos</option>
+                      </select>
                    </div>
-               </div>
-             </>
+                   {['Día(s) y', 'Horas', 'Minutos'].includes(activeGroup.minAnticipationType) && (
+                      <p className="text-[13px] ink-3 mt-2.5 font-medium leading-relaxed">Este grupo no recibirá citas para el próximo {activeGroup.minAnticipationValue || 0} {activeGroup.minAnticipationType.replace('Día(s) y', 'Día(s)').trim()}</p>
+                   )}
+                </div>
+
+                <div className="md:col-span-2">
+                   <label className="flex items-center text-[13px] font-semibold ink-1 mb-3">
+                      Bloqueos de calendario puntuales (Vacaciones / Festivos) <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                   </label>
+                   <div className="flex flex-col gap-2.5">
+                      <div className="w-full">
+                        <CustomDatePicker 
+                          value={activeGroup.newBlockedDate} 
+                          onChange={(val) => updateGroup({ newBlockedDate: val })} 
+                          placeholder="Seleccione una fecha exacta" 
+                        />
+                      </div>
+                      <button 
+                        onClick={addBlockedDate}
+                        disabled={!activeGroup.newBlockedDate}
+                        className="accent-bg hover:brightness-110 text-white font-bold text-[13px] w-full py-3 rounded-xl transition-colors disabled:opacity-50 cursor-pointer shadow-sm text-center"
+                      >
+                        AGREGAR
+                      </button>
+                   </div>
+
+                   <div className="mt-5 border hairline rounded-xl p-4 flex flex-wrap gap-2.5 max-w-3xl min-h-[70px] srf-sunken/30 animate-fadeIn">
+                      {activeGroup.blockedDates.map(date => (
+                         <div key={date} className="srf-panel border border-rose-100 text-rose-500 text-[13px] font-semibold px-3 py-1.5 rounded-lg flex items-center shadow-sm">
+                            {date.split('-').reverse().join('/')}
+                            <button onClick={() => removeBlockedDate(date)} className="ml-2 bg-rose-50 rounded-md p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-100 cursor-pointer transition-colors"><X className="w-3.5 h-3.5" /></button>
+                         </div>
+                      ))}
+                      {activeGroup.blockedDates.length === 0 && (
+                        <span className="ink-3 text-[13px] font-medium flex items-center italic">Ninguna fecha específica bloqueada.</span>
+                      )}
+                    </div>
+                </div>
+              </>
            )}
         </div>
 
         {/* Advanced Config block */}
-        {(!mode || mode === 'SCHEDULING') && (
+        {(!mode || mode === 'AVAILABILITY') && (
           <div className="border hairline rounded-xl overflow-hidden mt-10 srf-panel max-w-3xl shadow-sm animate-fadeIn">
             <div 
               onClick={() => setShowAdvanced(!showAdvanced)} 

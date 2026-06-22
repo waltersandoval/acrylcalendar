@@ -24,7 +24,8 @@ interface CalendarEditorProps {
 const SECTION_COPY: Record<string, { title: string; eyebrow: string }> = {
   BASIC: { title: 'Información general', eyebrow: 'Contenido' },
   DESIGN: { title: 'Diseño visual', eyebrow: 'Apariencia' },
-  SCHEDULING: { title: 'Horarios', eyebrow: 'Disponibilidad' },
+  SCHEDULING: { title: 'Horarios', eyebrow: 'Tiempo' },
+  AVAILABILITY: { title: 'Meses y disponibilidad', eyebrow: 'Disponibilidad' },
   SERVICES: { title: 'Servicios', eyebrow: 'Oferta' },
   GROUPS: { title: 'Grupos', eyebrow: 'Organización' },
   FORMS: { title: 'Formularios', eyebrow: 'Datos del cliente' },
@@ -143,8 +144,8 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
     if (activeSection === 'BASIC' || activeSection === 'DESIGN') {
       return <BasicSettings key={activeSection} initialTitle={calendarTitle} initialData={calendarData?.section_BASIC} onSave={(data) => handleSaveSection('BASIC', data)} onRegisterSave={registerSave} />;
     }
-    if (['SCHEDULING', 'SERVICES', 'GROUPS'].includes(activeSection)) {
-      return <SchedulingSettings key={activeSection} mode={activeSection} initialData={calendarData?.section_SCHEDULING} onSave={(data) => handleSaveSection('SCHEDULING', data)} calendarGroups={calendarGroups} onGroupsChange={setCalendarGroups} onRegisterSave={registerSave} />;
+    if (['SCHEDULING', 'AVAILABILITY', 'SERVICES', 'GROUPS'].includes(activeSection)) {
+      return <SchedulingSettings key="scheduling-settings" mode={activeSection} initialData={calendarData?.section_SCHEDULING} initialDataBasic={calendarData?.section_BASIC} onSave={(data) => handleSaveSection('SCHEDULING', data)} calendarGroups={calendarGroups} onGroupsChange={setCalendarGroups} onRegisterSave={registerSave} />;
     }
     if (activeSection === 'FORMS') {
       return <FormsSettings initialData={calendarData?.section_FORMS} onSave={(data) => handleSaveSection('FORMS', data)} calendarGroups={calendarGroups} onRegisterSave={registerSave} />;

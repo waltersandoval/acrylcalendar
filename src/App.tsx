@@ -78,7 +78,7 @@ function AdminGate() {
 
 export default function App() {
   if (import.meta.env.DEV && typeof localStorage !== 'undefined') {
-    localStorage.removeItem('devBypassAuth');
+    localStorage.setItem('devBypassAuth', '1');
     localStorage.setItem('forceMobileUI', '1');
   }
   // Inyecta el manifest PWA del cliente en rutas /booking/* (no-op en admin).

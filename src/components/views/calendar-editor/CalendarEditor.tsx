@@ -194,28 +194,17 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {/* Action buttons moved next to Volver */}
-            <button
-              type="button"
-              onClick={saveCurrentSection}
-              disabled={savingSection !== null || !sectionHasForm}
-              className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-3.5 text-[12px] srf-raised ink-1 hover:brightness-95 border hairline disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {savingSection !== null ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              Guardar cambios
-            </button>
-            <button
-              type="button"
-              onClick={saveCurrentSection}
-              disabled={savingSection !== null || !sectionHasForm}
-              className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-3.5 text-[12px] accent-fill hover:brightness-110 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {savingSection !== null ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              Publicar
-            </button>
+            {/* Toggle device button (Escritorio) */}
+            <div className="hidden xl:flex items-center h-9 rounded-xl srf-sunken border hairline p-1">
+              <button type="button" className="h-7 px-3 rounded-lg srf-panel shadow-sm text-xs font-bold ink-1 flex items-center gap-2"><Monitor className="w-3.5 h-3.5" /> Escritorio</button>
+            </div>
+            {/* Refresh preview button */}
+            <button type="button" title="Recargar vista previa" onClick={() => { setPreviewLoading(true); setPreviewVersion((version) => version + 1); }} className="builder-icon-button"><RefreshCw className="w-4 h-4" /></button>
+
+            {/* Notificaciones (movido a donde estaba Volver) */}
             <button
               onClick={onShowNotifications}
-              className="w-10 h-10 rounded-full srf-raised ink-2 flex items-center justify-center shadow-sm relative active:scale-95 transition-all cursor-pointer hover:brightness-95 border hairline mr-1"
+              className="w-10 h-10 rounded-full srf-raised ink-2 flex items-center justify-center shadow-sm relative active:scale-95 transition-all cursor-pointer hover:brightness-95 border hairline"
               title="Notificaciones"
               aria-label="Notificaciones"
             >
@@ -226,24 +215,6 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
                 </span>
               )}
             </button>
-
-            {/* Toggle device button (Escritorio) */}
-            <div className="hidden xl:flex items-center h-9 rounded-xl srf-sunken border hairline p-1 bg-slate-100/50">
-              <button type="button" className="h-7 px-3 rounded-lg srf-panel shadow-sm text-xs font-bold ink-1 flex items-center gap-2"><Monitor className="w-3.5 h-3.5" /> Escritorio</button>
-            </div>
-            {/* Refresh preview button */}
-            <button type="button" title="Recargar vista previa" onClick={() => { setPreviewLoading(true); setPreviewVersion((version) => version + 1); }} className="builder-icon-button"><RefreshCw className="w-4 h-4" /></button>
-            
-            {/* Back button (Volver) */}
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-4 text-[13px] srf-raised ink-1 hover:brightness-95 border hairline"
-              >
-                Volver
-              </button>
-            )}
           </div>
         </div>
 
@@ -264,8 +235,22 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
 
         {/* Existing Section Header */}
         <div className="px-5 py-4 border-b hairline shrink-0 srf-panel">
-          <p className="text-[10px] uppercase tracking-[0.14em] font-extrabold ink-3">{sectionMeta.eyebrow}</p>
-          <h2 className="mt-1 font-display text-lg font-bold ink-1">{sectionMeta.title}</h2>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.14em] font-extrabold ink-3">{sectionMeta.eyebrow}</p>
+              <h2 className="mt-1 font-display text-lg font-bold ink-1 truncate">{sectionMeta.title}</h2>
+            </div>
+            <button
+              type="button"
+              onClick={saveCurrentSection}
+              disabled={savingSection !== null || !sectionHasForm}
+              title="Guardar cambios"
+              aria-label="Guardar cambios"
+              className="shrink-0 w-9 h-9 rounded-[10px] accent-fill flex items-center justify-center shadow-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {savingSection !== null ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            </button>
+          </div>
           <label className="calendar-builder-mobile-section mt-3">
             <span className="sr-only">Sección del editor</span>
             <select value={activeSection} onChange={(event) => onSectionChange(event.target.value)} className="w-full srf-sunken border hairline rounded-xl px-3 py-2 text-sm font-semibold">

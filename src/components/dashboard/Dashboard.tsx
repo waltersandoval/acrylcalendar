@@ -317,6 +317,7 @@ const Dashboard: React.FC = () => {
              editorMode={activeSidebarItem === 'Editor de calendario'}
              editorSection={editorSection}
              onEditorSectionChange={setEditorSection}
+             onEditorBack={() => setActiveSidebarItem('Mis calendarios')}
            />
         </div>
       )}

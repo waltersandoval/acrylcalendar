@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Bell, Bot, Calendar, CalendarClock, CircleDollarSign, Clock, FileText,
+  Bell, Bot, Calendar, CalendarClock, ChevronLeft, CircleDollarSign, Clock, FileText,
   FolderKanban, Globe2, HelpCircle, Image, Info, Menu, Send,
   Settings as SettingsIcon, Shapes,
 } from 'lucide-react';
@@ -15,6 +15,7 @@ interface SidebarProps {
   editorMode?: boolean;
   editorSection?: string;
   onEditorSectionChange?: (section: string) => void;
+  onEditorBack?: () => void;
 }
 
 const editorItems = [
@@ -39,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   editorMode = false,
   editorSection = 'BASIC',
   onEditorSectionChange,
+  onEditorBack,
 }) => {
   const { user } = useAuth();
   const profileActive = activeSidebarItem === 'Perfil';
@@ -72,6 +74,15 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         )}
 
+        {editorMode && !isCollapsed && onEditorBack && (
+          <button
+            type="button"
+            onClick={onEditorBack}
+            className="mx-3 mb-2 flex items-center gap-2 px-3 py-2.5 rounded-[11px] srf-raised border hairline ink-1 font-bold text-sm hover:brightness-95 transition-all cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" /> Volver
+          </button>
+        )}
         {!isCollapsed && <p className="px-5 pt-2 pb-1.5 text-[11px] font-bold uppercase tracking-[0.13em] ink-3">{editorMode ? 'Configuración' : 'Menú'}</p>}
         <nav className="flex-1 px-3 space-y-0.5" aria-label={editorMode ? 'Configuración del calendario' : 'Menú principal'}>
           {navigationItems.map((item) => {

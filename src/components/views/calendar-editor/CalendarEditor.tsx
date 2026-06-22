@@ -108,9 +108,11 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
     return () => { cancelled = true; };
   }, [calendarId]);
 
-  useEffect(() => {
-    sectionSaveRef.current = () => {};
-  }, [activeSection]);
+  // NOTA: no reseteamos sectionSaveRef aquí. Hacerlo en un efecto [activeSection]
+  // borraba el registro de la sección (los efectos del hijo corren ANTES que los
+  // del padre), dejando "Guardar/Publicar" sin acción. Cada sección con
+  // formulario re-registra su save vía onRegisterSave en cada render.
+  const sectionHasForm = activeSection !== 'DOMAIN';
 
   const handleSaveSection = async (sectionId: string, data?: any) => {
     if (!calendarId) return;
@@ -192,6 +194,39 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
+            {/* Action buttons moved next to Volver */}
+            <button
+              type="button"
+              onClick={saveCurrentSection}
+              disabled={savingSection !== null || !sectionHasForm}
+              className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-3.5 text-[12px] srf-raised ink-1 hover:brightness-95 border hairline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingSection !== null ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Guardar cambios
+            </button>
+            <button
+              type="button"
+              onClick={saveCurrentSection}
+              disabled={savingSection !== null || !sectionHasForm}
+              className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-3.5 text-[12px] accent-fill hover:brightness-110 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingSection !== null ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              Publicar
+            </button>
+            <button
+              onClick={onShowNotifications}
+              className="w-10 h-10 rounded-full srf-raised ink-2 flex items-center justify-center shadow-sm relative active:scale-95 transition-all cursor-pointer hover:brightness-95 border hairline mr-1"
+              title="Notificaciones"
+              aria-label="Notificaciones"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full border border-white flex items-center justify-center leading-none animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
             {/* Toggle device button (Escritorio) */}
             <div className="hidden xl:flex items-center h-9 rounded-xl srf-sunken border hairline p-1 bg-slate-100/50">
               <button type="button" className="h-7 px-3 rounded-lg srf-panel shadow-sm text-xs font-bold ink-1 flex items-center gap-2"><Monitor className="w-3.5 h-3.5" /> Escritorio</button>
@@ -225,42 +260,7 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
       </section>
 
       <aside className="calendar-builder-properties w-[380px] shrink-0 srf-panel border-l hairline min-h-0 overflow-hidden flex flex-col">
-        {/* Right sidebar header containing Guardar, Publicar, and Bell */}
-        <div className="h-[76px] px-5 flex items-center justify-between border-b hairline bg-white shrink-0">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={saveCurrentSection}
-              disabled={savingSection !== null}
-              className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-3 text-[12px] srf-raised ink-1 hover:brightness-95 border hairline disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {savingSection !== null ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              Guardar cambios
-            </button>
-            <button
-              type="button"
-              onClick={saveCurrentSection}
-              disabled={savingSection !== null}
-              className="flex items-center gap-2 rounded-[11px] font-bold transition-all duration-200 active:scale-[0.98] h-10 px-3.5 text-[12px] accent-fill hover:brightness-110 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {savingSection !== null ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              Publicar
-            </button>
-          </div>
-          <button
-            onClick={onShowNotifications}
-            className="w-10 h-10 rounded-full srf-raised ink-2 flex items-center justify-center shadow-sm relative active:scale-95 transition-all cursor-pointer hover:brightness-95 border hairline"
-            title="Notificaciones"
-            aria-label="Notificaciones"
-          >
-            <Bell className="w-4.5 h-4.5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full border border-white flex items-center justify-center leading-none animate-pulse">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-        </div>
+
 
         {/* Existing Section Header */}
         <div className="px-5 py-4 border-b hairline shrink-0 srf-panel">

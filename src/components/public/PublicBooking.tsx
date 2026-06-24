@@ -16,7 +16,26 @@ interface PostActionConfig {
 }
 
 const ensurePostActions = (group: any): PostActionConfig[] => {
-  if (group?.postActions && group.postActions.length > 0) {
+  if (group?.postBookingActions && Array.isArray(group.postBookingActions) && group.postBookingActions.length > 0) {
+    const typeMapping: Record<string, 'message' | 'redirect' | 'thank_you' | 'summary' | 'pdf' | 'whatsapp'> = {
+      'success_message': 'message',
+      'redirect_url': 'redirect',
+      'thank_you_page': 'thank_you',
+      'appointment_summary': 'summary',
+      'download_receipt': 'pdf',
+      'open_whatsapp': 'whatsapp'
+    };
+    return group.postBookingActions.map((act: any) => ({
+      id: typeMapping[act.type] || 'message',
+      enabled: !!act.enabled,
+      message: act.config?.message || '',
+      buttonText: act.config?.buttonText || '',
+      url: act.config?.url || '',
+      title: act.config?.title || '',
+      phone: act.config?.phone || ''
+    }));
+  }
+  if (group?.postActions && Array.isArray(group.postActions) && group.postActions.length > 0) {
     return group.postActions;
   }
   return [

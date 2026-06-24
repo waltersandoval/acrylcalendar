@@ -18,14 +18,16 @@ interface FormField {
   mailingBossLabel?: string;
 }
 
-interface PostActionConfig {
-  id: 'message' | 'redirect' | 'thank_you' | 'summary' | 'pdf' | 'whatsapp';
+interface PostBookingAction {
+  type: 'success_message' | 'redirect_url' | 'thank_you_page' | 'appointment_summary' | 'download_receipt' | 'open_whatsapp';
   enabled: boolean;
-  title?: string;
-  message?: string;
-  url?: string;
-  phone?: string;
-  buttonText?: string;
+  config: {
+    message?: string;
+    buttonText?: string;
+    url?: string;
+    title?: string;
+    phone?: string;
+  };
 }
 
 interface GroupFormData {
@@ -37,7 +39,7 @@ interface GroupFormData {
   successMessage: string;
   redirectUrl: string;
   buttonText: string;
-  postActions?: PostActionConfig[];
+  postBookingActions?: PostBookingAction[];
 }
 
 const defaultFields: FormField[] = [
@@ -46,72 +48,224 @@ const defaultFields: FormField[] = [
   { id: '3', label: 'Teléfono', type: 'text', required: true, isDefault: true },
 ];
 
-const ensurePostActions = (group: any): PostActionConfig[] => {
-  if (group?.postActions && group.postActions.length > 0) {
-    return group.postActions;
+const getDefaultConfigForType = (type: PostBookingAction['type'], group?: any): any => {
+  switch (type) {
+    case 'success_message':
+      return {
+        message: group?.successMessage || '¡Tu cita fue registrada con éxito!',
+        buttonText: group?.buttonText || 'Regresar al home'
+      };
+    case 'redirect_url':
+      return {
+        url: group?.redirectUrl || ''
+      };
+    case 'thank_you_page':
+      return {
+        title: '¡Gracias por tu reserva!',
+        message: 'Tu cita ha sido agendada. Nos pondremos en contacto contigo pronto.'
+      };
+    case 'open_whatsapp':
+      return {
+        phone: '',
+        message: 'Hola {cliente}, tu cita para {servicio} fue registrada para {fecha}.'
+      };
+    default:
+      return {};
   }
+};
+
+const ensurePostBookingActions = (group: any): PostBookingAction[] => {
+  if (group?.postBookingActions && Array.isArray(group.postBookingActions) && group.postBookingActions.length > 0) {
+    const existingTypes = group.postBookingActions.map((a: any) => a.type);
+    const actions = [...group.postBookingActions];
+    const defaultTypes: PostBookingAction['type'][] = [
+      'success_message',
+      'redirect_url',
+      'thank_you_page',
+      'appointment_summary',
+      'download_receipt',
+      'open_whatsapp'
+    ];
+    defaultTypes.forEach(t => {
+      if (!existingTypes.includes(t)) {
+        actions.push({
+          type: t,
+          enabled: false,
+          config: getDefaultConfigForType(t, group)
+        });
+      }
+    });
+    return actions;
+  }
+
+  // Fallback para mapear el viejo postActions
+  if (group?.postActions && Array.isArray(group.postActions) && group.postActions.length > 0) {
+    const typeMapping: Record<string, PostBookingAction['type']> = {
+      'message': 'success_message',
+      'redirect': 'redirect_url',
+      'thank_you': 'thank_you_page',
+      'summary': 'appointment_summary',
+      'pdf': 'download_receipt',
+      'whatsapp': 'open_whatsapp'
+    };
+    const mapped = group.postActions.map((oldAct: any) => ({
+      type: typeMapping[oldAct.id] || 'success_message',
+      enabled: !!oldAct.enabled,
+      config: {
+        message: oldAct.message || '',
+        buttonText: oldAct.buttonText || '',
+        url: oldAct.url || '',
+        title: oldAct.title || '',
+        phone: oldAct.phone || ''
+      }
+    }));
+    
+    const existingTypes = mapped.map((a: any) => a.type);
+    const defaultTypes: PostBookingAction['type'][] = [
+      'success_message',
+      'redirect_url',
+      'thank_you_page',
+      'appointment_summary',
+      'download_receipt',
+      'open_whatsapp'
+    ];
+    defaultTypes.forEach(t => {
+      if (!existingTypes.includes(t)) {
+        mapped.push({
+          type: t,
+          enabled: false,
+          config: getDefaultConfigForType(t, group)
+        });
+      }
+    });
+    return mapped;
+  }
+
   return [
-    { id: 'message', enabled: group?.postAction === 'message' || !group?.postAction, message: group?.successMessage || '¡Tu cita fue registrada con éxito!', buttonText: group?.buttonText || 'Regresar al home' },
-    { id: 'redirect', enabled: group?.postAction === 'redirect', url: group?.redirectUrl || '' },
-    { id: 'thank_you', enabled: false, title: '¡Gracias por tu reserva!', message: 'Tu cita ha sido agendada. Nos pondremos en contacto contigo pronto.' },
-    { id: 'summary', enabled: false },
-    { id: 'pdf', enabled: false },
-    { id: 'whatsapp', enabled: false, phone: '', message: 'Hola {cliente}, tu cita para {servicio} fue registrada para {fecha}.' },
+    {
+      type: 'success_message',
+      enabled: group?.postAction === 'message' || !group?.postAction,
+      config: {
+        message: group?.successMessage || '¡Tu cita fue registrada con éxito!',
+        buttonText: group?.buttonText || 'Regresar al home'
+      }
+    },
+    {
+      type: 'redirect_url',
+      enabled: group?.postAction === 'redirect',
+      config: {
+        url: group?.redirectUrl || ''
+      }
+    },
+    {
+      type: 'thank_you_page',
+      enabled: false,
+      config: {
+        title: '¡Gracias por tu reserva!',
+        message: 'Tu cita ha sido agendada. Nos pondremos en contacto contigo pronto.'
+      }
+    },
+    {
+      type: 'appointment_summary',
+      enabled: false,
+      config: {}
+    },
+    {
+      type: 'download_receipt',
+      enabled: false,
+      config: {}
+    },
+    {
+      type: 'open_whatsapp',
+      enabled: false,
+      config: {
+        phone: '',
+        message: 'Hola {cliente}, tu cita para {servicio} fue registrada para {fecha}.'
+      }
+    }
   ];
 };
 
+const normalizeInitialData = (data: any): GroupFormData[] => {
+  const groups = Array.isArray(data)
+    ? data
+    : (data?.groupsData && Array.isArray(data.groupsData) ? data.groupsData : []);
+
+  if (groups.length === 0) {
+    return [
+      {
+        id: 'group-1',
+        name: 'Grupo 1',
+        fields: [...defaultFields],
+        termsAndConditions: false,
+        postAction: 'message',
+        successMessage: '¡Gracias por registrarse!',
+        redirectUrl: '',
+        buttonText: 'Continuar',
+      }
+    ];
+  }
+  return groups;
+};
+
 const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, calendarGroups }) => {
-  const [activeGroupId, setActiveGroupId] = useState(
-    initialData?.groupsData && initialData.groupsData.length > 0 
-      ? initialData.groupsData[0].id 
-      : 'group-1'
-  );
+  const [activeGroupId, setActiveGroupId] = useState('group-1');
   const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
   const [editingField, setEditingField] = useState<Partial<FormField> | null>(null);
-  
-  // By default we have one group, just like scheduling
-  const [groupsData, setGroupsData] = useState<GroupFormData[]>(() => {
-    const raw = initialData?.groupsData && initialData.groupsData.length > 0 
-      ? initialData.groupsData
-      : [
-          {
-            id: 'group-1',
-            name: 'Grupo 1',
-            fields: [...defaultFields],
-            termsAndConditions: false,
-            postAction: 'message',
-            successMessage: '¡Gracias por registrarse!',
-            redirectUrl: '',
-            buttonText: 'Continuar',
-          }
-        ];
-    return raw.map((g: any) => ({
-      ...g,
-      postActions: ensurePostActions(g)
-    }));
-  });
 
-  // Sync groupsData with calendarGroups (add external ones, rename existing)
-  // Sync loaded async initialData
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  
+  const [groupsData, setGroupsData] = useState<GroupFormData[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const loadedRef = useRef(false);
+
+  // 1. Carga inicial desde Firestore si hay datos guardados
   useEffect(() => {
-    if (initialData?.groupsData && initialData.groupsData.length > 0) {
-      setGroupsData(initialData.groupsData.map((g: any) => ({
-        ...g,
-        postActions: ensurePostActions(g)
-      })));
-      if (!initialData.groupsData.some((g: any) => g.id === activeGroupId)) {
-        setActiveGroupId(initialData.groupsData[0].id);
+    if (initialData && !loadedRef.current) {
+      const hasRealData = Array.isArray(initialData) 
+        ? initialData.length > 0 
+        : (initialData?.groupsData && initialData.groupsData.length > 0);
+      
+      if (hasRealData) {
+        const raw = normalizeInitialData(initialData);
+        setGroupsData(raw.map((g: any) => ({
+          ...g,
+          postBookingActions: ensurePostBookingActions(g)
+        })));
+        if (raw.length > 0) {
+          setActiveGroupId(raw[0].id);
+        }
+        loadedRef.current = true;
+        setIsLoaded(true);
       }
     }
   }, [initialData]);
 
+  // 2. Inicialización por defecto si no existen datos previos o no se han cargado aún
   useEffect(() => {
-    if (calendarGroups && calendarGroups.length > 0) {
+    if (!loadedRef.current && calendarGroups && calendarGroups.length > 0) {
+      const raw = normalizeInitialData(initialData);
+      setGroupsData(raw.map((g: any) => ({
+        ...g,
+        postBookingActions: ensurePostBookingActions(g)
+      })));
+      if (raw.length > 0) {
+        setActiveGroupId(raw[0].id);
+      }
+      loadedRef.current = true;
+      setIsLoaded(true);
+    }
+  }, [calendarGroups, initialData]);
+
+  // 3. Sincronización del listado de grupos de calendario (sin sobrescribir configuraciones)
+  useEffect(() => {
+    if (isLoaded && calendarGroups && calendarGroups.length > 0) {
       setGroupsData(prev => {
         let hasChanges = false;
         const newGroupsData = [...prev];
         
-        // Add new groups and update names
         calendarGroups.forEach(cg => {
           const existing = newGroupsData.find(g => g.id === cg.id);
           if (existing) {
@@ -129,13 +283,12 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
               successMessage: '¡Gracias por registrarse!',
               redirectUrl: '',
               buttonText: 'Continuar',
-              postActions: ensurePostActions({ postAction: 'message' })
+              postBookingActions: ensurePostBookingActions({ postAction: 'message' })
             });
             hasChanges = true;
           }
         });
 
-        // Remove deleted groups
         const keptGroups = newGroupsData.filter(g => calendarGroups.some(cg => cg.id === g.id));
         if (keptGroups.length !== newGroupsData.length) {
           hasChanges = true;
@@ -144,12 +297,11 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
         return hasChanges ? keptGroups : prev;
       });
       
-      // Update active group if current is deleted
       if (!calendarGroups.some(g => g.id === activeGroupId)) {
         setActiveGroupId(calendarGroups[0]?.id || '');
       }
     }
-  }, [calendarGroups]);
+  }, [calendarGroups, isLoaded, activeGroupId]);
 
   const activeGroup = groupsData.find(g => g.id === activeGroupId) || groupsData[0];
 
@@ -172,12 +324,10 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
     if (!editingField || !editingField.label) return;
     
     if (editingField.id) {
-       // Updating existing
        updateActiveGroup({
          fields: activeGroup.fields.map(f => f.id === editingField.id ? { ...(f as FormField), ...editingField } : f)
        });
     } else {
-       // Creating new
        const newField: FormField = {
          id: Math.random().toString(36).substr(2, 9),
          label: editingField.label || 'Nuevo Campo',
@@ -198,23 +348,91 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
     updateActiveGroup({ fields: activeGroup.fields.filter(f => f.id !== id) });
   };
 
-  // Registra el guardado de esta sección para el botón único del header.
+  const handleSave = async () => {
+    setError(null);
+    setSuccess(false);
+
+    for (const group of groupsData) {
+      const actions = group.postBookingActions || [];
+      
+      const successMsg = actions.find(a => a.type === 'success_message');
+      if (successMsg?.enabled) {
+        if (!successMsg.config.message?.trim()) {
+          setError(`En el grupo "${group.name}": El mensaje de confirmación es obligatorio.`);
+          return;
+        }
+      }
+
+      const redirect = actions.find(a => a.type === 'redirect_url');
+      if (redirect?.enabled) {
+        const url = redirect.config.url?.trim() || '';
+        if (!url) {
+          setError(`En el grupo "${group.name}": La URL de redirección es obligatoria.`);
+          return;
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          setError(`En el grupo "${group.name}": La URL de redirección debe comenzar con http:// o https://`);
+          return;
+        }
+      }
+
+      const whatsapp = actions.find(a => a.type === 'open_whatsapp');
+      if (whatsapp?.enabled) {
+        if (!whatsapp.config.phone?.trim()) {
+          setError(`En el grupo "${group.name}": El número de WhatsApp es obligatorio.`);
+          return;
+        }
+        if (!whatsapp.config.message?.trim()) {
+          setError(`En el grupo "${group.name}": El mensaje de WhatsApp es obligatorio.`);
+          return;
+        }
+      }
+    }
+
+    setSaving(true);
+    try {
+      await onSave?.({ groupsData });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Error al guardar los cambios.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const saveImpl = React.useRef<() => void>(() => {});
-  saveImpl.current = () => onSave?.(groupsData);
+  saveImpl.current = handleSave;
   useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
 
   return (
     <div className="srf-panel pb-6 rounded-b-2xl">
       {/* Header logic */}
       <div className="builder-embedded-toolbar flex flex-col justify-between items-start px-4 py-3 border-b hairline srf-sunken/80 backdrop-blur-md sticky top-0 z-10 transition-all duration-300 gap-2">
-         <div className="flex-1">
+         <div className="flex-1 flex justify-between items-center w-full">
             <h3 className="ink-1 font-semibold text-[13px] tracking-tight">Datos a solicitar en la programación de citas</h3>
-         </div>
-         <div className="flex gap-4 items-center w-full justify-end">
-            <button className="text-black text-xs font-semibold flex items-center tracking-wider hover:ink-1 cursor-pointer transition-colors shadow-sm srf-panel px-3 py-1.5 rounded-lg border hairline h-9">
-               <SettingsIcon className="w-3.5 h-3.5 mr-1.5" /> RÁPIDA
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-5 py-2 accent-bg hover:brightness-110 text-white rounded-xl text-[13px] font-bold flex items-center gap-2 transition-all shadow-md shadow-black/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed h-9"
+            >
+              {saving ? 'Guardando...' : 'Guardar'}
             </button>
          </div>
+      </div>
+
+      <div className="p-4 max-w-4xl mx-auto space-y-4">
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-2xl leading-relaxed">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-2xl leading-relaxed">
+            ¡Cambios guardados con éxito!
+          </div>
+        )}
       </div>
 
       <div>
@@ -307,32 +525,28 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
             {/* Visual Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto mb-8">
                {(() => {
-                  const currentActions = activeGroup.postActions || ensurePostActions(activeGroup);
+                  const currentActions = activeGroup.postBookingActions || ensurePostBookingActions(activeGroup);
                   const cards = [
-                     { id: 'message', title: 'Mostrar mensaje de éxito', desc: 'Confirmación rápida en pantalla.', icon: MessageSquare },
-                     { id: 'redirect', title: 'Redirigir a URL', desc: 'Enviar a una página personalizada.', icon: ExternalLink },
-                     { id: 'thank_you', title: 'Página de agradecimiento', desc: 'Mostrar una sección de gracias.', icon: Heart },
-                     { id: 'summary', title: 'Mostrar resumen de cita', desc: 'Fecha, hora y servicio reservado.', icon: List },
-                     { id: 'pdf', title: 'Descargar comprobante', desc: 'Permitir bajar un recibo PDF.', icon: FileDown },
-                     { id: 'whatsapp', title: 'Abrir WhatsApp', desc: 'Iniciar chat con mensaje dinámico.', icon: Phone },
-                  ];
+                     { id: 'success_message', title: 'Mostrar mensaje de éxito', desc: 'Confirmación rápida en pantalla.', icon: MessageSquare },
+                     { id: 'redirect_url', title: 'Redirigir a URL', desc: 'Enviar a una página personalizada.', icon: ExternalLink },
+                     { id: 'thank_you_page', title: 'Página de agradecimiento', desc: 'Mostrar una sección de gracias.', icon: Heart },
+                     { id: 'appointment_summary', title: 'Mostrar resumen de cita', desc: 'Fecha, hora y servicio reservado.', icon: List },
+                     { id: 'download_receipt', title: 'Descargar comprobante', desc: 'Permitir bajar un recibo PDF.', icon: FileDown },
+                     { id: 'open_whatsapp', title: 'Abrir WhatsApp', desc: 'Iniciar chat con mensaje dinámico.', icon: Phone },
+                  ] as const;
 
-                  const togglePostAction = (actionId: string) => {
-                     const updated = currentActions.map(act => act.id === actionId ? { ...act, enabled: !act.enabled } : act);
-                     const msgAct = updated.find(a => a.id === 'message');
-                     const redirAct = updated.find(a => a.id === 'redirect');
-                     
+                  const togglePostAction = (actionType: PostBookingAction['type']) => {
+                     const updated = currentActions.map(act => ({
+                        ...act,
+                        enabled: act.type === actionType
+                     }));
                      updateActiveGroup({
-                        postActions: updated,
-                        postAction: msgAct?.enabled ? 'message' : (redirAct?.enabled ? 'redirect' : 'message'),
-                        successMessage: msgAct?.message || activeGroup.successMessage || '¡Tu cita fue registrada con éxito!',
-                        buttonText: msgAct?.buttonText || activeGroup.buttonText || 'Regresar al home',
-                        redirectUrl: redirAct?.url || activeGroup.redirectUrl || ''
+                        postBookingActions: updated
                      });
                   };
 
                   return cards.map(card => {
-                     const config = currentActions.find(a => a.id === card.id);
+                     const config = currentActions.find(a => a.type === card.id);
                      const isEnabled = !!config?.enabled;
                      const Icon = card.icon;
 
@@ -375,25 +589,19 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
             {/* Conditional Form Configurations */}
             <div className="max-w-4xl mx-auto space-y-6">
                {(() => {
-                  const currentActions = activeGroup.postActions || ensurePostActions(activeGroup);
+                  const currentActions = activeGroup.postBookingActions || ensurePostBookingActions(activeGroup);
                   
-                  const updateActionField = (actionId: string, fields: Partial<PostActionConfig>) => {
-                     const updated = currentActions.map(act => act.id === actionId ? { ...act, ...fields } : act);
-                     const msgAct = updated.find(a => a.id === 'message');
-                     const redirAct = updated.find(a => a.id === 'redirect');
-                     
+                  const updateActionField = (actionType: PostBookingAction['type'], fields: any) => {
+                     const updated = currentActions.map(act => act.type === actionType ? { ...act, config: { ...act.config, ...fields } } : act);
                      updateActiveGroup({
-                        postActions: updated,
-                        successMessage: msgAct?.message || activeGroup.successMessage,
-                        buttonText: msgAct?.buttonText || activeGroup.buttonText,
-                        redirectUrl: redirAct?.url || activeGroup.redirectUrl
+                        postBookingActions: updated
                      });
                   };
 
-                  const msgConfig = currentActions.find(a => a.id === 'message');
-                  const redirConfig = currentActions.find(a => a.id === 'redirect');
-                  const thankConfig = currentActions.find(a => a.id === 'thank_you');
-                  const waConfig = currentActions.find(a => a.id === 'whatsapp');
+                  const msgConfig = currentActions.find(a => a.type === 'success_message');
+                  const redirConfig = currentActions.find(a => a.type === 'redirect_url');
+                  const thankConfig = currentActions.find(a => a.type === 'thank_you_page');
+                  const waConfig = currentActions.find(a => a.type === 'open_whatsapp');
 
                   return (
                      <>
@@ -405,8 +613,8 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
                                  <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Mensaje de confirmación <span className="text-rose-500">*</span></label>
                                  <textarea
                                     rows={3}
-                                    value={msgConfig.message || ''}
-                                    onChange={(e) => updateActionField('message', { message: e.target.value })}
+                                    value={msgConfig.config.message || ''}
+                                    onChange={(e) => updateActionField('success_message', { message: e.target.value })}
                                     placeholder="Ej. ¡Tu cita fue registrada con éxito!"
                                     className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none resize-none"
                                  />
@@ -415,8 +623,8 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
                                  <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Texto del botón de regreso</label>
                                  <input
                                     type="text"
-                                    value={msgConfig.buttonText || ''}
-                                    onChange={(e) => updateActionField('message', { buttonText: e.target.value })}
+                                    value={msgConfig.config.buttonText || ''}
+                                    onChange={(e) => updateActionField('success_message', { buttonText: e.target.value })}
                                     placeholder="Ej. Regresar"
                                     className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none"
                                  />
@@ -432,8 +640,8 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
                                  <label className="text-[12px] font-semibold ink-3 mb-1.5 block">URL de destino <span className="text-rose-500">*</span></label>
                                  <input
                                     type="url"
-                                    value={redirConfig.url || ''}
-                                    onChange={(e) => updateActionField('redirect', { url: e.target.value })}
+                                    value={redirConfig.config.url || ''}
+                                    onChange={(e) => updateActionField('redirect_url', { url: e.target.value })}
                                     placeholder="https://susitio.com/gracias"
                                     className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none"
                                  />
@@ -450,8 +658,8 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
                                  <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Título de agradecimiento <span className="text-rose-500">*</span></label>
                                  <input
                                     type="text"
-                                    value={thankConfig.title || ''}
-                                    onChange={(e) => updateActionField('thank_you', { title: e.target.value })}
+                                    value={thankConfig.config.title || ''}
+                                    onChange={(e) => updateActionField('thank_you_page', { title: e.target.value })}
                                     placeholder="Ej. ¡Muchas gracias por elegirnos!"
                                     className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none"
                                  />
@@ -460,8 +668,8 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
                                  <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Mensaje detallado <span className="text-rose-500">*</span></label>
                                  <textarea
                                     rows={4}
-                                    value={thankConfig.message || ''}
-                                    onChange={(e) => updateActionField('thank_you', { message: e.target.value })}
+                                    value={thankConfig.config.message || ''}
+                                    onChange={(e) => updateActionField('thank_you_page', { message: e.target.value })}
                                     placeholder="Detalles sobre qué esperar a continuación, términos importantes, etc."
                                     className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none resize-none"
                                  />
@@ -477,8 +685,8 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
                                  <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Número de teléfono (con código de país) <span className="text-rose-500">*</span></label>
                                  <input
                                     type="tel"
-                                    value={waConfig.phone || ''}
-                                    onChange={(e) => updateActionField('whatsapp', { phone: e.target.value })}
+                                    value={waConfig.config.phone || ''}
+                                    onChange={(e) => updateActionField('open_whatsapp', { phone: e.target.value })}
                                     placeholder="Ej. +50412345678"
                                     className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none"
                                  />
@@ -487,8 +695,8 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
                                  <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Mensaje de texto automático <span className="text-rose-500">*</span></label>
                                  <textarea
                                     rows={3}
-                                    value={waConfig.message || ''}
-                                    onChange={(e) => updateActionField('whatsapp', { message: e.target.value })}
+                                    value={waConfig.config.message || ''}
+                                    onChange={(e) => updateActionField('open_whatsapp', { message: e.target.value })}
                                     placeholder="Ej. Hola {cliente}, tu cita para {servicio} fue registrada para {fecha}."
                                     className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none resize-none"
                                  />

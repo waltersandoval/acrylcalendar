@@ -10,7 +10,7 @@ export const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 
 const DEFAULT_FROM = "Acryl Calendar <onboarding@resend.dev>";
 
-export async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<boolean> {
+export async function sendEmail(opts: { to: string; subject: string; html: string; from?: string; replyTo?: string }): Promise<boolean> {
   const apiKey = RESEND_API_KEY.value();
   if (!apiKey) {
     console.warn("RESEND_API_KEY no configurada; se omite el envío de correo.");
@@ -19,17 +19,28 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
   if (!opts.to) return false;
 
   // Remitente configurable por env var EMAIL_FROM (debe ser de un dominio verificado en Resend).
-  const from = process.env.EMAIL_FROM || DEFAULT_FROM;
+  const defaultFrom = process.env.EMAIL_FROM || DEFAULT_FROM;
+  const from = opts.from || defaultFrom;
 
   const fetchFn: any = (globalThis as any).fetch;
   try {
+    const payload: any = {
+      from,
+      to: [opts.to],
+      subject: opts.subject,
+      html: opts.html,
+    };
+    if (opts.replyTo) {
+      payload.reply_to = opts.replyTo;
+    }
+
     const res = await fetchFn("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to: [opts.to], subject: opts.subject, html: opts.html }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const text = await res.text();

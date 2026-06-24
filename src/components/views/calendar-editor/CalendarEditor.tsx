@@ -10,6 +10,8 @@ import FormsSettings from './FormsSettings';
 import CommunicationsSettings from './CommunicationsSettings';
 import AutomationSettings from './AutomationSettings';
 import PaymentSettings from './PaymentSettings';
+import MarketingSettings from './MarketingSettings';
+import SocialProofSettings from './SocialProofSettings';
 
 interface CalendarEditorProps {
   calendarId?: string;
@@ -32,6 +34,8 @@ const SECTION_COPY: Record<string, { title: string; eyebrow: string }> = {
   FORMS: { title: 'Formularios', eyebrow: 'Datos del cliente' },
   COMMS: { title: 'Comunicaciones', eyebrow: 'Mensajería' },
   AUTO: { title: 'Automatizaciones', eyebrow: 'Flujos' },
+  MARKETING: { title: 'Marketing y Listas', eyebrow: 'Integración' },
+  SOCIAL_PROOF: { title: 'Prueba social', eyebrow: 'Conversión' },
   PAYMENT: { title: 'Pagos', eyebrow: 'Checkout' },
   DOMAIN: { title: 'Dominio y URL', eyebrow: 'Enlace público' },
 };
@@ -172,6 +176,12 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
     }
     if (activeSection === 'AUTO') {
       return <AutomationSettings initialData={calendarData?.section_AUTO} onSave={(data) => handleSaveSection('AUTO', data)} calendarGroups={calendarGroups} onRegisterSave={registerSave} />;
+    }
+    if (activeSection === 'MARKETING') {
+      return <MarketingSettings calendarId={calendarId} initialData={calendarData?.section_MARKETING} initialDataForms={calendarData?.section_FORMS} onSave={(data) => handleSaveSection('MARKETING', data)} onRegisterSave={registerSave} />;
+    }
+    if (activeSection === 'SOCIAL_PROOF') {
+      return <SocialProofSettings initialData={calendarData?.section_SOCIAL_PROOF} onSave={(data) => handleSaveSection('SOCIAL_PROOF', data)} onRegisterSave={registerSave} />;
     }
     if (activeSection === 'PAYMENT') {
       return <PaymentSettings calendarId={calendarId} initialData={calendarData?.section_PAYMENT} onSave={(data) => handleSaveSection('PAYMENT', data)} onRegisterSave={registerSave} />;

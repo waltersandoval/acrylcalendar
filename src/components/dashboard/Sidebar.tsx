@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Bell, Bot, Calendar, CalendarClock, ChevronLeft, CircleDollarSign, Clock, FileText,
   FolderKanban, Globe2, HelpCircle, Image, Info, Menu, Send,
-  Settings as SettingsIcon, Shapes,
+  Settings as SettingsIcon, Shapes, Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { sidebarItems } from './data';
@@ -28,6 +28,8 @@ const editorItems = [
   { id: 'FORMS', name: 'Formularios', icon: FileText },
   { id: 'COMMS', name: 'Comunicaciones', icon: Bell },
   { id: 'AUTO', name: 'Automatizaciones', icon: Bot },
+  { id: 'MARKETING', name: 'Marketing y Listas', icon: Send },
+  { id: 'SOCIAL_PROOF', name: 'Prueba social', icon: Sparkles },
   { id: 'PAYMENT', name: 'Pagos', icon: CircleDollarSign },
   { id: 'DOMAIN', name: 'Dominio y URL', icon: Globe2 },
 ] as const;

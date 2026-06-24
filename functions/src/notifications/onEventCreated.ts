@@ -17,7 +17,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import { sendEmail, RESEND_API_KEY } from "../email/resend";
-import { buildAppointmentEmail } from "../email/templates";
+import { buildAppointmentEmail, compileUserTemplate } from "../email/templates";
 
 export const onEventCreated = onDocumentCreated(
   { document: "events/{eventId}", secrets: [RESEND_API_KEY] },
@@ -55,16 +55,65 @@ export const onEventCreated = onDocumentCreated(
     // ─────────────────────────────────────────────────────────────
     if (data.email) {
       try {
-        const { subject, html } = buildAppointmentEmail("confirm", {
-          client: data.client,
-          service: data.service,
-          calendarName,
-          day: data.day,
-          month: data.month,
-          time: data.time,
-        });
-        await sendEmail({ to: data.email, subject, html });
-        console.log(`onEventCreated [${eventId}]: Correo de confirmación enviado a ${data.email}`);
+        const commsData = calData?.section_COMMS;
+        const commGroup = Array.isArray(commsData)
+          ? commsData.find((g: any) => g.id === data.groupId) || commsData[0]
+          : null;
+
+        const confirmMode = commGroup ? commGroup.confirmMode : "yes";
+
+        if (confirmMode !== "no") {
+          let emailSubject = "";
+          let emailHtml = "";
+          let fromEmail = "";
+          let replyTo = "";
+
+          const vars = {
+            "{lead_name}": data.client || "Cliente",
+            "{lead_email}": data.email || "",
+            "{lead_phone}": data.phone || "",
+            "{calendar_title}": calendarName,
+            "{group_title}": data.groupTitle || (commGroup?.name || "Cita"),
+            "{host_name}": calData?.senderName || calData?.ownerName || "",
+            "{host_email}": calData?.senderEmail || calData?.ownerEmail || "",
+            "{status}": data.status || "Programada",
+            "{calendar_dates}": `${data.day || ""} ${data.month || ""} a las ${data.time || ""}`.trim(),
+          };
+
+          if (commGroup && commGroup.templates?.confirm?.active !== false) {
+            const confirmTpl = commGroup.templates.confirm;
+            const compiled = compileUserTemplate(confirmTpl.subject, confirmTpl.body, vars);
+            emailSubject = compiled.subject;
+            emailHtml = compiled.html;
+
+            if (commGroup.senderMode === "custom" && commGroup.senderEmail) {
+              fromEmail = `${commGroup.senderName || calData?.title || "Calendar"} <${commGroup.senderEmail}>`;
+              replyTo = commGroup.replyTo || "";
+            }
+          } else {
+            const { subject, html } = buildAppointmentEmail("confirm", {
+              client: data.client,
+              service: data.service,
+              calendarName,
+              day: data.day,
+              month: data.month,
+              time: data.time,
+            });
+            emailSubject = subject;
+            emailHtml = html;
+          }
+
+          await sendEmail({
+            to: data.email,
+            subject: emailSubject,
+            html: emailHtml,
+            from: fromEmail || undefined,
+            replyTo: replyTo || undefined,
+          });
+          console.log(`onEventCreated [${eventId}]: Correo de confirmación enviado a ${data.email}`);
+        } else {
+          console.log(`onEventCreated [${eventId}]: confirmMode === 'no', no se envía correo.`);
+        }
       } catch (emailErr) {
         console.error(`onEventCreated [${eventId}]: Error enviando correo de confirmación:`, emailErr);
       }
@@ -227,5 +276,114 @@ export const onEventCreated = onDocumentCreated(
     } catch (e) {
       console.error(`onEventCreated [${eventId}]: Error enviando push vía FCM:`, e);
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // 9. Sincronización automática de Google Calendar
+    // ─────────────────────────────────────────────────────────────
+    if (!needsApproval && calData) {
+      try {
+        const { createGoogleEvent } = require("../calendars/googleSync");
+        await createGoogleEvent(eventId, data, calData);
+      } catch (syncErr) {
+        console.error(`onEventCreated [${eventId}]: Error sincronizando con Google Calendar:`, syncErr);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 10. Suscripción a SendFox (si está habilitado)
+    // ─────────────────────────────────────────────────────────────
+    if (calData && calData.section_MARKETING && calData.section_MARKETING.enabled && data.email) {
+      try {
+        const marketing = calData.section_MARKETING;
+        const listId = marketing.listId;
+        const tagsString = marketing.tags || "";
+        const customFieldsMapping = marketing.customFieldsMapping || {};
+
+        // Cargar el API key privado de SendFox
+        const privateSnap = await db.collection("calendars")
+          .doc(data.calendarId)
+          .collection("private_settings")
+          .doc("marketing")
+          .get();
+
+        if (privateSnap.exists) {
+          const apiKey = privateSnap.data()?.apiKey;
+          if (apiKey) {
+            console.log(`onEventCreated [${eventId}]: Suscribiendo a SendFox (${data.email})`);
+
+            // Separar etiquetas por coma
+            const tags = tagsString.split(",").map((t: string) => t.trim()).filter(Boolean);
+
+            // Mapear campos adicionales
+            const customFields: Record<string, any> = {};
+            if (data.customFields) {
+              for (const [formFieldId, sendfoxKey] of Object.entries(customFieldsMapping)) {
+                if (sendfoxKey && typeof sendfoxKey === "string" && data.customFields[formFieldId]) {
+                  customFields[sendfoxKey] = data.customFields[formFieldId];
+                }
+              }
+            }
+
+            // Preparar el payload del contacto para SendFox
+            const [firstName, ...lastNameParts] = (data.client || "Cliente").split(" ");
+            const lastName = lastNameParts.join(" ");
+
+            const body: any = {
+              email: data.email,
+              first_name: firstName || "",
+              last_name: lastName || "",
+            };
+
+            if (listId) {
+              const listIdNum = parseInt(listId, 10);
+              if (!isNaN(listIdNum)) {
+                body.lists = [listIdNum];
+              }
+            }
+            if (tags.length > 0) {
+              body.tags = tags;
+            }
+            if (Object.keys(customFields).length > 0) {
+              body.custom_fields = customFields;
+            }
+
+            const sendfoxResp = await fetch("https://api.sendfox.com/contacts", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify(body),
+            });
+
+            if (!sendfoxResp.ok) {
+              const errText = await sendfoxResp.text();
+              console.error(`onEventCreated [${eventId}]: Error de API SendFox (${sendfoxResp.status}):`, errText);
+            } else {
+              console.log(`onEventCreated [${eventId}]: Suscripción exitosa a SendFox.`);
+            }
+          } else {
+            console.warn(`onEventCreated [${eventId}]: SendFox habilitado pero falta API Key en private_settings.`);
+          }
+        } else {
+          console.warn(`onEventCreated [${eventId}]: SendFox habilitado pero no se encontró private_settings/marketing.`);
+        }
+      } catch (sendfoxErr) {
+        console.error(`onEventCreated [${eventId}]: Error en proceso de SendFox:`, sendfoxErr);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 11. Sincronización de Prueba Social
+    // ─────────────────────────────────────────────────────────────
+    if (calData) {
+      try {
+        const { syncSocialProofEvent } = require("./socialProof");
+        await syncSocialProofEvent(eventId, data, calData);
+      } catch (spErr) {
+        console.error(`onEventCreated [${eventId}]: Error en sincronización de prueba social:`, spErr);
+      }
+    }
   }
 );
+

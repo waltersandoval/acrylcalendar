@@ -26,7 +26,10 @@ import Sheet from '../ui/Sheet';
 import { HeaderActionsProvider, HeaderActionsSlot } from '../../lib/headerActions';
 
 const Dashboard: React.FC = () => {
-  const [activeSidebarItem, setActiveSidebarItem] = useState('Escritorio');
+  const [activeSidebarItem, setActiveSidebarItem] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('code') ? 'Ajustes' : 'Escritorio';
+  });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeActivityTab, setActiveActivityTab] = useState('All time');
   const [activeCalendarView, setActiveCalendarView] = useState('Mes');

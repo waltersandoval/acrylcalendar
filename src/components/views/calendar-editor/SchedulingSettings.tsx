@@ -1448,10 +1448,10 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
 
         {/* Advanced Config block */}
         {(!mode || mode === 'AVAILABILITY') && (
-          <div className="border hairline rounded-xl overflow-hidden mt-10 srf-panel max-w-3xl shadow-sm animate-fadeIn">
+          <div className="border hairline rounded-xl mt-10 srf-panel max-w-3xl shadow-sm animate-fadeIn">
             <div 
               onClick={() => setShowAdvanced(!showAdvanced)} 
-              className="p-5 flex justify-between items-center cursor-pointer hover:srf-sunken transition-colors select-none"
+              className={`p-5 flex justify-between items-center cursor-pointer hover:srf-sunken transition-colors select-none ${showAdvanced ? 'rounded-t-xl' : 'rounded-xl'}`}
             >
                <div className="flex items-center ink-1 font-semibold text-[14px]">
                   <SettingsIcon className="w-4 h-4 mr-2 ink-2" /> Configuraciones avanzadas

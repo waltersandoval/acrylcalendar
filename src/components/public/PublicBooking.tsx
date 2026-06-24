@@ -2,8 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { collection, doc, getDoc, query, where, onSnapshot } from 'firebase/firestore';
 import { db, functions } from '../../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
-import { Calendar as CalendarIcon, Clock, User, Mail, ChevronLeft, ChevronRight, CheckCircle2, Globe, Check, CreditCard, Sparkles, AlertCircle, CalendarDays, ShieldCheck } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Mail, ChevronLeft, ChevronRight, CheckCircle2, Globe, Check, CreditCard, Sparkles, AlertCircle, CalendarDays, ShieldCheck, FileDown, Phone } from 'lucide-react';
 import PayPalButton from './PayPalButton';
+
+interface PostActionConfig {
+  id: 'message' | 'redirect' | 'thank_you' | 'summary' | 'pdf' | 'whatsapp';
+  enabled: boolean;
+  title?: string;
+  message?: string;
+  url?: string;
+  phone?: string;
+  buttonText?: string;
+}
+
+const ensurePostActions = (group: any): PostActionConfig[] => {
+  if (group?.postActions && group.postActions.length > 0) {
+    return group.postActions;
+  }
+  return [
+    { id: 'message', enabled: group?.postAction === 'message' || !group?.postAction, message: group?.successMessage || '¡Tu cita fue registrada con éxito!', buttonText: group?.buttonText || 'Regresar al home' },
+    { id: 'redirect', enabled: group?.postAction === 'redirect', url: group?.redirectUrl || '' },
+    { id: 'thank_you', enabled: false, title: '¡Gracias por tu reserva!', message: 'Tu cita ha sido agendada. Nos pondremos en contacto contigo pronto.' },
+    { id: 'summary', enabled: false },
+    { id: 'pdf', enabled: false },
+    { id: 'whatsapp', enabled: false, phone: '', message: 'Hola {cliente}, tu cita para {servicio} fue registrada para {fecha}.' },
+  ];
+};
 
 // Pure helpers for parsing and building slots
 const parseTimeToMinutes = (timeStr: string): number => {
@@ -65,6 +89,339 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
   const [currentMonthYear, setCurrentMonthYear] = useState<{ year: number; month: number } | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [paymentConfig, setPaymentConfig] = useState<any>(null);
+
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  // ─────────────────────────────────────────────────────────────
+  // Prueba Social (Social Proof)
+  // ─────────────────────────────────────────────────────────────
+  const [spEvents, setSpEvents] = useState<any[]>([]);
+  const [activeSpIndex, setActiveSpIndex] = useState<number>(-1);
+  const [spVisible, setSpVisible] = useState<boolean>(false);
+
+  useEffect(() => {
+    const spConfig = calendar?.section_SOCIAL_PROOF;
+    if (!spConfig || !spConfig.enabled) {
+      setSpEvents([]);
+      setActiveSpIndex(-1);
+      setSpVisible(false);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'social_proof_events'),
+      where('calendarId', '==', calendarId)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const now = Date.now();
+      let limitMs = 30 * 60 * 1000;
+      const limitStr = spConfig.minTimeLimit || '30m';
+      if (limitStr === '2h') limitMs = 2 * 60 * 60 * 1000;
+      else if (limitStr === '12h') limitMs = 12 * 60 * 60 * 1000;
+      else if (limitStr === '24h') limitMs = 24 * 60 * 60 * 1000;
+      else if (limitStr === '7d') limitMs = 7 * 24 * 60 * 60 * 1000;
+      else if (limitStr === '30d') limitMs = 30 * 24 * 60 * 60 * 1000;
+
+      const events: any[] = [];
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        if (d.status === 'scheduled') {
+          let eventTime = now;
+          if (d.timestamp) {
+            try {
+              eventTime = d.timestamp.toDate ? d.timestamp.toDate().getTime() : new Date(d.timestamp).getTime();
+            } catch (err) {}
+          }
+          if (now - eventTime <= limitMs) {
+            events.push({
+              id: docSnap.id,
+              ...d,
+              eventTime,
+            });
+          }
+        }
+      });
+
+      events.sort((a, b) => b.eventTime - a.eventTime);
+      setSpEvents(events);
+    });
+
+    return () => unsubscribe();
+  }, [calendarId, calendar?.section_SOCIAL_PROOF]);
+
+  useEffect(() => {
+    if (spEvents.length === 0) {
+      setActiveSpIndex(-1);
+      setSpVisible(false);
+      return;
+    }
+
+    const spConfig = calendar?.section_SOCIAL_PROOF || {};
+    const freqSeconds = spConfig.frequency || 30;
+    const displayDuration = 6000;
+
+    let currentIndex = 0;
+    setActiveSpIndex(0);
+    setSpVisible(true);
+
+    const interval = setInterval(() => {
+      setSpVisible(false);
+      setTimeout(() => {
+        currentIndex = (currentIndex + 1) % spEvents.length;
+        setActiveSpIndex(currentIndex);
+        setSpVisible(true);
+      }, 1000);
+
+      setTimeout(() => {
+        setSpVisible(false);
+      }, displayDuration);
+    }, freqSeconds * 1000);
+
+    const initialHideTimeout = setTimeout(() => {
+      setSpVisible(false);
+    }, displayDuration);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialHideTimeout);
+    };
+  }, [spEvents, calendar?.section_SOCIAL_PROOF]);
+
+  const formatSpText = (event: any) => {
+    const spConfig = calendar?.section_SOCIAL_PROOF || {};
+    let name = event.client || 'Cliente';
+    if (spConfig.nameDisplay === 'first') {
+      name = name.split(' ')[0];
+    } else if (spConfig.nameDisplay === 'initials') {
+      const parts = name.split(' ');
+      if (parts.length > 1) {
+        name = `${parts[0].charAt(0).toUpperCase()}. ${parts[1].charAt(0).toUpperCase()}.`;
+      } else {
+        name = `${parts[0].charAt(0).toUpperCase()}.`;
+      }
+    }
+
+    let serviceDetail = '';
+    if (spConfig.showService !== false && event.service) {
+      const serviceName = event.service.split(' - ').pop() || event.service;
+      serviceDetail = ` reservó ${serviceName}`;
+    } else {
+      serviceDetail = ` agendó una cita`;
+    }
+
+    let cityDetail = '';
+    if (spConfig.showCity !== false && event.city) {
+      cityDetail = ` de ${event.city}`;
+    }
+
+    let timeText = 'hace unos minutos';
+    if (event.eventTime) {
+      const elapsedMins = Math.round((Date.now() - event.eventTime) / 60000);
+      if (elapsedMins < 1) {
+        timeText = 'hace unos segundos';
+      } else if (elapsedMins === 1) {
+        timeText = 'hace 1 minuto';
+      } else if (elapsedMins < 60) {
+        timeText = `hace ${elapsedMins} minutos`;
+      } else {
+        const elapsedHours = Math.round(elapsedMins / 60);
+        if (elapsedHours === 1) {
+          timeText = 'hace 1 hora';
+        } else if (elapsedHours < 24) {
+          timeText = `hace ${elapsedHours} horas`;
+        } else {
+          const elapsedDays = Math.round(elapsedHours / 24);
+          if (elapsedDays === 1) {
+            timeText = 'hace 1 día';
+          } else {
+            timeText = `hace ${elapsedDays} días`;
+          }
+        }
+      }
+    }
+
+    return (
+      <span>
+        <strong>{name}</strong>{cityDetail}{serviceDetail} <span className="opacity-75 font-normal">{timeText}</span>
+      </span>
+    );
+  };
+
+  const getSpAnimationClasses = () => {
+    const spConfig = calendar?.section_SOCIAL_PROOF || {};
+    const anim = spConfig.animationType || 'slide';
+    const pos = spConfig.position || 'bottom-left';
+    
+    if (anim === 'fade') {
+      return spVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-100 pointer-events-none';
+    }
+    if (anim === 'scale') {
+      return spVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none';
+    }
+    if (spVisible) return 'opacity-100 translate-y-0 scale-100';
+    const isTop = pos.startsWith('top');
+    return isTop 
+      ? 'opacity-0 -translate-y-8 scale-95 pointer-events-none' 
+      : 'opacity-0 translate-y-8 scale-95 pointer-events-none';
+  };
+
+  const groupForm = React.useMemo(() => {
+    if (!calendar) return null;
+    const formsData = calendar?.section_FORMS;
+    const formGroups = Array.isArray(formsData) ? formsData : (formsData?.groupsData || []);
+    return formGroups.find((g: any) => g.id === selectedGroup?.id) || formGroups[0];
+  }, [calendar, selectedGroup]);
+
+  const activePostActions = React.useMemo(() => {
+    if (!groupForm) return [];
+    return ensurePostActions(groupForm);
+  }, [groupForm]);
+
+  useEffect(() => {
+    if (step === 'success') {
+      const redirectAction = activePostActions.find(a => a.id === 'redirect' && a.enabled);
+      if (redirectAction && redirectAction.url) {
+        setCountdown(5);
+      } else {
+        setCountdown(null);
+      }
+    } else {
+      setCountdown(null);
+    }
+  }, [step, activePostActions]);
+
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown <= 0) {
+      const redirectAction = activePostActions.find(a => a.id === 'redirect' && a.enabled);
+      if (redirectAction && redirectAction.url) {
+        window.location.href = redirectAction.url;
+      }
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCountdown(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [countdown, activePostActions]);
+
+  const replaceVariables = (text: string) => {
+    if (!text) return '';
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'long', timeZone: safeTimezone }) : '';
+    const profName = selectedGroup?.admins && selectedGroup.admins.length > 0 
+      ? selectedGroup.admins.map((a: any) => a.name).join(', ') 
+      : (selectedGroup?.name || '');
+    const locationStr = selectedGroup?.location || calendar?.location || 'Por definir';
+    const serviceStr = selectedGroup ? (selectedGroup.title || selectedGroup.name) : (calendar.title || 'Servicio');
+    
+    return text
+      .replace(/{cliente}/g, formData.name)
+      .replace(/{servicio}/g, serviceStr)
+      .replace(/{fecha}/g, dateStr)
+      .replace(/{hora}/g, selectedTime || '')
+      .replace(/{profesional}/g, profName)
+      .replace(/{ubicacion}/g, locationStr);
+  };
+
+  const downloadReceipt = () => {
+    const serviceStr = selectedGroup ? (selectedGroup.title || selectedGroup.name) : (calendar.title || 'Servicio');
+    const dateStr = selectedDate ? selectedDate.toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'long', timeZone: safeTimezone }) : '';
+    const profName = selectedGroup?.admins && selectedGroup.admins.length > 0 
+      ? selectedGroup.admins.map((a: any) => a.name).join(', ') 
+      : '';
+    const logoHtml = calendar?.section_BASIC?.logoBase64 
+      ? `<img src="${calendar.section_BASIC.logoBase64}" style="max-height: 80px; margin-bottom: 20px;" />` 
+      : '';
+
+    const receiptHtml = `
+      <html>
+        <head>
+          <title>Comprobante de Reserva - ${formData.name}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+            .header { text-align: center; border-bottom: 2px dashed #eee; padding-bottom: 20px; margin-bottom: 30px; }
+            .title { font-size: 24px; font-weight: bold; color: #0f172a; margin-top: 10px; }
+            .subtitle { font-size: 14px; color: #64748b; margin-top: 5px; }
+            .section { margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+            .label { color: #64748b; font-weight: 500; }
+            .value { color: #0f172a; font-weight: 600; text-align: right; }
+            .footer { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 40px; }
+            .badge { display: inline-block; padding: 4px 12px; background: #f1f5f9; border-radius: 9999px; font-size: 12px; font-weight: bold; color: #0f172a; }
+            @media print {
+              body { padding: 20px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            ${logoHtml}
+            <div class="title">Comprobante de Cita</div>
+            <div class="subtitle">Reserva confirmada con éxito</div>
+          </div>
+          <div class="section">
+            <div class="row">
+              <span class="label">Cliente</span>
+              <span class="value">${formData.name}</span>
+            </div>
+            <div class="row">
+              <span class="label">Email</span>
+              <span class="value">${formData.email}</span>
+            </div>
+            <div class="row">
+              <span class="label">Teléfono</span>
+              <span class="value">${formData.phoneCode} ${formData.phone}</span>
+            </div>
+          </div>
+          <div class="section">
+            <div class="row">
+              <span class="label">Servicio</span>
+              <span class="value">${serviceStr}</span>
+            </div>
+            <div class="row">
+              <span class="label">Profesional</span>
+              <span class="value">${profName || 'Por asignar'}</span>
+            </div>
+            <div class="row">
+              <span class="label">Fecha</span>
+              <span class="value" style="text-transform: capitalize;">${dateStr}</span>
+            </div>
+            <div class="row">
+              <span class="label">Hora</span>
+              <span class="value">${selectedTime}</span>
+            </div>
+            <div class="row">
+              <span class="label">Zona Horaria</span>
+              <span class="value">${selectedTimezone}</span>
+            </div>
+          </div>
+          <div class="footer">
+            <p>Gracias por tu confianza. Por favor guarda este documento como referencia.</p>
+            <p style="margin-top: 15px; font-size: 10px;">ID Calendario: ${calendarId}</p>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(receiptHtml);
+      win.document.close();
+    }
+  };
+
+  const openWhatsApp = (config: PostActionConfig) => {
+    const text = replaceVariables(config.message || '');
+    const cleanPhone = (config.phone || '').replace(/[^0-9+]/g, '');
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
 
   useEffect(() => {
     const fetchCalendar = async () => {
@@ -1459,35 +1816,160 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
             );
           })()}
 
-          {step === 'success' && (
-            <div className="animate-in fade-in zoom-in-98 duration-500 flex flex-col items-center justify-center h-full text-center py-10">
-              <div className="w-20 h-20 bg-emerald-500/[0.08] text-emerald-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-emerald-500/[0.02]">
-                <CheckCircle2 className="w-11 h-11" />
+          {step === 'success' && (() => {
+            const actions = activePostActions;
+            const messageAction = actions.find(a => a.id === 'message' && a.enabled);
+            const redirectAction = actions.find(a => a.id === 'redirect' && a.enabled);
+            const thankYouAction = actions.find(a => a.id === 'thank_you' && a.enabled);
+            const summaryAction = actions.find(a => a.id === 'summary' && a.enabled);
+            const pdfAction = actions.find(a => a.id === 'pdf' && a.enabled);
+            const whatsappAction = actions.find(a => a.id === 'whatsapp' && a.enabled);
+
+            const displayTitle = thankYouAction ? replaceVariables(thankYouAction.title || '') : t.success;
+            const displaySubText = thankYouAction 
+              ? replaceVariables(thankYouAction.message || '') 
+              : messageAction 
+                ? replaceVariables(messageAction.message || '') 
+                : `${t.scheduledAt} ${selectedDate?.toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'long', timeZone: safeTimezone })} a las ${selectedTime} (${selectedTimezone}).`;
+
+            return (
+              <div className="animate-in fade-in zoom-in-98 duration-500 flex flex-col items-center justify-start h-full py-6 space-y-6 overflow-y-auto max-h-[680px] w-full">
+                <div className="w-16 h-16 bg-emerald-500/[0.08] text-emerald-500 rounded-full flex items-center justify-center ring-8 ring-emerald-500/[0.02] shrink-0">
+                  <CheckCircle2 className="w-9 h-9" />
+                </div>
+                
+                <div className="text-center space-y-2 max-w-lg">
+                  <h2 className="text-2xl font-black ink-1 font-display leading-tight">{displayTitle}</h2>
+                  <p className="ink-3 text-sm font-semibold leading-relaxed whitespace-pre-wrap">
+                    {displaySubText}
+                  </p>
+                </div>
+
+                {/* Redirect Banner */}
+                {redirectAction && redirectAction.url && countdown !== null && (
+                  <div className="w-full max-w-md bg-amber-500/10 border border-amber-500/20 text-amber-800 p-4 rounded-2xl text-xs font-bold flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+                      Redirigiendo en {countdown} segundos...
+                    </span>
+                    <a
+                      href={redirectAction.url}
+                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors font-extrabold text-[10px] uppercase tracking-wider"
+                    >
+                      Redirigir ahora
+                    </a>
+                  </div>
+                )}
+
+                {/* Summary Card */}
+                {summaryAction && (
+                  <div className="w-full max-w-md srf-sunken border hairline rounded-2xl p-5 space-y-4 text-left shadow-sm">
+                    <h3 className="text-xs font-extrabold ink-3 uppercase tracking-widest border-b hairline pb-2">Resumen de la cita</h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div>
+                        <span className="text-[10px] font-bold ink-3 uppercase">Servicio</span>
+                        <p className="text-sm font-extrabold ink-1">
+                          {selectedGroup ? (selectedGroup.title || selectedGroup.name) : (calendar.title || 'Cita')}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[10px] font-bold ink-3 uppercase">Fecha</span>
+                          <p className="text-sm font-extrabold ink-1 capitalize">
+                            {selectedDate?.toLocaleDateString(lang, { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold ink-3 uppercase">Hora</span>
+                          <p className="text-sm font-extrabold ink-1">{selectedTime}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold ink-3 uppercase">Cliente</span>
+                        <p className="text-sm font-extrabold ink-1">{formData.name}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[10px] font-bold ink-3 uppercase">Email</span>
+                          <p className="text-xs font-bold ink-2 truncate">{formData.email}</p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold ink-3 uppercase">Teléfono</span>
+                          <p className="text-xs font-bold ink-2 truncate">{formData.phoneCode}-{formData.phone}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions Buttons */}
+                <div className="w-full max-w-md flex flex-col gap-3">
+                  {pdfAction && (
+                    <button
+                      type="button"
+                      onClick={downloadReceipt}
+                      className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md text-xs uppercase tracking-wider"
+                    >
+                      <FileDown className="w-4 h-4" />
+                      Descargar Comprobante (PDF)
+                    </button>
+                  )}
+
+                  {whatsappAction && (
+                    <button
+                      type="button"
+                      onClick={() => openWhatsApp(whatsappAction)}
+                      className="w-full py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md text-xs uppercase tracking-wider"
+                    >
+                      <Phone className="w-4 h-4 animate-pulse" />
+                      Enviar por WhatsApp
+                    </button>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t hairline w-full max-w-md flex justify-center">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setStep('date');
+                      setSelectedDate(null);
+                      setSelectedTime(null);
+                      setFormData({ name: '', email: '', phoneCode: '+504', phone: '', termsAccepted: false, custom: {} });
+                    }}
+                    className="px-6 py-3 srf-sunken hover:bg-slate-200/80 hover:ink-1 ink-2 rounded-xl font-bold transition-all cursor-pointer text-[10px] uppercase tracking-wider"
+                  >
+                    {messageAction?.buttonText || t.scheduleAnother}
+                  </button>
+                </div>
               </div>
-              <h2 className="text-2xl font-black ink-1 mb-2 font-display">{t.success}</h2>
-              <p className="ink-3 max-w-md mb-8 text-sm font-semibold leading-relaxed">
-                {t.scheduledAt}{' '}
-                <span className="ink-1 font-extrabold srf-sunken px-2.5 py-1 rounded-lg inline-block my-1 capitalize">
-                  {selectedDate?.toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'long', timeZone: safeTimezone })}
-                </span>{' '}
-                a las <span className="text-slate-950 font-extrabold">{selectedTime}</span> ({selectedTimezone}).
-              </p>
-              
-              <button 
-                type="button"
-                onClick={() => {
-                  setStep('date');
-                  setSelectedDate(null);
-                  setSelectedTime(null);
-                  setFormData({ name: '', email: '', phoneCode: '+504', phone: '', termsAccepted: false });
-                }}
-                className="px-6 py-3 srf-sunken hover:bg-slate-200/80 hover:ink-1 ink-2 rounded-xl font-bold transition-all cursor-pointer text-xs uppercase tracking-wider"
-              >
-                {t.scheduleAnother}
-              </button>
-            </div>
-          )}
+            );
+          })()}
         </div>
+
+        {/* Widget Flotante de Prueba Social */}
+        {activeSpIndex >= 0 && spEvents[activeSpIndex] && (
+          <div 
+            className={`fixed z-50 flex items-center gap-3 p-4 bg-white/95 text-slate-800 rounded-2xl border border-slate-100 shadow-xl max-w-[320px] sm:max-w-sm transition-all duration-500 ease-out transform ${
+              calendar?.section_SOCIAL_PROOF?.position === 'bottom-right' ? 'bottom-6 right-6' :
+              calendar?.section_SOCIAL_PROOF?.position === 'top-left' ? 'top-6 left-6' :
+              calendar?.section_SOCIAL_PROOF?.position === 'top-right' ? 'top-6 right-6' :
+              'bottom-6 left-6'
+            } ${getSpAnimationClasses()}`}
+          >
+            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-md">
+              ⚡
+            </div>
+            <div className="min-w-0 flex-1 leading-relaxed">
+              <p className="text-xs font-semibold text-slate-800">
+                {formatSpText(spEvents[activeSpIndex])}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1 font-semibold">
+                <span>Reserva verificada</span>
+                <span className="text-emerald-500 font-bold">✓</span>
+              </p>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

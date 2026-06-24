@@ -138,30 +138,7 @@ const AutomationSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSa
         </div>
       </div>
 
-      {/* Reuniones */}
-      <div>
-        <div className="px-4 pt-4 pb-2">
-           <h3 className="ink-1 font-semibold text-sm tracking-tight flex items-center">
-             Reuniones (Google Meet y Zoom)
-           </h3>
-        </div>
-        <div className="px-4 pb-4 border-b hairline">
-           <div className="grid grid-cols-1 gap-4 max-w-4xl">
-              <div onClick={() => updateActiveGroup({ meetMode: 'no'})} className={`flex items-center gap-4 cursor-pointer group p-4 rounded-2xl border transition-all duration-300 ${activeGroup.meetMode==='no'?'border-black srf-sunken shadow-sm':'hairline srf-panel hover:border-slate-300 hover:srf-sunken'}`}>
-                 <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeGroup.meetMode==='no'?'srf-panel border text-black shadow-sm hairline':'srf-sunken ink-3 group-hover:srf-panel border border-transparent group-hover:hairline'}`}> 
-                   <span className="font-bold text-lg">No</span> 
-                 </div>
-                 <div><h4 className="font-semibold text-sm ink-1 mb-0.5">No permitir reuniones</h4><p className="text-[13px] ink-3">No crear enlaces de video.</p></div>
-              </div>
-              <div onClick={() => updateActiveGroup({ meetMode: 'yes'})} className={`flex items-center gap-4 cursor-pointer group p-4 rounded-2xl border transition-all duration-300 ${activeGroup.meetMode==='yes'?'border-black srf-sunken shadow-sm':'hairline srf-panel hover:border-slate-300 hover:srf-sunken'}`}>
-                 <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeGroup.meetMode==='yes'?'srf-panel border text-black shadow-sm hairline':'srf-sunken ink-3 group-hover:srf-panel border border-transparent group-hover:hairline'}`}> 
-                   <span className="font-bold text-lg">Sí</span>  
-                 </div>
-                 <div><h4 className="font-semibold text-sm ink-1 mb-0.5">Permitir reuniones</h4><p className="text-[13px] ink-3">Crea enlaces en Zoom o Meet.</p></div>
-              </div>
-           </div>
-        </div>
-      </div>
+
 
       {/* Suscripcion Lista */}
       <div>

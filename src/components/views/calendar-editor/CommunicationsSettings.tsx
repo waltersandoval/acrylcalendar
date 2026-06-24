@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, Info, Plus, Trash2, Edit2, Mail, Bell, Calendar as CalendarIcon, ChevronDown, X } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Info, Plus, Trash2, Edit2, Mail, Bell, Calendar as CalendarIcon, ChevronDown, X, Phone, MessageSquare, Check, Eye } from 'lucide-react';
 
 interface Props {
   initialData?: any;
@@ -12,15 +12,22 @@ interface NotificationTemplate {
   active: boolean;
   subject: string;
   body: string;
+  whatsappActive?: boolean;
+  whatsappBody?: string;
 }
 
-interface Reminder extends NotificationTemplate {
+interface Reminder {
   id: string;
   days: number;
   hours: number;
   minutes: number;
   channels: string[];
   target: 'prospect' | 'host';
+  active: boolean;
+  subject: string;
+  body: string;
+  whatsappActive?: boolean;
+  whatsappBody?: string;
 }
 
 interface GroupCommunications {
@@ -40,13 +47,21 @@ interface GroupCommunications {
     confirm: NotificationTemplate;
     adminNew: NotificationTemplate;
     cancel: NotificationTemplate;
+    paymentConfirm?: NotificationTemplate;
+    cancelAdmin?: NotificationTemplate;
+    cancelClient?: NotificationTemplate;
+    reschedule?: NotificationTemplate;
+    adminNewPayment?: NotificationTemplate;
+    adminNewCancel?: NotificationTemplate;
   }
 }
 
 const defaultTemplate = {
   active: true,
   subject: '🎉 Tu cita se ha programado con éxito!',
-  body: '🎉 Importante! lee y verifica que hayas seleccionado el día y la hora deseada:\n\n🎉 Tu cita de {group_title}, se ha programado con éxito!\n\n👍 Hola, {lead_name}.\n\n😃 Soy el asistente virtual...'
+  body: '¡Hola {lead_name}!\n\nTu cita de {group_title} ha sido confirmada con éxito.\n\n📅 Fecha: {calendar_dates}\n\n¡Gracias por tu preferencia!',
+  whatsappActive: false,
+  whatsappBody: 'Hola {lead_name}, tu cita para {servicio} fue registrada para {fecha}.'
 };
 
 const defaultReminder: Reminder = {
@@ -54,11 +69,13 @@ const defaultReminder: Reminder = {
   days: 1,
   hours: 0,
   minutes: 0,
-  channels: ['Email', 'WhatsApp'],
+  channels: ['Email'],
   target: 'prospect',
   active: true,
-  subject: 'Estas a 1 día de consentirte 🎉 !!!!',
-  body: 'Hola, {lead_name}\n\nFalta 1 día para tu cita de {group_title}!\n\nGracias por tu preferencia.\nAcryl Nagels...El reflejo de tu expresión!'
+  subject: 'Recordatorio de tu próxima cita ⏰',
+  body: 'Hola {lead_name},\n\nFalta 1 día para tu cita de {group_title}.\n\n¡Te esperamos!',
+  whatsappActive: false,
+  whatsappBody: 'Hola {lead_name}, recordatorio de tu cita para {servicio} mañana.'
 };
 
 const defaultGroupComms: GroupCommunications = {
@@ -76,8 +93,14 @@ const defaultGroupComms: GroupCommunications = {
   replyTo: '',
   templates: {
     confirm: { ...defaultTemplate },
-    adminNew: { ...defaultTemplate, subject: '{lead_name} se ha suscrito!' },
-    cancel: { ...defaultTemplate, subject: 'Cita cancelada' }
+    adminNew: { ...defaultTemplate, subject: '{lead_name} se ha registrado!' },
+    cancel: { ...defaultTemplate, subject: 'Cita cancelada' },
+    paymentConfirm: { ...defaultTemplate, subject: 'Confirmación de pago de tu cita 💳', body: 'Hola {lead_name},\n\nHemos registrado el pago de tu cita de {group_title} con éxito.' },
+    cancelAdmin: { ...defaultTemplate, subject: 'Cita cancelada por el administrador', body: 'Hola {lead_name},\n\nTe notificamos que tu cita de {group_title} ha sido cancelada por el administrador.' },
+    cancelClient: { ...defaultTemplate, subject: 'Has cancelado tu cita', body: 'Hola {lead_name},\n\nTe confirmamos que has cancelado tu cita de {group_title} con éxito.' },
+    reschedule: { ...defaultTemplate, subject: 'Tu cita fue reprogramada 📅', body: 'Hola {lead_name},\n\nTu cita de {group_title} fue reprogramada. Nuevos detalles:\n\n📅 Fecha: {calendar_dates}' },
+    adminNewPayment: { ...defaultTemplate, subject: 'Nuevo pago recibido 💰', body: 'Hola,\n\nSe ha registrado un nuevo pago para la cita de {lead_name} en {group_title}.' },
+    adminNewCancel: { ...defaultTemplate, subject: 'Cita cancelada por cliente ❌', body: 'Hola,\n\nEl cliente {lead_name} ha cancelado su cita de {group_title}.' }
   }
 };
 
@@ -94,188 +117,313 @@ const NotificationModal = ({
   onSave: (t: any) => void; 
   isReminder?: boolean;
 }) => {
-  const [localTemplate, setLocalTemplate] = useState<any>(template);
-  const [activeTab, setActiveTab] = useState('EMAIL');
+  const [localTemplate, setLocalTemplate] = useState<any>({
+    active: true,
+    subject: '',
+    body: '',
+    whatsappActive: false,
+    whatsappBody: '',
+    ...template
+  });
+  const [activeChannel, setActiveChannel] = useState<'email' | 'whatsapp'>('email');
 
   useEffect(() => {
     if (isOpen) {
-      setLocalTemplate(template);
+      setLocalTemplate({
+        active: true,
+        subject: '',
+        body: '',
+        whatsappActive: false,
+        whatsappBody: '',
+        ...template
+      });
     }
   }, [isOpen, template]);
 
   if (!isOpen) return null;
 
   const variables = [
-    { name: 'Nombre del prospecto', tag: '{lead_name}' },
-    { name: 'Email del prospecto', tag: '{lead_email}' },
-    { name: 'Teléfono del prospecto', tag: '{lead_phone}' },
+    { name: 'Nombre del cliente', tag: '{lead_name}' },
+    { name: 'Email del cliente', tag: '{lead_email}' },
+    { name: 'Teléfono del cliente', tag: '{lead_phone}' },
     { name: 'Título del Calendario', tag: '{calendar_title}' },
     { name: 'Título del grupo', tag: '{group_title}' },
-    { name: 'Nombre del administrador', tag: '{host_name}' },
-    { name: 'Email del administrador', tag: '{host_email}' },
+    { name: 'Nombre del anfitrión', tag: '{host_name}' },
+    { name: 'Email del anfitrión', tag: '{host_email}' },
     { name: 'Estado', tag: '{status}' },
     { name: 'Fecha(s) de las citas', tag: '{calendar_dates}' }
   ];
 
+  // Helper to compile preview with mockup data
+  const renderPreviewContent = (text: string) => {
+    if (!text) return 'Escribe tu mensaje para ver una vista previa aquí...';
+    return text
+      .replace(/{lead_name}/g, 'Juan Pérez')
+      .replace(/{lead_email}/g, 'juan@correo.com')
+      .replace(/{lead_phone}/g, '+504-99887766')
+      .replace(/{calendar_title}/g, 'Asesoría VIP')
+      .replace(/{group_title}/g, 'Consulta General')
+      .replace(/{host_name}/g, 'Dra. María Silva')
+      .replace(/{host_email}/g, 'maria.silva@business.com')
+      .replace(/{status}/g, 'Confirmada')
+      .replace(/{calendar_dates}/g, 'Lunes, 28 de Julio, 10:00 AM');
+  };
+
   return (
-    <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#f8f9fa] w-full max-w-5xl h-[85vh] rounded-xl flex flex-col overflow-hidden shadow-2xl relative">
-        <div className="flex justify-between items-center p-4 srf-panel border-b hairline">
-          <h2 className="text-xl font-bold text-[#374151]">Editar notificación</h2>
-          <button onClick={onClose} className="p-1 rounded-full srf-sunken hover:bg-slate-200 ink-3 cursor-pointer">
+    <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-[#f8fafc] w-full max-w-6xl h-[88vh] rounded-3xl flex flex-col overflow-hidden shadow-2xl relative border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 py-4 bg-white border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white">
+              <Mail className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-900 font-display">Personalizar Notificación</h2>
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Editor de plantillas multi-canal</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar Variables */}
-          <div className="w-80 srf-panel border-r hairline p-4 flex flex-col">
-            <div className="text-sm font-semibold ink-2 mb-3 px-1">Variables disponibles</div>
-            <div className="overflow-y-auto pr-2 space-y-2 flex-1 scrollbar-thin scrollbar-thumb-slate-300">
-               {variables.map((v, i) => (
-                 <div key={i} className="border hairline rounded-lg p-3 cursor-pointer hover:border-black hover:shadow-xs transition-all srf-panel group">
-                   <div className="text-[13px] font-semibold ink-1 group-hover:ink-1">{v.name}</div>
-                   <div className="text-[13px] ink-1 font-mono mt-1">{v.tag}</div>
-                 </div>
-               ))}
-            </div>
+        {/* Channels selector at top of editor */}
+        <div className="bg-white px-6 py-2 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveChannel('email')}
+              className={`px-4 py-2 text-xs font-black rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+                activeChannel === 'email'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              <Mail className="w-4 h-4" />
+              Correo Electrónico
+            </button>
+            <button
+              onClick={() => setActiveChannel('whatsapp')}
+              className={`px-4 py-2 text-xs font-black rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+                activeChannel === 'whatsapp'
+                  ? 'bg-[#25D366]/10 text-[#128C7E] border border-[#25D366]/20'
+                  : 'text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              WhatsApp
+            </button>
           </div>
 
-          {/* Main Editor Area */}
-          <div className="flex-1 srf-panel p-6 overflow-y-auto">
-             {/* Tabs */}
-             <div className="flex border-b hairline mb-6 relative">
-               {['EMAIL', 'SMS', 'WHATSAPP'].map(tab => (
-                 <button 
-                   key={tab}
-                   onClick={() => setActiveTab(tab)}
-                   className={`px-6 py-3 text-[13px] font-bold tracking-wider relative cursor-pointer
-                    ${activeTab === tab ? 'text-black' : 'ink-3 hover:ink-1'}`}
-                 >
-                   {tab}
-                   {activeTab === tab && (
-                     <div className="absolute bottom-0 left-0 right-0 h-0.5 accent-bg"></div>
-                   )}
-                 </button>
-               ))}
-             </div>
-
-             {/* Activo Toggle */}
-             <div className="flex justify-end items-center mb-6">
-                <span className="text-[14px] ink-2 mr-3">Activo</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer" 
-                    checked={localTemplate.active}
-                    onChange={(e) => setLocalTemplate({...localTemplate, active: e.target.checked})}
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:srf-panel after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:accent-bg"></div>
-                </label>
-             </div>
-
-             {/* Info Box */}
-             <div className="srf-sunken border hairline rounded-xl p-4 mb-6 relative pr-10 text-[13.5px] ink-2 leading-relaxed shadow-sm">
-                Si no usas un remitente de correo electrónico personalizado, tus correos serán enviados desde el remitente de "Builderall Booking". Puedes configurar tu propio remitente en la página de "Preferencias".
-                <button className="absolute top-4 right-4 ink-3 hover:ink-2 cursor-pointer">
-                  <X className="w-4 h-4" />
-                </button>
-             </div>
-
-             {/* Subject */}
-             <div className="mb-6">
-               <label className="block text-[14px] ink-2 mb-2">Asunto</label>
-               <div className="relative">
-                 <input 
-                   type="text" 
-                   value={localTemplate.subject}
-                   onChange={e => setLocalTemplate({...localTemplate, subject: e.target.value})}
-                   maxLength={255}
-                   className="w-full srf-panel border hairline hover:border-slate-300 focus:border-slate-300 px-4 py-3 rounded-lg text-[14px] ink-1 outline-none transition-colors"
-                 />
-                 <span className="absolute right-3 top-3.5 text-[10px] ink-3">{localTemplate.subject.length}/255</span>
-               </div>
-             </div>
-
-             {/* Body Editor Mock */}
-             <div className="mb-6 flex flex-col flex-1 min-h-[300px]">
-               <label className="block text-[14px] ink-2 mb-2">Mensaje</label>
-               <div className="border hairline rounded-lg flex flex-col overflow-hidden srf-panel">
-                 <div className="bg-[#f8f9fa] border-b hairline p-2 flex items-center space-x-1 overflow-x-auto">
-                    {/* Dummy Editor Toolbar */}
-                    <button className="px-2 py-1 text-sm srf-panel border hairline rounded ink-2 cursor-pointer">Normal</button>
-                    <button className="px-2 py-1 text-sm srf-panel border hairline rounded ink-2 cursor-pointer mr-2">Normal</button>
-                    <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                    <button className="p-1.5 ink-1 hover:bg-slate-200 rounded font-serif font-bold cursor-pointer">B</button>
-                    <button className="p-1.5 ink-1 hover:bg-slate-200 rounded font-serif italic cursor-pointer">I</button>
-                    <button className="p-1.5 ink-1 hover:bg-slate-200 rounded font-serif underline cursor-pointer">U</button>
-                    <button className="p-1.5 ink-1 hover:bg-slate-200 rounded font-serif line-through cursor-pointer">S</button>
-                    <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                    <button className="p-1.5 ink-1 hover:bg-slate-200 rounded cursor-pointer"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-                    <button className="p-1.5 ink-1 hover:bg-slate-200 rounded cursor-pointer"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16"/></svg></button>
-                 </div>
-                 <textarea 
-                   value={localTemplate.body}
-                   onChange={e => setLocalTemplate({...localTemplate, body: e.target.value})}
-                   className="w-full p-4 text-[14px] ink-1 outline-none resize-none min-h-[300px]"
-                 />
-               </div>
-             </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Estado:</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer"
+                checked={activeChannel === 'email' ? localTemplate.active : !!localTemplate.whatsappActive}
+                onChange={(e) => {
+                  if (activeChannel === 'email') {
+                    setLocalTemplate({...localTemplate, active: e.target.checked});
+                  } else {
+                    setLocalTemplate({...localTemplate, whatsappActive: e.target.checked});
+                  }
+                }}
+              />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
+            </label>
+            <span className="text-xs font-black text-slate-800">
+              {(activeChannel === 'email' ? localTemplate.active : localTemplate.whatsappActive) ? 'Activo' : 'Inactivo'}
+            </span>
           </div>
         </div>
 
-        {isReminder && localTemplate && (
-          <div className="border-t hairline srf-panel p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="text-[14px] ink-3 mb-2 block">Días antes</label>
-              <div className="relative">
-                <select 
-                  className="w-full srf-panel border hairline hover:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black appearance-none cursor-pointer"
-                  value={localTemplate.days}
-                  onChange={e => setLocalTemplate({...localTemplate, days: parseInt(e.target.value)})}
-                >
-                  {[0,1,2,3,4,5,6,7].map(num => <option key={num} value={num}>{num}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 absolute right-3 top-3 ink-3 pointer-events-none" />
+        <div className="flex flex-1 overflow-hidden divide-x divide-slate-100">
+          
+          {/* Left panel: Form editor */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Variables list */}
+            <div className="w-64 bg-slate-50/50 p-4 overflow-y-auto space-y-4 shrink-0">
+              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Etiquetas Dinámicas</h4>
+              <p className="text-[11px] text-slate-500 leading-relaxed font-medium">Haz click para insertar en tu plantilla o escribe la etiqueta correspondiente.</p>
+              <div className="space-y-1.5">
+                {variables.map((v, i) => (
+                  <button 
+                    key={i} 
+                    type="button"
+                    onClick={() => {
+                      const suffix = v.tag;
+                      if (activeChannel === 'email') {
+                        setLocalTemplate({
+                          ...localTemplate,
+                          body: localTemplate.body + ' ' + suffix
+                        });
+                      } else {
+                        setLocalTemplate({
+                          ...localTemplate,
+                          whatsappBody: (localTemplate.whatsappBody || '') + ' ' + suffix
+                        });
+                      }
+                    }}
+                    className="w-full text-left bg-white border border-slate-200/60 p-2.5 rounded-xl hover:border-slate-800 transition-colors shadow-sm group flex flex-col cursor-pointer"
+                  >
+                    <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-900 transition-colors">{v.name}</span>
+                    <code className="text-[10px] font-mono text-slate-900 font-extrabold mt-0.5">{v.tag}</code>
+                  </button>
+                ))}
               </div>
             </div>
-            <div>
-              <label className="text-[14px] ink-3 mb-2 block">Horas antes</label>
-              <div className="relative">
-                <select 
-                  className="w-full srf-panel border hairline hover:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black appearance-none cursor-pointer"
-                  value={localTemplate.hours}
-                  onChange={e => setLocalTemplate({...localTemplate, hours: parseInt(e.target.value)})}
-                >
-                  {Array.from({length: 24}).map((_, num) => <option key={num} value={num}>{num}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 absolute right-3 top-3 ink-3 pointer-events-none" />
+
+            {/* Form Fields */}
+            <div className="flex-1 bg-white p-6 overflow-y-auto space-y-5 flex flex-col justify-between">
+              <div className="space-y-5">
+                {activeChannel === 'email' ? (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Asunto del Correo</label>
+                      <input 
+                        type="text" 
+                        value={localTemplate.subject}
+                        onChange={e => setLocalTemplate({...localTemplate, subject: e.target.value})}
+                        placeholder="Ej. ¡Tu cita está confirmada! ✅"
+                        maxLength={255}
+                        className="w-full bg-slate-50 border border-slate-200/60 focus:border-slate-900 px-4 py-3 rounded-xl text-sm font-semibold outline-none transition-all focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 flex-1 flex flex-col">
+                      <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Cuerpo del Correo (HTML/Texto)</label>
+                      <textarea 
+                        value={localTemplate.body}
+                        onChange={e => setLocalTemplate({...localTemplate, body: e.target.value})}
+                        placeholder="Escribe el cuerpo del correo..."
+                        className="w-full bg-slate-50 border border-slate-200/60 focus:border-slate-900 p-4 rounded-xl text-sm font-semibold outline-none transition-all focus:bg-white flex-1 min-h-[250px] resize-none"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-1.5 flex-1 flex flex-col">
+                      <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Mensaje de WhatsApp</label>
+                      <textarea 
+                        value={localTemplate.whatsappBody || ''}
+                        onChange={e => setLocalTemplate({...localTemplate, whatsappBody: e.target.value})}
+                        placeholder="Escribe el mensaje que se enviará por WhatsApp..."
+                        className="w-full bg-slate-50 border border-slate-200/60 focus:border-slate-900 p-4 rounded-xl text-sm font-semibold outline-none transition-all focus:bg-white flex-1 min-h-[300px] resize-none"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
-            <div>
-              <label className="text-[14px] ink-3 mb-2 block">Minutos antes</label>
-              <div className="relative">
-                <select 
-                  className="w-full srf-panel border hairline hover:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black appearance-none cursor-pointer"
-                  value={localTemplate.minutes}
-                  onChange={e => setLocalTemplate({...localTemplate, minutes: parseInt(e.target.value)})}
-                >
-                  {[0,5,10,15,20,25,30,35,40,45,50,55].map((num) => <option key={num} value={num}>{num}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 absolute right-3 top-3 ink-3 pointer-events-none" />
-              </div>
+
+              {isReminder && activeChannel === 'email' && (
+                <div className="grid grid-cols-3 gap-4 border-t border-slate-100 pt-5 mt-4">
+                  <div>
+                    <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1.5">Días antes</label>
+                    <select 
+                      className="w-full bg-slate-50 border border-slate-200/60 px-4 py-2.5 rounded-xl text-xs font-bold outline-none cursor-pointer focus:bg-white focus:border-slate-900"
+                      value={localTemplate.days}
+                      onChange={e => setLocalTemplate({...localTemplate, days: parseInt(e.target.value)})}
+                    >
+                      {[0,1,2,3,4,5,6,7].map(num => <option key={num} value={num}>{num}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1.5">Horas antes</label>
+                    <select 
+                      className="w-full bg-slate-50 border border-slate-200/60 px-4 py-2.5 rounded-xl text-xs font-bold outline-none cursor-pointer focus:bg-white focus:border-slate-900"
+                      value={localTemplate.hours}
+                      onChange={e => setLocalTemplate({...localTemplate, hours: parseInt(e.target.value)})}
+                    >
+                      {Array.from({length: 24}).map((_, num) => <option key={num} value={num}>{num}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1.5">Minutos antes</label>
+                    <select 
+                      className="w-full bg-slate-50 border border-slate-200/60 px-4 py-2.5 rounded-xl text-xs font-bold outline-none cursor-pointer focus:bg-white focus:border-slate-900"
+                      value={localTemplate.minutes}
+                      onChange={e => setLocalTemplate({...localTemplate, minutes: parseInt(e.target.value)})}
+                    >
+                      {[0,5,10,15,20,30,45].map((num) => <option key={num} value={num}>{num}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        <div className="border-t hairline srf-panel p-4 flex justify-end items-center gap-4">
-           <button onClick={onClose} className="px-6 py-2.5 text-sm font-semibold ink-1 hover:srf-sunken rounded-lg transition-colors cursor-pointer">
-             Cancelar
-           </button>
-           <button onClick={() => onSave(localTemplate)} className="px-8 py-2.5 text-sm font-bold bg-[#13CE9C] hover:bg-[#10b981] text-white rounded-lg transition-colors cursor-pointer uppercase">
-             HECHO
-           </button>
+          {/* Right panel: Real-time Live Preview mockup */}
+          <div className="w-[420px] bg-slate-50 p-6 flex flex-col overflow-y-auto shrink-0">
+            <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5" /> Vista Previa en Tiempo Real
+            </h4>
+
+            {activeChannel === 'email' ? (
+              /* Mockup Email inbox view */
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden flex flex-col min-h-[400px]">
+                <div className="bg-slate-900 text-white p-4">
+                  <div className="flex items-center gap-1 mb-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  </div>
+                  <div className="text-[11px] opacity-75 font-semibold">Asunto:</div>
+                  <div className="text-sm font-extrabold mt-0.5 truncate">{localTemplate.subject || '(Sin Asunto)'}</div>
+                </div>
+                <div className="border-b border-slate-100 p-3 flex flex-col gap-1 text-[11px] text-slate-500">
+                  <div><span className="font-bold">De:</span> Acryl Calendar &lt;onboarding@resend.dev&gt;</div>
+                  <div><span className="font-bold">Para:</span> Juan Pérez &lt;juan@correo.com&gt;</div>
+                </div>
+                <div className="p-5 flex-1 bg-[#f8fafc] text-slate-700 text-xs leading-relaxed whitespace-pre-wrap font-sans min-h-[250px]">
+                  <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                    {renderPreviewContent(localTemplate.body)}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Mockup WhatsApp chat bubble view */
+              <div className="bg-[#E5DDD5] border border-slate-200 rounded-2xl shadow-md overflow-hidden flex flex-col min-h-[400px] font-sans relative">
+                {/* Chat header */}
+                <div className="bg-[#075E54] text-white p-4 flex items-center gap-3 shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-xs uppercase">
+                    AC
+                  </div>
+                  <div>
+                    <div className="text-xs font-extrabold">Acryl Calendar Bot</div>
+                    <div className="text-[9px] opacity-80">En línea</div>
+                  </div>
+                </div>
+                {/* Chat content background */}
+                <div className="p-4 flex-1 flex flex-col justify-end min-h-[300px]">
+                  <div className="max-w-[85%] bg-white rounded-2xl p-3 shadow-xs text-xs text-slate-800 relative self-start mb-2 leading-relaxed">
+                    <div className="whitespace-pre-wrap">
+                      {renderPreviewContent(localTemplate.whatsappBody)}
+                    </div>
+                    <div className="text-[9px] text-slate-400 text-right mt-1 font-semibold">
+                      12:34 PM
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 bg-white border-t border-slate-100 flex justify-end gap-3">
+          <button onClick={onClose} className="px-5 py-2.5 text-xs font-black text-slate-500 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
+            Cancelar
+          </button>
+          <button 
+            onClick={() => onSave(localTemplate)} 
+            className="px-6 py-2.5 text-xs font-black bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-md cursor-pointer uppercase tracking-wider"
+          >
+            Guardar Cambios
+          </button>
+        </div>
+
       </div>
     </div>
   );
@@ -287,15 +435,46 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
       ? initialData.groupsData[0].id 
       : 'group-1'
   );
-  const [editingTemplate, setEditingTemplate] = useState<{type: 'confirm'|'adminNew'|'cancel'|'reminder', id?: string, name: string} | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<{type: keyof GroupCommunications['templates'] | 'reminder', id?: string, name: string} | null>(null);
   const [showReminderMenu, setShowReminderMenu] = useState(false);
 
-  
-  const [groupsData, setGroupsData] = useState<GroupCommunications[]>(
-    initialData?.groupsData && initialData.groupsData.length > 0 
+  const [groupsData, setGroupsData] = useState<GroupCommunications[]>(() => {
+    const raw = initialData?.groupsData && initialData.groupsData.length > 0 
       ? initialData.groupsData
-      : [{ ...defaultGroupComms, id: 'group-1' }]
-  );
+      : [{ ...defaultGroupComms, id: 'group-1' }];
+    
+    return raw.map((g: any) => {
+      // Ensure all dynamic templates are available on load
+      const mergedTemplates = {
+        ...defaultGroupComms.templates,
+        ...(g.templates || {})
+      };
+      return {
+        ...defaultGroupComms,
+        ...g,
+        templates: mergedTemplates
+      };
+    });
+  });
+
+  useEffect(() => {
+    if (initialData?.groupsData && initialData.groupsData.length > 0) {
+      setGroupsData(initialData.groupsData.map((g: any) => {
+        const mergedTemplates = {
+          ...defaultGroupComms.templates,
+          ...(g.templates || {})
+        };
+        return {
+          ...defaultGroupComms,
+          ...g,
+          templates: mergedTemplates
+        };
+      }));
+      if (!initialData.groupsData.some((g: any) => g.id === activeGroupId)) {
+        setActiveGroupId(initialData.groupsData[0].id);
+      }
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (calendarGroups && calendarGroups.length > 0) {
@@ -355,18 +534,44 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
     updateActiveGroup({ reminders: activeGroup.reminders.filter(r => r.id !== id) });
   };
 
-  // Registra el guardado de esta sección para el botón único del header.
+  // Register section save
   const saveImpl = React.useRef<() => void>(() => {});
   saveImpl.current = () => onSave?.(groupsData);
   useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
 
+  // Helper to render channel details/status badges in lists
+  const renderTemplateStatus = (tpl?: NotificationTemplate) => {
+    if (!tpl) return <span className="text-[10px] text-slate-400 font-bold">Sin Configurar</span>;
+    if (!tpl.active && !tpl.whatsappActive) {
+      return <span className="text-[10px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-lg font-bold">Desactivado</span>;
+    }
+    
+    return (
+      <div className="flex gap-1.5 items-center">
+        {tpl.active && (
+          <span className="text-[9px] bg-slate-900 text-white px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 shadow-xs">
+            <Mail className="w-2.5 h-2.5" /> Email
+          </span>
+        )}
+        {tpl.whatsappActive && (
+          <span className="text-[9px] bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 shadow-xs">
+            <MessageSquare className="w-2.5 h-2.5" /> WhatsApp
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="srf-panel pb-4 rounded-b-2xl">
-      <div className="px-4 py-3 bg-slate-50 border-b hairline">
+    <div className="srf-panel pb-6 rounded-b-3xl">
+      
+      {/* Service Selector Group Header */}
+      <div className="px-6 py-4 bg-slate-50 border-b border-slate-100/60 rounded-t-3xl flex items-center gap-3">
+        <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest shrink-0">Grupo:</span>
         <select
           value={activeGroupId}
           onChange={(e) => setActiveGroupId(e.target.value)}
-          className="w-full srf-panel border hairline rounded-xl px-3 py-2 text-sm font-semibold cursor-pointer outline-none bg-transparent"
+          className="flex-1 bg-white border border-slate-200/60 rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none transition-all shadow-sm focus:border-slate-800"
         >
           {groupsData.map(g => (
             <option key={g.id} value={g.id}>{g.name}</option>
@@ -374,501 +579,354 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
         </select>
       </div>
 
-      <div className="p-4 space-y-8">
-        {/* Notificación de Confirmación de Citas */}
-        <section>
-          <div className="flex flex-col gap-2 mb-6">
-            <h3 className="ink-1 font-bold text-[16px]">Notificación de Confirmación de Citas</h3>
-            <button className="flex items-center ink-1 hover:text-black text-[11px] font-bold uppercase tracking-wider cursor-pointer">
-              <SettingsIcon className="w-3.5 h-3.5 mr-1.5" /> PASOS DE CONFIGURACIÓN RÁPIDA
+      <div className="p-6 space-y-6">
+        
+        {/* CATEGORY 1: CONFIRMACIONES */}
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1 border-b border-slate-100 pb-2">
+            <h3 className="text-slate-900 font-extrabold text-sm uppercase tracking-wider font-display">1. Confirmaciones</h3>
+            <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Plantillas enviadas al registrar o pagar cita</p>
+          </div>
+
+          <div className="space-y-3 max-w-4xl">
+            {/* Confirmacion Cita */}
+            <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm hover:border-slate-800 transition-colors flex items-center justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Confirmación de Cita (Cliente)</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Se envía tras completar el formulario.</p>
+                <div className="mt-2.5">{renderTemplateStatus(activeGroup.templates.confirm)}</div>
+              </div>
+              <button 
+                onClick={() => setEditingTemplate({ type: 'confirm', name: 'Confirmación de Cita' })}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+
+            {/* Confirmacion Pago */}
+            <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm hover:border-slate-800 transition-colors flex items-center justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Confirmación de Pago (Cliente)</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Se envía si el servicio requiere pago.</p>
+                <div className="mt-2.5">{renderTemplateStatus(activeGroup.templates.paymentConfirm)}</div>
+              </div>
+              <button 
+                onClick={() => setEditingTemplate({ type: 'paymentConfirm', name: 'Confirmación de Pago' })}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* CATEGORY 2: RECORDATORIOS */}
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1 border-b border-slate-100 pb-2">
+            <h3 className="text-slate-900 font-extrabold text-sm uppercase tracking-wider font-display">2. Recordatorios</h3>
+            <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Alertas de anticipación configurables</p>
+          </div>
+
+          <div className="max-w-4xl space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="relative">
+                <button onClick={() => setShowReminderMenu(!showReminderMenu)} className="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center transition-all cursor-pointer whitespace-nowrap gap-1">
+                  <Plus className="w-4 h-4" /> AGREGAR RECORDATORIO <ChevronDown className="w-4 h-4" />
+                </button>
+                {showReminderMenu && (
+                  <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-slate-100 shadow-xl rounded-xl overflow-hidden z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <button onClick={() => addReminder('prospect')} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-800 hover:bg-slate-50 border-b border-slate-100 cursor-pointer">
+                      Para el Cliente
+                    </button>
+                    <button onClick={() => addReminder('host')} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-800 hover:bg-slate-50 cursor-pointer">
+                      Para el Anfitrión (Admin)
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {activeGroup.reminders.length === 0 ? (
+              <div className="text-center py-10 border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl text-slate-400 text-xs font-semibold">
+                No hay recordatorios configurados para este grupo.
+              </div>
+            ) : (
+              <div className="border border-slate-200/60 bg-white rounded-2xl overflow-hidden shadow-sm">
+                <table className="w-full text-left border-collapse min-w-[600px]">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200/60">
+                      <th className="px-5 py-3.5 font-extrabold text-[11px] text-slate-400 uppercase tracking-wider">Anticipación</th>
+                      <th className="px-5 py-3.5 font-extrabold text-[11px] text-slate-400 uppercase tracking-wider">Destinatario</th>
+                      <th className="px-5 py-3.5 font-extrabold text-[11px] text-slate-400 uppercase tracking-wider">Canales</th>
+                      <th className="px-5 py-3.5"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {activeGroup.reminders.map((reminder) => (
+                      <tr key={reminder.id} className="hover:bg-slate-50/30 transition-colors">
+                        <td className="px-5 py-4 text-xs font-bold text-slate-800 whitespace-nowrap">
+                          {reminder.days > 0 && `${reminder.days}d `}
+                          {reminder.hours > 0 && `${reminder.hours}h `}
+                          {reminder.minutes > 0 && `${reminder.minutes}m `}
+                          {reminder.days === 0 && reminder.hours === 0 && reminder.minutes === 0 ? 'Al mismo tiempo' : 'antes'}
+                        </td>
+                        <td className="px-5 py-4 text-xs font-semibold text-slate-500">
+                          {reminder.target === 'prospect' ? 'Cliente' : 'Anfitrión'}
+                        </td>
+                        <td className="px-5 py-4 text-xs">
+                          {renderTemplateStatus(reminder)}
+                        </td>
+                        <td className="px-5 py-4 text-right whitespace-nowrap">
+                          <button 
+                            onClick={() => setEditingTemplate({ type: 'reminder', id: reminder.id, name: 'Recordatorio' })}
+                            className="text-slate-500 hover:text-slate-900 mr-4 cursor-pointer"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => removeReminder(reminder.id)} className="text-red-500 hover:text-red-700 cursor-pointer">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* CATEGORY 3: CANCELACIONES */}
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1 border-b border-slate-100 pb-2">
+            <h3 className="text-slate-900 font-extrabold text-sm uppercase tracking-wider font-display">3. Cancelaciones</h3>
+            <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Plantillas enviadas al cancelar citas</p>
+          </div>
+
+          <div className="space-y-3 max-w-4xl">
+            {/* Cancelacion Cliente */}
+            <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm hover:border-slate-800 transition-colors flex items-center justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Cancelada por el Cliente (Cliente)</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Se envía cuando el cliente solicita la cancelación.</p>
+                <div className="mt-2.5">{renderTemplateStatus(activeGroup.templates.cancelClient || activeGroup.templates.cancel)}</div>
+              </div>
+              <button 
+                onClick={() => setEditingTemplate({ type: 'cancelClient', name: 'Cancelado por Cliente' })}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+
+            {/* Cancelacion Admin */}
+            <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm hover:border-slate-800 transition-colors flex items-center justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Cancelada por el Administrador (Cliente)</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Se envía si el administrador anula la cita.</p>
+                <div className="mt-2.5">{renderTemplateStatus(activeGroup.templates.cancelAdmin)}</div>
+              </div>
+              <button 
+                onClick={() => setEditingTemplate({ type: 'cancelAdmin', name: 'Cancelado por Admin' })}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* CATEGORY 4: REPROGRAMACIONES */}
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1 border-b border-slate-100 pb-2">
+            <h3 className="text-slate-900 font-extrabold text-sm uppercase tracking-wider font-display">4. Reprogramaciones</h3>
+            <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Notificaciones de cambio de fecha u horario</p>
+          </div>
+
+          <div className="space-y-3 max-w-4xl">
+            <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm hover:border-slate-800 transition-colors flex items-center justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Reprogramación de Cita (Cliente)</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Se envía al modificar fecha/hora de reserva.</p>
+                <div className="mt-2.5">{renderTemplateStatus(activeGroup.templates.reschedule)}</div>
+              </div>
+              <button 
+                onClick={() => setEditingTemplate({ type: 'reschedule', name: 'Cita Reprogramada' })}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* CATEGORY 5: NOTIFICACIONES INTERNAS */}
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1 border-b border-slate-100 pb-2">
+            <h3 className="text-slate-900 font-extrabold text-sm uppercase tracking-wider font-display">5. Notificaciones Internas</h3>
+            <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Alertas enviadas al administrador/anfitrión</p>
+          </div>
+
+          <div className="space-y-3 max-w-4xl">
+            {/* Nuevo Registro Admin */}
+            <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm hover:border-slate-800 transition-colors flex items-center justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Aviso de Nuevo Registro (Anfitrión)</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Se envía al crear una cita.</p>
+                <div className="mt-2.5">{renderTemplateStatus(activeGroup.templates.adminNew)}</div>
+              </div>
+              <button 
+                onClick={() => setEditingTemplate({ type: 'adminNew', name: 'Nuevo Registro (Admin)' })}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+
+            {/* Nuevo Pago Admin */}
+            <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm hover:border-slate-800 transition-colors flex items-center justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Aviso de Nuevo Pago (Anfitrión)</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Se envía al confirmarse el pago.</p>
+                <div className="mt-2.5">{renderTemplateStatus(activeGroup.templates.adminNewPayment)}</div>
+              </div>
+              <button 
+                onClick={() => setEditingTemplate({ type: 'adminNewPayment', name: 'Nuevo Pago (Admin)' })}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+
+            {/* Cita Cancelada Admin */}
+            <div className="bg-white border border-slate-200/60 p-4 rounded-2xl shadow-sm hover:border-slate-800 transition-colors flex items-center justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Aviso de Cancelación (Anfitrión)</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-1">Se envía si el cliente cancela.</p>
+                <div className="mt-2.5">{renderTemplateStatus(activeGroup.templates.adminNewCancel)}</div>
+              </div>
+              <button 
+                onClick={() => setEditingTemplate({ type: 'adminNewCancel', name: 'Cancelación (Admin)' })}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Editar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-slate-100" />
+
+        {/* REMITENTE EMAIL */}
+        <section className="space-y-4">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-slate-900 font-extrabold text-sm uppercase tracking-wider font-display">Remitente del correo electrónico</h3>
+            <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Configurar dirección y nombre del emisor</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mt-3">
+            {/* Sender Options Cards */}
+            <button 
+              onClick={() => updateActiveGroup({ senderMode: 'default' })}
+              className={`p-5 rounded-2xl border text-left flex flex-col justify-between transition-all relative ${
+                activeGroup.senderMode === 'default'
+                  ? 'border-slate-900 bg-white ring-4 ring-slate-100 shadow-md'
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}
+            >
+              {activeGroup.senderMode === 'default' && (
+                <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-slate-900 flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white stroke-[3.5]" />
+                </div>
+              )}
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-800 shrink-0">
+                  <SettingsIcon className="w-4 h-4" />
+                </div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Predeterminado</h4>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                Usa el servidor central del sistema. Los correos se envían bajo el remitente del servicio.
+              </p>
+            </button>
+
+            <button 
+              onClick={() => updateActiveGroup({ senderMode: 'custom' })}
+              className={`p-5 rounded-2xl border text-left flex flex-col justify-between transition-all relative ${
+                activeGroup.senderMode === 'custom'
+                  ? 'border-slate-900 bg-white ring-4 ring-slate-100 shadow-md'
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}
+            >
+              {activeGroup.senderMode === 'custom' && (
+                <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-slate-900 flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white stroke-[3.5]" />
+                </div>
+              )}
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-800 shrink-0">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <h4 className="font-extrabold text-slate-800 text-sm">Personalizado</h4>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                Configura un email de remitente y nombre específicos para las comunicaciones de este grupo.
+              </p>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 mb-6 mt-4">
-            {/* Box 1 */}
-            <div className="flex flex-col">
-              <div 
-                onClick={() => updateActiveGroup({ confirmMode: 'no'})}
-                className="flex items-start cursor-pointer group"
-              >
-                <div className={`w-28 h-20 rounded-xl flex items-center justify-center relative border-dashed border-2 flex-shrink-0 mr-6 transition-colors ${activeGroup.confirmMode === 'no' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                  {activeGroup.confirmMode === 'no' ? (
-                     <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                  ) : (
-                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                  )}
-                  <div className="relative">
-                    <svg className={`w-12 h-12 ${activeGroup.confirmMode === 'no' ? 'text-slate-300' : 'text-slate-200'}`} viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <h4 className="font-bold ink-1 text-[15px] mb-2">No, no enviar ninguna confirmación</h4>
-                  <p className="text-[13px] ink-3 leading-relaxed">No desea que el sistema genere ninguna confirmación. (Por lo tanto, el usuario no podrá realizar una cancelación ya que no recibirá el correo electrónico de confirmación con el enlace de cancelación).</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Box 2 */}
-            <div className="flex flex-col">
-              <div 
-                onClick={() => updateActiveGroup({ confirmMode: 'yes' })}
-                className="flex items-start cursor-pointer group mb-4"
-              >
-                <div className={`w-28 h-20 rounded-xl flex items-center justify-center relative border-dashed border-2 flex-shrink-0 mr-6 transition-colors ${activeGroup.confirmMode === 'yes' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                  {activeGroup.confirmMode === 'yes' ? (
-                     <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                  ) : (
-                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                  )}
-                  <div className="relative">
-                    <svg className={`w-12 h-12 ${activeGroup.confirmMode === 'yes' ? 'text-black' : 'text-slate-300'}`} viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                    {activeGroup.confirmMode === 'yes' && (
-                       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-1">
-                         <div className="w-5 h-1 bg-slate-200 rounded-full mb-1"></div>
-                         <div className="w-3 h-1 bg-slate-200 rounded-full"></div>
-                       </div>
-                    )}
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <h4 className="font-bold ink-1 text-[15px] mb-2">Sí, enviar confirmación</h4>
-                  <p className="text-[13px] ink-3 leading-relaxed">El sistema enviará notificaciones de confirmación de citas.</p>
-                </div>
+          {activeGroup.senderMode === 'custom' && (
+            <div className="space-y-4 max-w-lg bg-slate-50/50 p-5 border border-slate-200/50 rounded-2xl mt-4 animate-in fade-in duration-200">
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Email del Remitente</label>
+                <input 
+                  type="email" 
+                  value={activeGroup.senderEmail}
+                  onChange={(e) => updateActiveGroup({senderEmail: e.target.value})}
+                  placeholder="Ej. citas@tudominio.com"
+                  className="w-full bg-white border border-slate-200/60 focus:border-slate-900 px-4 py-2.5 rounded-xl text-xs font-semibold outline-none transition-all"
+                />
               </div>
 
-              {activeGroup.confirmMode === 'yes' && (
-                 <div className="ml-0 mt-3 bg-[#f5f7f9] border hairline rounded-md p-4 flex items-center justify-between">
-                    <div>
-                      <span className="text-[13px] ink-3 font-medium">Canales: Email, WhatsApp</span>
-                      <div className="flex items-center mt-1 text-[13px] font-medium text-[#20c997]">
-                         <div className="w-4 h-4 rounded-full bg-[#20c997] text-white flex items-center justify-center mr-2">
-                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                         </div>
-                         {activeGroup.templates.confirm.subject.substring(0, 20)}...
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setEditingTemplate({ type: 'confirm', name: 'Confirmación de Cita' })}
-                      className="bg-slate-500 hover:bg-slate-600 text-white font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded shadow-sm transition-colors cursor-pointer"
-                    >
-                      Editar
-                    </button>
-                 </div>
-              )}
-            </div>
-          </div>
-
-          {activeGroup.confirmMode === 'yes' && (
-            <div className="space-y-4 max-w-4xl">
-              <div className="border hairline rounded-md srf-panel">
-                <div className="px-5 py-4 border-b hairline flex items-center srf-panel rounded-t-md">
-                   <label className="flex items-center cursor-pointer flex-1">
-                     <div className="relative flex items-center justify-center">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only" 
-                          checked={activeGroup.adminNotify}
-                          onChange={(e) => updateActiveGroup({ adminNotify: e.target.checked })}
-                        />
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${activeGroup.adminNotify ? 'accent-bg' : 'srf-sunken border border-slate-300'}`}>
-                          {activeGroup.adminNotify && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
-                        </div>
-                     </div>
-                     <span className="ml-4 text-[13px] ink-1 font-medium">Enviar correos electrónicos a los administradores cuando se realicen nuevos registros.</span>
-                   </label>
-                   <Info className="w-4 h-4 ink-3 ml-2" />
-                </div>
-                {activeGroup.adminNotify && (
-                  <div className="p-3 srf-sunken">
-                     <div className="bg-[#f5f7f9] border hairline rounded-md p-3 flex items-center justify-between ml-0 mt-2">
-                        <div>
-                          <span className="text-[13px] ink-3 font-medium">Canales: Email</span>
-                          <div className="flex items-center mt-1 text-[13px] font-medium text-[#20c997]">
-                             <div className="w-4 h-4 rounded-full bg-[#20c997] text-white flex items-center justify-center mr-2">
-                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                             </div>
-                             {activeGroup.templates.adminNew.subject.substring(0, 20)}...
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => setEditingTemplate({ type: 'adminNew', name: 'Nuevos Registros (Admin)' })}
-                          className="bg-slate-500 hover:bg-slate-600 text-white font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded shadow-sm transition-colors cursor-pointer"
-                        >
-                          Editar
-                        </button>
-                     </div>
-                  </div>
-                )}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Nombre del Remitente</label>
+                <input 
+                  type="text" 
+                  value={activeGroup.senderName} 
+                  onChange={(e) => updateActiveGroup({ senderName: e.target.value })}
+                  placeholder="Ej. Clínica Acryl"
+                  maxLength={40}
+                  className="w-full bg-white border border-slate-200/60 focus:border-slate-900 px-4 py-2.5 rounded-xl text-xs font-semibold outline-none transition-all" 
+                />
               </div>
 
-              <div className="border hairline rounded-md srf-panel">
-                <div className="px-5 py-4 flex items-center">
-                   <label className="flex items-center cursor-pointer flex-1">
-                     <div className="relative flex items-center justify-center">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only" 
-                          checked={activeGroup.receivePending}
-                          onChange={(e) => updateActiveGroup({ receivePending: e.target.checked })}
-                        />
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${activeGroup.receivePending ? 'accent-bg' : 'srf-sunken border border-slate-300'}`}>
-                          {activeGroup.receivePending && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
-                        </div>
-                     </div>
-                     <span className="ml-4 text-[13px] ink-1 font-medium">Quiero recibir correos electrónicos de los nuevos registros o de los que están pendientes.</span>
-                   </label>
-                   <Info className="w-4 h-4 ink-3 ml-2 cursor-help" />
-                </div>
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Responder a (Reply-To)</label>
+                <input 
+                  type="email" 
+                  value={activeGroup.replyTo} 
+                  onChange={(e) => updateActiveGroup({ replyTo: e.target.value })}
+                  placeholder="Ej. soporte@tudominio.com"
+                  className="w-full bg-white border border-slate-200/60 focus:border-slate-900 px-4 py-2.5 rounded-xl text-xs font-semibold outline-none transition-all" 
+                />
               </div>
             </div>
           )}
         </section>
 
-        <hr className="hairline" />
-
-        {/* Notificación de cancelación */}
-        <section>
-          <div className="flex items-center mb-6">
-            <h3 className="ink-1 font-bold text-[17px] mr-3">Notificación de cancelación</h3>
-            <span className="bg-[#20c997] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">New</span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 mb-6">
-            <div className="flex flex-col">
-              <div 
-                onClick={() => updateActiveGroup({ cancelMode: 'no'})}
-                className="flex items-start cursor-pointer group"
-              >
-                <div className={`w-28 h-20 rounded-xl flex items-center justify-center relative border-dashed border-2 flex-shrink-0 mr-6 transition-colors ${activeGroup.cancelMode === 'no' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                  {activeGroup.cancelMode === 'no' ? (
-                     <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                  ) : (
-                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                  )}
-                  <div className="relative">
-                    <svg className={`w-12 h-12 ${activeGroup.cancelMode === 'no' ? 'text-slate-300' : 'text-slate-200'}`} viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                    <div className="absolute inset-0 flex items-center justify-center pb-2">
-                       <div className="srf-panel rounded-sm text-[#4f78a2]">
-                          <X className="w-3.5 h-3.5 font-black" />
-                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <h4 className="font-bold ink-1 text-[15px] mb-2">No enviar correos electrónicos de cancelación</h4>
-                  <p className="text-[13px] ink-3 leading-relaxed">No se enviará ningún correo electrónico al suscriptor si se cancela su cita</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <div 
-                onClick={() => updateActiveGroup({ cancelMode: 'yes' })}
-                className="flex items-start cursor-pointer group mb-4"
-              >
-                <div className={`w-28 h-20 rounded-xl flex items-center justify-center relative border-dashed border-2 flex-shrink-0 mr-6 transition-colors ${activeGroup.cancelMode === 'yes' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                  {activeGroup.cancelMode === 'yes' ? (
-                     <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                  ) : (
-                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                  )}
-                  <div className="relative">
-                    <svg className={`w-12 h-12 ${activeGroup.cancelMode === 'yes' ? 'text-black' : 'text-slate-300'}`} viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                    <div className="absolute inset-0 flex items-center justify-center pb-2">
-                       <div className="srf-panel rounded-sm text-black border border-current">
-                          <X className="w-2.5 h-2.5 font-black" strokeWidth={3} />
-                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <h4 className="font-bold ink-1 text-[15px] mb-2">Enviar notificaciones de cancelación.</h4>
-                  <p className="text-[13px] ink-3 leading-relaxed">El suscriptor recibirá una notificación si la cita se cancela (independientemente de que la cancele el suscriptor o el administrador del calendario). Puede elegir enviar esta notificación por correo electrónico, sms y WhatsApp.</p>
-                </div>
-              </div>
-
-              {activeGroup.cancelMode === 'yes' && (
-                 <div className="ml-0 mt-3 bg-[#f5f7f9] border hairline rounded-md p-4 flex items-center justify-between">
-                    <div>
-                      <span className="text-[13px] ink-3 font-medium">Canales: Email, WhatsApp</span>
-                      <div className="flex items-center mt-1 text-[13px] font-medium text-[#20c997]">
-                         <div className="w-4 h-4 rounded-full bg-[#20c997] text-white flex items-center justify-center mr-2">
-                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                         </div>
-                         <div className="w-4 h-4 rounded-full bg-transparent border border-rose-500 text-rose-500 flex items-center justify-center mr-2">
-                           <X className="w-3 h-3" strokeWidth={3} />
-                         </div>
-                         {activeGroup.templates.cancel.subject.substring(0, 20)}...
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setEditingTemplate({ type: 'cancel', name: 'Notificación de Cancelación' })}
-                      className="bg-slate-500 hover:bg-slate-600 text-white font-bold text-[11px] uppercase tracking-wider px-4 py-2 rounded shadow-sm transition-colors cursor-pointer"
-                    >
-                      Editar
-                    </button>
-                 </div>
-              )}
-            </div>
-          </div>
-
-          <div className="max-w-4xl border hairline rounded-md srf-panel px-5 py-4 flex items-center">
-             <label className="flex items-center cursor-pointer flex-1">
-               <div className="relative flex items-center justify-center">
-                  <input type="checkbox" className="sr-only" checked={true} readOnly />
-                  <div className="w-5 h-5 rounded-full accent-bg flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  </div>
-               </div>
-               <span className="ml-4 text-[13px] ink-1 font-medium">Las notificaciones de cancelación deben configurarse en el paso &quot;Comunicaciones&quot;.</span>
-             </label>
-             <Info className="w-4 h-4 ink-3 ml-2 cursor-help" />
-          </div>
-        </section>
-
-        <hr className="hairline" />
-
-        {/* Recordatorios */}
-        <section>
-          <div className="flex items-center mb-6">
-            <h3 className="ink-1 font-bold text-[17px]">Recordatorios</h3>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 mb-6">
-            <div className="flex flex-col">
-              <div 
-                onClick={() => updateActiveGroup({ remindMode: 'no'})}
-                className="flex items-start cursor-pointer group"
-              >
-                <div className={`w-28 h-20 rounded-xl flex items-center justify-center relative border-dashed border-2 flex-shrink-0 mr-6 transition-colors ${activeGroup.remindMode === 'no' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                  {activeGroup.remindMode === 'no' ? (
-                     <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                  ) : (
-                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                  )}
-                  <div className="relative">
-                    <CalendarIcon className={`w-12 h-12 ${activeGroup.remindMode === 'no' ? 'text-slate-300' : 'text-slate-200'}`} fill="currentColor" stroke="none" />
-                    <div className="absolute -top-1 -right-1 srf-panel rounded-full w-6 h-6 flex items-center justify-center">
-                       <div className="bg-[#4f78a2] text-white rounded-full w-5 h-5 flex items-center justify-center">
-                         <Bell className="w-3 h-3" />
-                         <div className="absolute bottom-0 right-0 srf-panel shadow-sm rounded-full w-3 h-3 flex items-center justify-center">
-                            <X className="w-2 h-2 text-rose-500" />
-                         </div>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <h4 className="font-bold ink-1 text-[15px] mb-2">No, no enviar ningún recordatorio</h4>
-                  <p className="text-[13px] ink-3 leading-relaxed">No desea que el sistema genere ningún recordatorio.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <div 
-                onClick={() => updateActiveGroup({ remindMode: 'yes' })}
-                className="flex items-start cursor-pointer group"
-              >
-                <div className={`w-28 h-20 rounded-xl flex items-center justify-center relative border-dashed border-2 flex-shrink-0 mr-6 transition-colors ${activeGroup.remindMode === 'yes' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                  {activeGroup.remindMode === 'yes' ? (
-                     <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                  ) : (
-                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                  )}
-                  <div className="relative pt-1">
-                    <CalendarIcon className={`w-12 h-12 ${activeGroup.remindMode === 'yes' ? 'fill-slate-100 text-transparent' : 'fill-slate-100 text-transparent'}`} stroke="none" />
-                    <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2">
-                       <div className="accent-bg text-white rounded-full p-1 shadow-sm">
-                         <Bell className="w-3 h-3 fill-current" />
-                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <h4 className="font-bold ink-1 text-[15px] mb-2">Sí, enviar recordatorios</h4>
-                  <p className="text-[13px] ink-3 leading-relaxed">¿Quiere que el sistema envíe recordatorios?</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {activeGroup.remindMode === 'yes' && (
-             <div className="mt-8 relative z-10 w-full overflow-hidden max-w-[100%] max-w-4xl">
-                <div className="relative inline-block mb-4">
-                  <button onClick={() => setShowReminderMenu(!showReminderMenu)} className="accent-bg hover:brightness-110 text-white font-bold text-[12px] px-4 py-2.5 rounded shadow-sm flex items-center transition-colors cursor-pointer whitespace-nowrap z-20">
-                    <Mail className="w-4 h-4 mr-2" /> NUEVO RECORDATORIO <ChevronDown className="w-4 h-4 ml-2" />
-                  </button>
-                  {showReminderMenu && (
-                    <div className="absolute top-full left-0 mt-1 w-48 srf-panel border hairline shadow-lg rounded-md overflow-hidden z-30">
-                      <button onClick={() => addReminder('prospect')} className="w-full text-left px-4 py-2.5 text-[13px] ink-1 hover:srf-sunken border-b hairline cursor-pointer">
-                        Para los suscriptores
-                      </button>
-                      <button onClick={() => addReminder('host')} className="w-full text-left px-4 py-2.5 text-[13px] ink-1 hover:srf-sunken cursor-pointer">
-                        Para los anfitriones
-                      </button>
-                    </div>
-                  )}
-                </div>
-                
-                {activeGroup.reminders.length === 0 ? (
-                  <div className="text-center py-8 border hairline srf-panel ink-3 text-sm">No hay recordatorios configurados.</div>
-                ) : (
-                  <div className="border hairline srf-panel rounded-md overflow-x-auto w-full relative z-0">
-                    <table className="w-full text-left border-collapse min-w-[700px]">
-                      <thead>
-                        <tr className="border-b hairline">
-                          <th className="px-5 py-4 font-bold text-[13px] ink-1 srf-panel sticky left-0 z-10 w-1/4">Cuando</th>
-                          <th className="px-5 py-4 font-bold text-[13px] ink-1 w-1/3">Asunto</th>
-                          <th className="px-5 py-4 font-bold text-[13px] ink-1">Send to</th>
-                          <th className="px-5 py-4 font-bold text-[13px] ink-1">Canales</th>
-                          <th className="px-5 py-4"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {activeGroup.reminders.map((reminder) => (
-                           <tr key={reminder.id} className="border-b hairline hover:srf-sunken transition-colors">
-                             <td className="px-5 py-4 text-[13px] ink-2 font-medium whitespace-nowrap srf-panel sticky left-0 z-10">
-                               {reminder.days} Día(s) y {reminder.hours} Hora(s) y {reminder.minutes} Minuto(s) antes
-                             </td>
-                             <td className="px-5 py-4 text-[13px] ink-2 font-medium whitespace-nowrap">{reminder.subject.substring(0,25)}...</td>
-                             <td className="px-5 py-4 text-[13px] ink-2 font-medium">{reminder.target === 'prospect' ? 'Prospecto' : 'Anfitrión'}</td>
-                             <td className="px-5 py-4 text-[13px] ink-2 font-medium whitespace-nowrap">{reminder.channels.join(', ')}</td>
-                             <td className="px-5 py-4 text-right whitespace-nowrap">
-                               <button 
-                                 onClick={() => setEditingTemplate({ type: 'reminder', id: reminder.id, name: 'Recordatorio' })}
-                                 className="ink-3 hover:ink-2 mr-4 cursor-pointer"
-                               >
-                                 <Edit2 className="w-4 h-4" />
-                               </button>
-                               <button onClick={() => removeReminder(reminder.id)} className="text-rose-500 hover:text-rose-700 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
-                             </td>
-                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-             </div>
-          )}
-        </section>
-
-        <hr className="hairline" />
-
-        {/* Remitente Email */}
-        <section>
-          <div className="flex items-center mb-6">
-            <h3 className="ink-1 font-bold text-[17px]">Remitente del correo electrónico</h3>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 mb-6">
-            <div className="flex flex-col">
-              <div 
-                onClick={() => updateActiveGroup({ senderMode: 'default' })}
-                className="flex items-start cursor-pointer group"
-              >
-                <div className={`w-28 h-20 rounded-xl flex items-center justify-center relative border-dashed border-2 flex-shrink-0 mr-6 transition-colors ${activeGroup.senderMode === 'default' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                  {activeGroup.senderMode === 'default' ? (
-                     <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                  ) : (
-                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                  )}
-                  <div className="relative bg-slate-200">
-                    <svg className={`w-12 h-12 ${activeGroup.senderMode === 'default' ? 'text-slate-300' : 'text-slate-200'}`} viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <h4 className="font-bold ink-1 text-[15px] mb-2">Usar remitente de correo electrónico predeterminado</h4>
-                  <p className="text-[13px] ink-3 leading-relaxed">El remitente predeterminado actual es: team@tu-negocio.com. Su remitente predeterminado se puede cambiar en la página Preferencias.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <div 
-                onClick={() => updateActiveGroup({ senderMode: 'custom' })}
-                className="flex items-start cursor-pointer group mb-6"
-              >
-                <div className={`w-28 h-20 rounded-xl flex items-center justify-center relative border-dashed border-2 flex-shrink-0 mr-6 transition-colors ${activeGroup.senderMode === 'custom' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                  {activeGroup.senderMode === 'custom' ? (
-                     <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                  ) : (
-                     <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                  )}
-                  <div className="relative">
-                    <svg className={`w-12 h-12 ${activeGroup.senderMode === 'custom' ? 'text-black' : 'text-slate-300'}`} viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                    {activeGroup.senderMode === 'custom' && (
-                       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-1">
-                         <div className="w-5 h-1 bg-slate-200 rounded-full mb-1"></div>
-                         <div className="w-3 h-1 bg-slate-200 rounded-full"></div>
-                       </div>
-                    )}
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <h4 className="font-bold ink-1 text-[15px] mb-2">Usar remitente de correo electrónico específico</h4>
-                  <p className="text-[13px] ink-3 leading-relaxed">Si desea utilizar una dirección de correo electrónico específica para ese grupo, especifíquela a continuación.</p>
-                </div>
-              </div>
-
-              {activeGroup.senderMode === 'custom' && (
-                <div className="space-y-5 max-w-lg mt-2">
-                   <div>
-                      <label className="text-[13px] ink-3 mb-1.5 block">Remitente del correo electrónico</label>
-                      <div className="relative">
-                        <select 
-                          className="w-full srf-panel border hairline hover:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black transition-all appearance-none cursor-pointer"
-                          value={activeGroup.senderEmail}
-                          onChange={(e) => updateActiveGroup({senderEmail: e.target.value})}
-                        >
-                          <option value="team@tu-negocio.com">team@tu-negocio.com</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 ink-2">
-                           <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
-                        </div>
-                      </div>
-                   </div>
-
-                   <div>
-                      <label className="text-[13px] ink-3 mb-1.5 block">Nombre del remitente del correo electrónico <span className="text-red-500">*</span></label>
-                      <div className="relative">
-                        <input 
-                           type="text" 
-                           value={activeGroup.senderName} 
-                           onChange={(e) => updateActiveGroup({ senderName: e.target.value })}
-                           className="w-full srf-panel border hairline hover:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black transition-all" 
-                           maxLength={40}
-                        />
-                        <span className="absolute right-3 top-3 text-[10px] ink-3">{activeGroup.senderName.length}/40</span>
-                      </div>
-                   </div>
-
-                   <div>
-                      <label className="flex items-center text-[13px] ink-3 mb-1.5">
-                        Responder a <span className="text-red-500 ml-1">*</span> 
-                        <Info className="w-3 h-3 ink-3 ml-2" />
-                      </label>
-                      <input 
-                         type="email" 
-                         value={activeGroup.replyTo} 
-                         onChange={(e) => updateActiveGroup({ replyTo: e.target.value })}
-                         className="w-full srf-panel border hairline hover:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black transition-all" 
-                      />
-                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="builder-embedded-toolbar mt-8 flex justify-end gap-4 max-w-4xl">
-             <button className="px-6 py-2.5 text-[13px] font-bold ink-1 hover:bg-slate-200/50 rounded-xl transition-colors cursor-pointer text-center srf-panel border hairline shadow-sm">
-               CANCELAR
-             </button>
-             <button onClick={() => onSave?.(groupsData)} className="px-6 py-2.5 text-[13px] font-bold bg-[#13CE9C] hover:bg-[#10b981] text-white rounded-xl flex items-center transition-colors shadow-sm cursor-pointer text-center font-bold">
-               <Save className="w-4 h-4 mr-2" /> GUARDAR
-             </button>
-          </div>
-        </section>
+        {/* Builder Footer Buttons */}
+        <div className="builder-embedded-toolbar mt-8 flex justify-end gap-3 max-w-4xl">
+          <button className="px-6 py-3 text-xs font-black text-slate-500 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
+            CANCELAR
+          </button>
+          <button 
+            onClick={() => onSave?.(groupsData)} 
+            className="px-6 py-3 text-xs font-black bg-slate-900 hover:bg-slate-800 text-white rounded-xl flex items-center gap-2 transition-all shadow-md cursor-pointer uppercase tracking-wider"
+          >
+            <Save className="w-4 h-4" /> GUARDAR COMUNICACIONES
+          </button>
+        </div>
 
       </div>
 
@@ -902,4 +960,5 @@ const CommunicationsSettings: React.FC<Props> = ({ initialData, onSave, onRegist
     </div>
   );
 };
+
 export default CommunicationsSettings;

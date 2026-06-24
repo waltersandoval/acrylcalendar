@@ -9,7 +9,10 @@ type TabKey = 'configuraciones' | 'administradores' | 'integraciones';
 
 const Ajustes: React.FC<{ embedded?: boolean }> = ({ embedded }) => {
   const isMobileApp = useIsMobileApp();
-  const [activeTab, setActiveTab] = useState<TabKey>('configuraciones');
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('code') ? 'integraciones' : 'configuraciones';
+  });
 
   const tabs: { key: TabKey; label: string; icon: any; description: string }[] = [
     { key: 'configuraciones', label: 'Configuraciones', icon: SettingsIcon, description: 'Preferencias generales' },

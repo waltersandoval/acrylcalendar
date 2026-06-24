@@ -88,3 +88,37 @@ export function buildAppointmentEmail(variant: Variant, data: AppointmentEmailDa
 
   return { subject: c.subject, html };
 }
+
+export function compileUserTemplate(
+  subjectTpl: string,
+  bodyTpl: string,
+  vars: Record<string, string>
+): { subject: string; html: string } {
+  let subject = subjectTpl || "";
+  let body = bodyTpl || "";
+
+  for (const [key, value] of Object.entries(vars)) {
+    const regex = new RegExp(key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
+    subject = subject.replace(regex, value);
+    body = body.replace(regex, value);
+  }
+
+  // Basic HTML sanitization but keeping simple structure
+  const escapedBody = body
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  const formattedBody = escapedBody.replace(/\n/g, "<br/>");
+
+  const html = `
+  <div style="background:#f5f5f7;padding:24px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+    <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;overflow:hidden;padding:28px;color:#0f172a;">
+      <div style="font-size:14px;line-height:1.6;color:#334155;">
+        ${formattedBody}
+      </div>
+    </div>
+  </div>`;
+
+  return { subject, html };
+}

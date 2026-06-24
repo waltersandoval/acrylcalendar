@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, Info, Plus, Trash2, Edit2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Settings as SettingsIcon, Save, Info, Plus, Trash2, Edit2, MessageSquare, ExternalLink, Heart, List, FileDown, Phone, CheckCircle2 } from 'lucide-react';
 
 interface Props {
   initialData?: any;
@@ -18,6 +18,16 @@ interface FormField {
   mailingBossLabel?: string;
 }
 
+interface PostActionConfig {
+  id: 'message' | 'redirect' | 'thank_you' | 'summary' | 'pdf' | 'whatsapp';
+  enabled: boolean;
+  title?: string;
+  message?: string;
+  url?: string;
+  phone?: string;
+  buttonText?: string;
+}
+
 interface GroupFormData {
   id: string;
   name: string;
@@ -27,6 +37,7 @@ interface GroupFormData {
   successMessage: string;
   redirectUrl: string;
   buttonText: string;
+  postActions?: PostActionConfig[];
 }
 
 const defaultFields: FormField[] = [
@@ -34,6 +45,20 @@ const defaultFields: FormField[] = [
   { id: '2', label: 'Email', type: 'text', required: true, isDefault: true },
   { id: '3', label: 'Teléfono', type: 'text', required: true, isDefault: true },
 ];
+
+const ensurePostActions = (group: any): PostActionConfig[] => {
+  if (group?.postActions && group.postActions.length > 0) {
+    return group.postActions;
+  }
+  return [
+    { id: 'message', enabled: group?.postAction === 'message' || !group?.postAction, message: group?.successMessage || '¡Tu cita fue registrada con éxito!', buttonText: group?.buttonText || 'Regresar al home' },
+    { id: 'redirect', enabled: group?.postAction === 'redirect', url: group?.redirectUrl || '' },
+    { id: 'thank_you', enabled: false, title: '¡Gracias por tu reserva!', message: 'Tu cita ha sido agendada. Nos pondremos en contacto contigo pronto.' },
+    { id: 'summary', enabled: false },
+    { id: 'pdf', enabled: false },
+    { id: 'whatsapp', enabled: false, phone: '', message: 'Hola {cliente}, tu cita para {servicio} fue registrada para {fecha}.' },
+  ];
+};
 
 const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, calendarGroups }) => {
   const [activeGroupId, setActiveGroupId] = useState(
@@ -45,8 +70,8 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
   const [editingField, setEditingField] = useState<Partial<FormField> | null>(null);
   
   // By default we have one group, just like scheduling
-  const [groupsData, setGroupsData] = useState<GroupFormData[]>(
-    initialData?.groupsData && initialData.groupsData.length > 0 
+  const [groupsData, setGroupsData] = useState<GroupFormData[]>(() => {
+    const raw = initialData?.groupsData && initialData.groupsData.length > 0 
       ? initialData.groupsData
       : [
           {
@@ -59,10 +84,27 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
             redirectUrl: '',
             buttonText: 'Continuar',
           }
-        ]
-  );
+        ];
+    return raw.map((g: any) => ({
+      ...g,
+      postActions: ensurePostActions(g)
+    }));
+  });
 
   // Sync groupsData with calendarGroups (add external ones, rename existing)
+  // Sync loaded async initialData
+  useEffect(() => {
+    if (initialData?.groupsData && initialData.groupsData.length > 0) {
+      setGroupsData(initialData.groupsData.map((g: any) => ({
+        ...g,
+        postActions: ensurePostActions(g)
+      })));
+      if (!initialData.groupsData.some((g: any) => g.id === activeGroupId)) {
+        setActiveGroupId(initialData.groupsData[0].id);
+      }
+    }
+  }, [initialData]);
+
   useEffect(() => {
     if (calendarGroups && calendarGroups.length > 0) {
       setGroupsData(prev => {
@@ -87,6 +129,7 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
               successMessage: '¡Gracias por registrarse!',
               redirectUrl: '',
               buttonText: 'Continuar',
+              postActions: ensurePostActions({ postAction: 'message' })
             });
             hasChanges = true;
           }
@@ -253,134 +296,222 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
 
       <hr className="border-t hairline mb-6" />
 
-      {/* Action after subscription */}
+      {/* Action after booking (Refactored visual cards) */}
       <div>
          <div className="px-4 pb-2">
-            <h3 className="ink-1 font-semibold text-lg tracking-tight">Acción después de la suscripción</h3>
+            <h3 className="ink-1 font-semibold text-lg tracking-tight">Acción después de agendar cita</h3>
+            <p className="text-xs ink-3 mt-1 font-medium">Seleccione una o más acciones que se ejecutarán automáticamente al finalizar la reserva.</p>
          </div>
 
          <div className="p-4 pb-4">
-            <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto">
-               
-               <div className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col items-center ${activeGroup.postAction === 'message' ? 'border-transparent shadow-none' : 'border-transparent hover:srf-sunken'}`}>
-                 <div 
-                    onClick={() => updateActiveGroup({ postAction: 'message' })}
-                    className="flex flex-col items-center text-center cursor-pointer group mb-6 relative"
-                 >
-                    <div className={`w-28 h-20 rounded-xl mb-4 flex items-center justify-center transition-colors relative border-dashed border-2 ${activeGroup.postAction === 'message' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                       {activeGroup.postAction === 'message' ? (
-                          <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                       ) : (
-                          <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                       )}
-                       <div className={`transition-colors ${activeGroup.postAction === 'message' ? 'text-black' : 'text-slate-300'}`}>
-                         <svg className="w-12 h-12" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 16.17L5.83 13l1.41-1.41L9 13.34l7.59-7.59L18 7.17 9 16.17z"/></svg>
-                       </div>
-                    </div>
-                    <h4 className="font-semibold ink-1 text-[15px] mb-2">Mostrar mensaje de éxito</h4>
-                    <p className="text-[13px] ink-3 max-w-[280px] leading-relaxed">Cuando haga la cita, su usuario verá un mensaje escrito por usted y continuará en la página de citas.</p>
-                 </div>
+            {/* Visual Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto mb-8">
+               {(() => {
+                  const currentActions = activeGroup.postActions || ensurePostActions(activeGroup);
+                  const cards = [
+                     { id: 'message', title: 'Mostrar mensaje de éxito', desc: 'Confirmación rápida en pantalla.', icon: MessageSquare },
+                     { id: 'redirect', title: 'Redirigir a URL', desc: 'Enviar a una página personalizada.', icon: ExternalLink },
+                     { id: 'thank_you', title: 'Página de agradecimiento', desc: 'Mostrar una sección de gracias.', icon: Heart },
+                     { id: 'summary', title: 'Mostrar resumen de cita', desc: 'Fecha, hora y servicio reservado.', icon: List },
+                     { id: 'pdf', title: 'Descargar comprobante', desc: 'Permitir bajar un recibo PDF.', icon: FileDown },
+                     { id: 'whatsapp', title: 'Abrir WhatsApp', desc: 'Iniciar chat con mensaje dinámico.', icon: Phone },
+                  ];
 
-                  <div className={`w-full overflow-hidden transition-all duration-500 ease-in-out ${activeGroup.postAction === 'message' ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                     <div className="w-full text-left space-y-5" onClick={(e) => e.stopPropagation()}>
-                        <div>
-                           <label className="text-[13px] font-semibold ink-3 mb-1.5 block">Mensaje exitoso <span className="text-red-500">*</span></label>
-                           <div className="relative">
-                             <input 
-                               type="text" 
-                               value={activeGroup.successMessage} 
-                               onChange={(e) => updateActiveGroup({ successMessage: e.target.value })}
-                               maxLength={255}
-                               className="w-full srf-panel border hairline hover:border-slate-300 focus:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black transition-all" 
-                             />
-                             <span className="absolute right-3 top-3 text-[10px] ink-3">{activeGroup.successMessage.length}/255</span>
+                  const togglePostAction = (actionId: string) => {
+                     const updated = currentActions.map(act => act.id === actionId ? { ...act, enabled: !act.enabled } : act);
+                     const msgAct = updated.find(a => a.id === 'message');
+                     const redirAct = updated.find(a => a.id === 'redirect');
+                     
+                     updateActiveGroup({
+                        postActions: updated,
+                        postAction: msgAct?.enabled ? 'message' : (redirAct?.enabled ? 'redirect' : 'message'),
+                        successMessage: msgAct?.message || activeGroup.successMessage || '¡Tu cita fue registrada con éxito!',
+                        buttonText: msgAct?.buttonText || activeGroup.buttonText || 'Regresar al home',
+                        redirectUrl: redirAct?.url || activeGroup.redirectUrl || ''
+                     });
+                  };
+
+                  return cards.map(card => {
+                     const config = currentActions.find(a => a.id === card.id);
+                     const isEnabled = !!config?.enabled;
+                     const Icon = card.icon;
+
+                     return (
+                        <div 
+                           key={card.id}
+                           onClick={() => togglePostAction(card.id)}
+                           className={`p-4.5 rounded-2xl border cursor-pointer select-none transition-all duration-200 relative group flex items-start gap-4 ${
+                              isEnabled 
+                                 ? 'border-black srf-sunken shadow-sm' 
+                                 : 'border-slate-200 hover:border-slate-300 srf-panel hover:shadow-xs'
+                           }`}
+                        >
+                           <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
+                              isEnabled 
+                                 ? 'accent-bg border-transparent text-white' 
+                                 : 'srf-sunken border-transparent ink-3 group-hover:bg-slate-100 group-hover:ink-1'
+                           }`}>
+                              <Icon className="w-5 h-5" />
+                           </div>
+                           <div className="min-w-0 pr-6 pt-0.5">
+                              <h4 className="font-bold text-sm ink-1 leading-normal mb-1">{card.title}</h4>
+                              <p className="text-[12px] ink-3 leading-relaxed">{card.desc}</p>
+                           </div>
+                           <div className="absolute top-4 right-4">
+                              <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                                 isEnabled 
+                                    ? 'accent-bg border-transparent text-white' 
+                                    : 'border-slate-300 srf-panel group-hover:border-slate-400'
+                              }`}>
+                                 {isEnabled && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                              </div>
                            </div>
                         </div>
+                     );
+                  });
+               })()}
+            </div>
 
-                        <div className="border hairline rounded-md overflow-hidden srf-panel">
-                           <div className="srf-sunken px-4 py-3 flex justify-between items-center cursor-pointer border-b hairline">
-                             <div className="flex items-center ink-2 font-semibold text-[14px]">
-                               <SettingsIcon className="w-4 h-4 mr-2 ink-3" />
-                               Botón de la página de gracias
-                             </div>
-                             <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"/></svg>
-                           </div>
-                           <div className="p-5 space-y-4">
-                             <div>
-                                <label className="text-[13px] font-semibold ink-3 mb-1.5 block">Título <span className="text-red-500">*</span></label>
-                                <div className="relative">
-                                  <input 
-                                     type="text"
-                                     value={activeGroup.buttonText || 'Regresar al home'} 
-                                     onChange={(e) => updateActiveGroup({ buttonText: e.target.value })}
-                                     maxLength={255}
-                                     className="w-full srf-panel border hairline hover:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black transition-all" 
-                                  />
-                                  <span className="absolute right-3 top-3 text-[10px] ink-3">{(activeGroup.buttonText || 'Regresar al home').length}/255</span>
-                                </div>
-                             </div>
-                             <div>
-                                <label className="text-[13px] font-semibold ink-3 mb-2 block">Acción <span className="text-red-500">*</span></label>
-                                <div className="space-y-2">
-                                   <label className="flex items-center cursor-pointer">
-                                      <input type="radio" name="btnAction" className="w-4 h-4 text-black focus:ring-black border-slate-300" defaultChecked />
-                                      <span className="ml-2 text-[13px] ink-1 font-medium">Ir al calendario</span>
-                                   </label>
-                                   <label className="flex items-center cursor-pointer">
-                                      <input type="radio" name="btnAction" className="w-4 h-4 text-black focus:ring-black border-slate-300" />
-                                      <span className="ml-2 text-[13px] ink-1 font-medium">Ir a este grupo</span>
-                                   </label>
-                                   <label className="flex items-center cursor-pointer">
-                                      <input type="radio" name="btnAction" className="w-4 h-4 text-black focus:ring-black border-slate-300" />
-                                      <span className="ml-2 text-[13px] ink-1 font-medium">URL...</span>
-                                   </label>
-                                </div>
-                             </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               <div className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col items-center ${activeGroup.postAction === 'redirect' ? 'border-transparent shadow-none' : 'border-transparent hover:srf-sunken'}`}>
-                 <div 
-                    onClick={() => updateActiveGroup({ postAction: 'redirect' })}
-                    className="flex flex-col items-center text-center cursor-pointer group mb-6 relative"
-                 >
-                    <div className={`w-28 h-20 rounded-xl mb-4 flex items-center justify-center transition-colors relative border-dashed border-2 ${activeGroup.postAction === 'redirect' ? 'border-black srf-sunken' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}>
-                       {activeGroup.postAction === 'redirect' ? (
-                          <div className="absolute -top-3 -right-3 accent-bg text-white rounded-full p-1"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7"/></svg></div>
-                       ) : (
-                          <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full srf-panel border border-slate-300"></div>
-                       )}
-                       <div className={`transition-colors flex flex-col items-center justify-center relative w-full h-full ${activeGroup.postAction === 'redirect' ? 'text-black' : 'text-slate-300'}`}>
-                          <div className="h-6 w-14 border-2 border-current rounded-sm flex items-center justify-center text-[10px] font-bold">www.</div>
-                          <div className="absolute bottom-2 right-6">
-                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M13 10L6 10 6 22 13 22 10ZM12 20L7 20 7 12 12 12 12 20Z"/><path d="M15 15l-3 4 5 1L15 15z" className="text-black"/></svg>
-                          </div>
-                       </div>
-                    </div>
-                    <h4 className="font-semibold ink-1 text-[15px] mb-2">Redireccion a la URL</h4>
-                    <p className="text-[13px] ink-3 max-w-[280px] leading-relaxed">Después de hacer la cita, el usuario será redirigido a la URL indicada por usted.</p>
-                 </div>
+            {/* Conditional Form Configurations */}
+            <div className="max-w-4xl mx-auto space-y-6">
+               {(() => {
+                  const currentActions = activeGroup.postActions || ensurePostActions(activeGroup);
                   
-                  <div className={`w-full overflow-hidden transition-all duration-500 ease-in-out ${activeGroup.postAction === 'redirect' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="w-full text-left space-y-5" onClick={(e) => e.stopPropagation()}>
-                        <div>
-                           <label className="text-[13px] font-semibold ink-3 mb-1.5 block">URL de destino <span className="text-red-500">*</span></label>
-                           <input 
-                             type="url" 
-                             value={activeGroup.redirectUrl} 
-                             onChange={(e) => updateActiveGroup({ redirectUrl: e.target.value })}
-                             placeholder="https://su-sitio.com/gracias-compra"
-                             className="w-full srf-panel border hairline hover:border-slate-300 px-4 py-2.5 rounded-md text-[13px] ink-1 outline-none focus:ring-1 focus:ring-black transition-all" 
-                           />
-                           <p className="text-[11px] ink-3 mt-1">Asegúrese de incluir https:// en el enlace.</p>
-                        </div>
-                     </div>
-                  </div>
-               </div>
+                  const updateActionField = (actionId: string, fields: Partial<PostActionConfig>) => {
+                     const updated = currentActions.map(act => act.id === actionId ? { ...act, ...fields } : act);
+                     const msgAct = updated.find(a => a.id === 'message');
+                     const redirAct = updated.find(a => a.id === 'redirect');
+                     
+                     updateActiveGroup({
+                        postActions: updated,
+                        successMessage: msgAct?.message || activeGroup.successMessage,
+                        buttonText: msgAct?.buttonText || activeGroup.buttonText,
+                        redirectUrl: redirAct?.url || activeGroup.redirectUrl
+                     });
+                  };
 
+                  const msgConfig = currentActions.find(a => a.id === 'message');
+                  const redirConfig = currentActions.find(a => a.id === 'redirect');
+                  const thankConfig = currentActions.find(a => a.id === 'thank_you');
+                  const waConfig = currentActions.find(a => a.id === 'whatsapp');
+
+                  return (
+                     <>
+                        {/* 1. CONFIG: Mostrar mensaje de éxito */}
+                        {msgConfig?.enabled && (
+                           <div className="srf-panel border hairline rounded-2xl p-5 space-y-4 shadow-sm animate-fadeIn">
+                              <h4 className="font-bold text-[14px] ink-1 flex items-center gap-2"><MessageSquare className="w-4 h-4 text-slate-500" /> Configuración: Mensaje de éxito</h4>
+                              <div>
+                                 <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Mensaje de confirmación <span className="text-rose-500">*</span></label>
+                                 <textarea
+                                    rows={3}
+                                    value={msgConfig.message || ''}
+                                    onChange={(e) => updateActionField('message', { message: e.target.value })}
+                                    placeholder="Ej. ¡Tu cita fue registrada con éxito!"
+                                    className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none resize-none"
+                                 />
+                              </div>
+                              <div>
+                                 <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Texto del botón de regreso</label>
+                                 <input
+                                    type="text"
+                                    value={msgConfig.buttonText || ''}
+                                    onChange={(e) => updateActionField('message', { buttonText: e.target.value })}
+                                    placeholder="Ej. Regresar"
+                                    className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none"
+                                 />
+                              </div>
+                           </div>
+                        )}
+
+                        {/* 2. CONFIG: Redirigir a URL */}
+                        {redirConfig?.enabled && (
+                           <div className="srf-panel border hairline rounded-2xl p-5 space-y-4 shadow-sm animate-fadeIn">
+                              <h4 className="font-bold text-[14px] ink-1 flex items-center gap-2"><ExternalLink className="w-4 h-4 text-slate-500" /> Configuración: Redirección de URL</h4>
+                              <div>
+                                 <label className="text-[12px] font-semibold ink-3 mb-1.5 block">URL de destino <span className="text-rose-500">*</span></label>
+                                 <input
+                                    type="url"
+                                    value={redirConfig.url || ''}
+                                    onChange={(e) => updateActionField('redirect', { url: e.target.value })}
+                                    placeholder="https://susitio.com/gracias"
+                                    className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none"
+                                 />
+                                 <p className="text-[11px] ink-3 mt-1.5">Asegúrese de incluir https:// o http:// en el enlace.</p>
+                              </div>
+                           </div>
+                        )}
+
+                        {/* 3. CONFIG: Página de agradecimiento */}
+                        {thankConfig?.enabled && (
+                           <div className="srf-panel border hairline rounded-2xl p-5 space-y-4 shadow-sm animate-fadeIn">
+                              <h4 className="font-bold text-[14px] ink-1 flex items-center gap-2"><Heart className="w-4 h-4 text-slate-500" /> Configuración: Página de Agradecimiento</h4>
+                              <div>
+                                 <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Título de agradecimiento <span className="text-rose-500">*</span></label>
+                                 <input
+                                    type="text"
+                                    value={thankConfig.title || ''}
+                                    onChange={(e) => updateActionField('thank_you', { title: e.target.value })}
+                                    placeholder="Ej. ¡Muchas gracias por elegirnos!"
+                                    className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none"
+                                 />
+                              </div>
+                              <div>
+                                 <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Mensaje detallado <span className="text-rose-500">*</span></label>
+                                 <textarea
+                                    rows={4}
+                                    value={thankConfig.message || ''}
+                                    onChange={(e) => updateActionField('thank_you', { message: e.target.value })}
+                                    placeholder="Detalles sobre qué esperar a continuación, términos importantes, etc."
+                                    className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none resize-none"
+                                 />
+                              </div>
+                           </div>
+                        )}
+
+                        {/* 4. CONFIG: Abrir WhatsApp */}
+                        {waConfig?.enabled && (
+                           <div className="srf-panel border hairline rounded-2xl p-5 space-y-4 shadow-sm animate-fadeIn">
+                              <h4 className="font-bold text-[14px] ink-1 flex items-center gap-2"><Phone className="w-4 h-4 text-slate-500" /> Configuración: Mensaje de WhatsApp</h4>
+                              <div>
+                                 <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Número de teléfono (con código de país) <span className="text-rose-500">*</span></label>
+                                 <input
+                                    type="tel"
+                                    value={waConfig.phone || ''}
+                                    onChange={(e) => updateActionField('whatsapp', { phone: e.target.value })}
+                                    placeholder="Ej. +50412345678"
+                                    className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none"
+                                 />
+                              </div>
+                              <div>
+                                 <label className="text-[12px] font-semibold ink-3 mb-1.5 block">Mensaje de texto automático <span className="text-rose-500">*</span></label>
+                                 <textarea
+                                    rows={3}
+                                    value={waConfig.message || ''}
+                                    onChange={(e) => updateActionField('whatsapp', { message: e.target.value })}
+                                    placeholder="Ej. Hola {cliente}, tu cita para {servicio} fue registrada para {fecha}."
+                                    className="w-full srf-sunken border border-transparent focus:srf-panel focus:border-slate-300 rounded-xl px-4 py-3 text-sm ink-1 focus:ring-2 focus:ring-black/10 transition-all outline-none resize-none"
+                                 />
+                              </div>
+                              
+                              {/* Dynamic Variables Helper */}
+                              <div className="srf-sunken border hairline rounded-xl p-3.5 space-y-2">
+                                 <span className="text-[11px] font-extrabold uppercase tracking-wider ink-3 block">Variables dinámicas disponibles:</span>
+                                 <div className="flex flex-wrap gap-1.5 text-xs font-mono font-semibold text-slate-700">
+                                    <span className="px-2 py-1 srf-panel border hairline rounded-md">{'{cliente}'}</span>
+                                    <span className="px-2 py-1 srf-panel border hairline rounded-md">{'{servicio}'}</span>
+                                    <span className="px-2 py-1 srf-panel border hairline rounded-md">{'{fecha}'}</span>
+                                    <span className="px-2 py-1 srf-panel border hairline rounded-md">{'{hora}'}</span>
+                                    <span className="px-2 py-1 srf-panel border hairline rounded-md">{'{profesional}'}</span>
+                                    <span className="px-2 py-1 srf-panel border hairline rounded-md">{'{ubicacion}'}</span>
+                                 </div>
+                                 <p className="text-[11px] ink-3 leading-relaxed mt-1">Estas etiquetas se reemplazarán automáticamente con los datos de la reserva y del cliente.</p>
+                              </div>
+                           </div>
+                        )}
+                     </>
+                  );
+               })()}
             </div>
          </div>
       </div>

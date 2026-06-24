@@ -1,12 +1,19 @@
-/**
- * Función programada: cada hora revisa las citas dentro de las próximas 24 h que
- * aún no recibieron recordatorio y envía un correo de RECORDATORIO al cliente,
- * marcando `reminderSent: true` para no repetir.
- */
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import { sendEmail, RESEND_API_KEY } from "../email/resend";
-import { buildAppointmentEmail } from "../email/templates";
+import { compileUserTemplate } from "../email/templates";
+
+interface Reminder {
+  id: string;
+  days: number;
+  hours: number;
+  minutes: number;
+  channels: string[];
+  target: "prospect" | "host";
+  active: boolean;
+  subject: string;
+  body: string;
+}
 
 function parseTimeToParts(t: string): { h: number; m: number } {
   if (!t) return { h: 9, m: 0 };
@@ -35,48 +42,116 @@ export const sendReminders = onSchedule(
   async () => {
     const db = admin.firestore();
     const now = Date.now();
-    const horizon = now + 24 * 60 * 60 * 1000;
+    const horizon = now + 7 * 24 * 60 * 60 * 1000; // look ahead up to 7 days
 
-    // Trae citas no canceladas sin recordatorio enviado (filtro fino en código).
-    const snap = await db.collection("events").where("reminderSent", "in", [false, null]).get().catch(async () => {
-      // Si el índice/valor no existe, cae a traer todas y filtrar en memoria.
-      return db.collection("events").get();
-    });
+    const snap = await db.collection("events")
+      .where("fullDate", ">=", new Date(now - 2 * 60 * 60 * 1000).toISOString())
+      .where("fullDate", "<=", new Date(horizon).toISOString())
+      .get();
 
     let sent = 0;
-    const calNames = new Map<string, string>();
+    const calNames = new Map<string, any>();
 
     for (const doc of snap.docs) {
       const data = doc.data();
-      if (data.reminderSent) continue;
-      if (!data.email) continue;
       const status = String(data.status || "").toLowerCase();
       if (status.includes("cancel")) continue;
+      if (!data.email) continue;
 
       const dt = eventDateTime(data);
       if (!dt) continue;
       const ts = dt.getTime();
-      if (ts <= now || ts > horizon) continue; // solo dentro de las próximas 24 h
 
       let calendarName = "Calendario";
+      let calData: any = null;
       if (data.calendarId) {
         if (calNames.has(data.calendarId)) {
-          calendarName = calNames.get(data.calendarId)!;
+          calData = calNames.get(data.calendarId);
+          calendarName = calData?.title || "Calendario";
         } else {
           const cal = await db.collection("calendars").doc(data.calendarId).get();
-          calendarName = (cal.exists && cal.data()?.title) || "Calendario";
-          calNames.set(data.calendarId, calendarName);
+          if (cal.exists) {
+            calData = cal.data();
+            calendarName = calData?.title || "Calendario";
+            calNames.set(data.calendarId, calData);
+          }
         }
       }
 
-      const { subject, html } = buildAppointmentEmail("reminder", {
-        client: data.client, service: data.service, calendarName,
-        day: data.day, month: data.month, time: data.time,
-      });
-      const ok = await sendEmail({ to: data.email, subject, html });
-      if (ok) {
-        await doc.ref.update({ reminderSent: true }).catch(() => {});
-        sent++;
+      const commsData = calData?.section_COMMS;
+      const commGroup = Array.isArray(commsData)
+        ? commsData.find((g: any) => g.id === data.groupId) || commsData[0]
+        : null;
+
+      if (commGroup && commGroup.remindMode === "no") continue;
+
+      const reminders: Reminder[] = (commGroup && commGroup.reminders) || [
+        {
+          id: "default-24h",
+          active: true,
+          days: 1,
+          hours: 0,
+          minutes: 0,
+          channels: ["Email"],
+          target: "prospect",
+          subject: "Recordatorio de tu próxima cita ⏰",
+          body: "Hola, {lead_name}\n\nFalta 1 día para tu cita de {group_title}!\n\nGracias por tu preferencia."
+        }
+      ];
+
+      const sentRemindersList = data.sentReminders || [];
+
+      for (const rem of reminders) {
+        if (!rem.active) continue;
+        if (sentRemindersList.includes(rem.id)) continue;
+
+        // Calculate target time in ms
+        const anticipationMs = (rem.days * 24 * 60 + rem.hours * 60 + rem.minutes) * 60 * 1000;
+        const targetSendTime = ts - anticipationMs;
+
+        // Send if now is past the target send time and within a 3 hour grace window
+        if (now >= targetSendTime && now < targetSendTime + 3 * 60 * 60 * 1000) {
+          const vars = {
+            "{lead_name}": data.client || "Cliente",
+            "{lead_email}": data.email || "",
+            "{lead_phone}": data.phone || "",
+            "{calendar_title}": calendarName,
+            "{group_title}": data.groupTitle || (commGroup?.name || "Cita"),
+            "{host_name}": calData?.senderName || calData?.ownerName || "",
+            "{host_email}": calData?.senderEmail || calData?.ownerEmail || "",
+            "{status}": data.status || "Programada",
+            "{calendar_dates}": `${data.day || ""} ${data.month || ""} a las ${data.time || ""}`.trim(),
+          };
+
+          const compiled = compileUserTemplate(rem.subject, rem.body, vars);
+
+          let fromEmail = "";
+          let replyTo = "";
+          if (commGroup && commGroup.senderMode === "custom" && commGroup.senderEmail) {
+            fromEmail = `${commGroup.senderName || calData?.title || "Calendar"} <${commGroup.senderEmail}>`;
+            replyTo = commGroup.replyTo || "";
+          }
+
+          const recipient = rem.target === "prospect" 
+            ? data.email 
+            : (calData?.ownerEmail || commGroup.senderEmail);
+
+          const ok = await sendEmail({
+            to: recipient,
+            subject: compiled.subject,
+            html: compiled.html,
+            from: fromEmail || undefined,
+            replyTo: replyTo || undefined
+          });
+
+          if (ok) {
+            await doc.ref.update({
+              sentReminders: admin.firestore.FieldValue.arrayUnion(rem.id),
+              reminderSent: true
+            }).catch(() => {});
+            sent++;
+          }
+        }
       }
     }
 

@@ -40,6 +40,15 @@ service cloud.firestore {
       allow read, create, update, delete: if signedIn() && request.auth.uid == uid;
     }
 
+    match /user_credentials/{uid} {
+      allow read, write: if false;
+    }
+
+    match /social_proof_events/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /calendars/{calendarId} {
       allow get: if isActiveCalendar(resource.data) || canReadCalendar(resource.data);
       allow list: if signedIn() && canReadCalendar(resource.data);

@@ -308,13 +308,7 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
     setGroupsData(prev => prev.map(g => g.id === activeGroupId ? { ...g, ...updates } : g));
   };
 
-  if (!activeGroup) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <span className="text-sm ink-3 font-semibold">Cargando configuración de formularios...</span>
-      </div>
-    );
-  }
+
 
   const openNewFieldModal = () => {
     setEditingField({
@@ -412,6 +406,14 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
   const saveImpl = React.useRef<() => void>(() => {});
   saveImpl.current = handleSave;
   useEffect(() => { onRegisterSave?.(() => saveImpl.current()); }, [onRegisterSave]);
+
+  if (!activeGroup) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <span className="text-sm ink-3 font-semibold">Cargando configuración de formularios...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="srf-panel pb-6 rounded-b-2xl">

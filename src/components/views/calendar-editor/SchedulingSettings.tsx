@@ -453,10 +453,10 @@ const createDefaultGroup = (id: string, name: string): GroupSettings => ({
   allowCancel: 'Acepte cancelación',
   allowReschedule: 'No se aceptan reprogramaciones',
   unavailableDisplay: 'Oculto',
-  timeLimit: '1',
+  timeLimit: '0',
   timeLimitUnit: 'months',
   emailLimit: 'Sin límite',
-  advanceLimit: '1',
+  advanceLimit: '0',
 });
 
 const STANDARD_STARTING_POINTS = [
@@ -1605,7 +1605,7 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                    <div className="flex max-w-sm gap-2">
                      <input
                        type="number"
-                       min="1"
+                       min="0"
                        max="365"
                        value={activeGroup.timeLimit}
                        onChange={(e) => updateGroup({ timeLimit: e.target.value })}
@@ -1622,8 +1622,9 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                      </select>
                    </div>
                    <p className="text-[13px] ink-3 mt-2 font-medium leading-relaxed">
-                     Este calendario no aceptará citas con más de {activeGroup.timeLimit || 0}{' '}
-                     {activeGroup.timeLimitUnit === 'days' ? 'día(s)' : activeGroup.timeLimitUnit === 'weeks' ? 'semana(s)' : 'mes(es)'} de anticipación.
+                     {(parseInt(activeGroup.timeLimit, 10) || 0) > 0
+                       ? `Este calendario no aceptará citas con más de ${activeGroup.timeLimit} ${activeGroup.timeLimitUnit === 'days' ? 'día(s)' : activeGroup.timeLimitUnit === 'weeks' ? 'semana(s)' : 'mes(es)'} de anticipación.`
+                       : 'Sin límite de anticipación (0 = se puede agendar en cualquier fecha futura disponible).'}
                    </p>
                  </div>
 
@@ -1657,11 +1658,14 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                      onChange={(e) => updateGroup({ advanceLimit: e.target.value })}
                      className="w-full max-w-sm srf-panel border hairline focus:border-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-black/10 ink-1 shadow-sm transition-all cursor-pointer"
                    >
+                      <option value="0">Sin límite</option>
                       <option value="1">1 mes</option>
                       <option value="2">2 meses</option>
                       <option value="3">3 meses</option>
                       <option value="4">4 meses</option>
                       <option value="5">5 meses</option>
+                      <option value="6">6 meses</option>
+                      <option value="12">12 meses</option>
                    </select>
                  </div>
 

@@ -77,6 +77,38 @@ const minutesToTimeString = (totalMins: number): string => {
   return `${hourStr}:${minStr} ${ampm}`;
 };
 
+// Calcula el timestamp máximo permitido para agendar (ventana de agendamiento),
+// combinando "Límite de programación por tiempo" (timeLimit + timeLimitUnit) y
+// "Ventana máxima de agendamiento (meses)" (advanceLimit). Gana el más
+// restrictivo. Devuelve null cuando no hay ningún límite configurado (0/vacío),
+// para no restringir calendarios que nunca definieron una ventana.
+const getBookingWindowMaxTime = (group: any): number | null => {
+  if (!group) return null;
+  let max: number | null = null;
+
+  const tlv = parseInt(group.timeLimit, 10);
+  if (!isNaN(tlv) && tlv > 0) {
+    const unit = group.timeLimitUnit || 'days';
+    const ms = unit === 'weeks'
+      ? tlv * 7 * 24 * 60 * 60 * 1000
+      : unit === 'months'
+        ? tlv * 30 * 24 * 60 * 60 * 1000
+        : tlv * 24 * 60 * 60 * 1000;
+    const candidate = Date.now() + ms;
+    max = max === null ? candidate : Math.min(max, candidate);
+  }
+
+  const alv = parseInt(group.advanceLimit, 10);
+  if (!isNaN(alv) && alv > 0) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + alv);
+    const candidate = d.getTime();
+    max = max === null ? candidate : Math.min(max, candidate);
+  }
+
+  return max;
+};
+
 interface PublicBookingProps {
   calendarId: string;
 }
@@ -605,6 +637,12 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
       if (date.getTime() > limitTime) return false;
     }
 
+    // 4b. Ventana máxima de agendamiento (timeLimit / advanceLimit)
+    const bookingWindowMax = getBookingWindowMaxTime(selectedGroup);
+    if (bookingWindowMax !== null && date.getTime() > bookingWindowMax) {
+      return false;
+    }
+
     // 5. Check minimum anticipation constraints
     if (selectedGroup.minAnticipationType && selectedGroup.minAnticipationType !== 'Sin anticipación mínima') {
       const now = new Date();
@@ -653,6 +691,12 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
         const rollingDays = parseInt(selectedGroup.availabilityRollingDays, 10) || 90;
         maxDate = new Date(today);
         maxDate.setDate(today.getDate() + rollingDays);
+      }
+
+      // Recortar por la ventana máxima de agendamiento si es más restrictiva
+      const bookingWindowMax = getBookingWindowMaxTime(selectedGroup);
+      if (bookingWindowMax !== null && bookingWindowMax < maxDate.getTime()) {
+        maxDate = new Date(bookingWindowMax);
       }
     }
 
@@ -837,8 +881,8 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
       }
     }
 
-    // Filter out already booked slots
-    const availableSlots = slots.filter(slot => {
+    // Evaluar cada slot (único) y marcar si está ocupado
+    const slotStatuses = Array.from(new Set(slots)).map(slot => {
       const slotStartMins = parseTimeToMinutes(slot);
       const slotEndMins = slotStartMins + duration;
 
@@ -924,20 +968,26 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
         return overlaps;
       });
 
-      return !isBooked;
+      return { time: slot, available: !isBooked };
     });
 
-    // Sort slots by time
-    return Array.from(new Set(availableSlots)).sort((a, b) => {
-      return parseTimeToMinutes(a) - parseTimeToMinutes(b);
-    });
+    // Visualización de horas no disponibles:
+    // - "Mostrar como ocupado": se muestran los slots ocupados (deshabilitados)
+    // - "Oculto" (default): se omiten por completo
+    const unavailableDisplay = selectedGroup?.unavailableDisplay || 'Oculto';
+    const visibleSlots = unavailableDisplay === 'Mostrar como ocupado'
+      ? slotStatuses
+      : slotStatuses.filter(s => s.available);
+
+    // Ordenar por hora
+    return visibleSlots.sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
   }, [selectedDate, selectedGroup, bookedEvents]);
 
   // Automatically select the active filter based on available tabs when selection changes
   useEffect(() => {
     if (timeSlots && timeSlots.length > 0) {
-      const hasAM = timeSlots.some(t => t.toUpperCase().includes('AM'));
-      const hasPM = timeSlots.some(t => t.toUpperCase().includes('PM'));
+      const hasAM = timeSlots.some(t => t.time.toUpperCase().includes('AM'));
+      const hasPM = timeSlots.some(t => t.time.toUpperCase().includes('PM'));
       if (hasAM) {
         setTimeFilter('am');
       } else if (hasPM) {
@@ -948,10 +998,10 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
 
   const filteredTimeSlots = React.useMemo(() => {
     if (timeFilter === 'am') {
-      return timeSlots.filter(t => t.toUpperCase().includes('AM'));
+      return timeSlots.filter(t => t.time.toUpperCase().includes('AM'));
     }
     if (timeFilter === 'pm') {
-      return timeSlots.filter(t => t.toUpperCase().includes('PM'));
+      return timeSlots.filter(t => t.time.toUpperCase().includes('PM'));
     }
     return timeSlots;
   }, [timeSlots, timeFilter]);
@@ -1489,20 +1539,33 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                         timeSlots.length > 0 ? (
                           filteredTimeSlots.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2 max-h-[260px] overflow-y-auto pr-1">
-                              {filteredTimeSlots.map((time, i) => {
-                                const isSelected = selectedTime === time;
+                              {filteredTimeSlots.map((slot, i) => {
+                                const isSelected = selectedTime === slot.time;
+                                if (!slot.available) {
+                                  return (
+                                    <button
+                                      key={i}
+                                      type="button"
+                                      disabled
+                                      title={lang === 'es' ? 'Horario ocupado' : 'Time slot taken'}
+                                      className="p-3 rounded-xl border text-xs font-extrabold text-center cursor-not-allowed line-through opacity-50 hairline srf-sunken ink-3"
+                                    >
+                                      {slot.time}
+                                    </button>
+                                  );
+                                }
                                 return (
                                   <button
                                     key={i}
                                     type="button"
-                                    onClick={() => setSelectedTime(time)}
+                                    onClick={() => setSelectedTime(slot.time)}
                                     className={`p-3 rounded-xl border text-xs font-extrabold transition-all text-center cursor-pointer ${
                                       isSelected
                                         ? 'border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-900/10'
                                         : 'hairline srf-panel hover:border-slate-300 hover:srf-sunken ink-1 hover:scale-101'
                                     }`}
                                   >
-                                    {time}
+                                    {slot.time}
                                   </button>
                                 );
                               })}

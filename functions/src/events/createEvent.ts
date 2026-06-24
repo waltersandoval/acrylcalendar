@@ -162,6 +162,38 @@ export const createEvent = onCall({ cors: true }, async (request: CallableReques
       throw new HttpsError("failed-precondition", "El horario seleccionado ya no está disponible.");
     }
 
+    // Límite de citas activas por correo electrónico (por grupo).
+    // La config vive en section_SCHEDULING.groups[].emailLimit, con valores como
+    // "Sin límite", "1 cita", "2 citas"… (o formatos antiguos "1 Programación").
+    // Se extrae el primer número; sin número => sin límite.
+    if (email && groupId) {
+      const schedGroups = (calData.section_SCHEDULING && calData.section_SCHEDULING.groups) || [];
+      const grp = schedGroups.find((g: any) => g && g.id === groupId);
+      const rawLimit = grp ? grp.emailLimit : null;
+      const limitMatch = rawLimit ? String(rawLimit).match(/\d+/) : null;
+      const emailLimit = limitMatch ? parseInt(limitMatch[0], 10) : 0;
+
+      if (emailLimit > 0) {
+        const emailLower = String(email).toLowerCase();
+        let activeForEmail = 0;
+        for (const doc of eventsSnapshot.docs) {
+          const ev = doc.data();
+          const cancelled = ev.status === "cancelled" || ev.status === "cancelada" || ev.statusColor === "bg-red-400";
+          if (cancelled) continue;
+          if (ev.groupId !== groupId) continue;
+          if (String(ev.email || "").toLowerCase() === emailLower) {
+            activeForEmail++;
+          }
+        }
+        if (activeForEmail >= emailLimit) {
+          throw new HttpsError(
+            "failed-precondition",
+            `Este calendario permite un máximo de ${emailLimit} cita(s) activa(s) por correo electrónico. Ya alcanzaste ese límite.`
+          );
+        }
+      }
+    }
+
     // Si pasa la validación sin conflicto, procedemos a guardar la cita real en la BD
     const newEvent = {
       calendarId,

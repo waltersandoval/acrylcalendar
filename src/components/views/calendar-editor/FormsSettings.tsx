@@ -302,12 +302,19 @@ const FormsSettings: React.FC<Props> = ({ initialData, onSave, onRegisterSave, c
       }
     }
   }, [calendarGroups, isLoaded, activeGroupId]);
-
   const activeGroup = groupsData.find(g => g.id === activeGroupId) || groupsData[0];
 
   const updateActiveGroup = (updates: Partial<GroupFormData>) => {
     setGroupsData(prev => prev.map(g => g.id === activeGroupId ? { ...g, ...updates } : g));
   };
+
+  if (!activeGroup) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <span className="text-sm ink-3 font-semibold">Cargando configuración de formularios...</span>
+      </div>
+    );
+  }
 
   const openNewFieldModal = () => {
     setEditingField({

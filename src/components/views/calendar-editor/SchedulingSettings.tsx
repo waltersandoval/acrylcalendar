@@ -1,7 +1,38 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Component, ReactNode } from 'react';
 import { Info, Save, PlusCircle, Trash2, Copy, Settings as SettingsIcon, Clock, X, ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronUp, ChevronDown, Globe, Lightbulb } from 'lucide-react';
 // Removed useIsMobileApp import to prevent unused import warnings
 // import { useIsMobileApp } from '../../../hooks/useMediaQuery';
+
+// Error Boundary para aislar fallos del bloque de Configuraciones avanzadas y
+// evitar que un error de render deje toda la página en blanco (React #310, etc.)
+class AdvancedConfigErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  declare props: { children: ReactNode };
+  state: { hasError: boolean } = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: unknown) {
+    // eslint-disable-next-line no-console
+    console.error('Error en Configuraciones avanzadas:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 text-center text-rose-500 text-sm font-medium">
+          Ocurrió un error al cargar las configuraciones avanzadas. Por favor recarga la página.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Ícono de información con tooltip nativo funcional (hover muestra el texto).
+const InfoTip = ({ text, className = 'w-3.5 h-3.5 ink-3 ml-1.5 cursor-help' }: { text: string; className?: string }) => (
+  <span title={text} className="inline-flex items-center" aria-label={text} role="img">
+    <Info className={className} aria-hidden="true" />
+  </span>
+);
 
 const CustomDatePicker = ({ value, onChange, placeholder, className }: { value: string, onChange: (val: string) => void, placeholder: string, className?: string }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -84,15 +115,15 @@ const CustomDatePicker = ({ value, onChange, placeholder, className }: { value: 
       </div>
       
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 srf-panel border hairline rounded-xl shadow-xl z-[9999] p-4 w-[280px]">
+        <div className="absolute top-full right-0 mt-2 srf-panel border hairline rounded-xl shadow-xl z-[9999] p-4 w-[280px] max-w-[calc(100vw-2rem)]">
            {value && (
              <div className="bg-[#eef2f6] ink-1 font-semibold text-xs py-2 px-3 rounded-lg text-center mb-4">
                {value.split('-').reverse().join('/')}
              </div>
            )}
            <div className="flex justify-between items-center mb-4 px-1">
-             <span className="font-bold ink-1 text-sm capitalize">
-               {monthNames[currentMonth]} de {currentYear}
+             <span className="font-bold ink-1 text-sm">
+               {monthNames[currentMonth].charAt(0).toUpperCase() + monthNames[currentMonth].slice(1)} de {currentYear}
              </span>
              <div className="flex gap-1.5">
                <button onClick={handlePrevMonth} className="p-1 rounded-full accent-bg hover:brightness-110 text-white transition-colors cursor-pointer"><ChevronLeft className="w-3.5 h-3.5" /></button>
@@ -364,6 +395,7 @@ interface GroupSettings {
   allowReschedule: string;
   unavailableDisplay: string;
   timeLimit: string;
+  timeLimitUnit: string;
   emailLimit: string;
   advanceLimit: string;
 }
@@ -422,6 +454,7 @@ const createDefaultGroup = (id: string, name: string): GroupSettings => ({
   allowReschedule: 'No se aceptan reprogramaciones',
   unavailableDisplay: 'Oculto',
   timeLimit: '1',
+  timeLimitUnit: 'months',
   emailLimit: 'Sin límite',
   advanceLimit: '1',
 });
@@ -1264,21 +1297,23 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                           <span className={`ml-3 text-[13px] font-semibold select-none ${month.active ? 'ink-1' : 'ink-3'}`}>{month.name}</span>
                         </label>
 
-                        <div className={`flex items-center gap-2 ${!month.active && 'opacity-40 pointer-events-none'}`}>
-                           <select 
+                        <div className={`flex items-center gap-2 ${!month.active ? 'opacity-40 cursor-not-allowed' : ''}`}>
+                           <select
                              value={month.start}
+                             disabled={!month.active}
                              onChange={(e) => updateMonth(monthIndex, { start: e.target.value })}
-                             className="w-full srf-panel border hairline hover:border-slate-300 rounded-lg px-2.5 py-1.5 text-xs ink-1 font-semibold outline-none cursor-pointer transition-colors shadow-sm focus:ring-2 focus:ring-black/20"
+                             className="w-full srf-panel border hairline hover:border-slate-300 rounded-lg px-2.5 py-1.5 text-xs ink-1 font-semibold outline-none transition-colors shadow-sm focus:ring-2 focus:ring-black/20 disabled:cursor-not-allowed disabled:bg-slate-50 cursor-pointer"
                            >
                               {[...Array(31)].map((_, i) => (
                                 <option key={i + 1} value={String(i + 1)}>{i + 1}</option>
                               ))}
                            </select>
                            <span className="ink-3 text-xs font-bold px-1">a</span>
-                           <select 
+                           <select
                              value={month.end}
+                             disabled={!month.active}
                              onChange={(e) => updateMonth(monthIndex, { end: e.target.value })}
-                             className="w-full srf-panel border hairline hover:border-slate-300 rounded-lg px-2.5 py-1.5 text-xs ink-1 font-semibold outline-none cursor-pointer transition-colors shadow-sm focus:ring-2 focus:ring-black/20"
+                             className="w-full srf-panel border hairline hover:border-slate-300 rounded-lg px-2.5 py-1.5 text-xs ink-1 font-semibold outline-none transition-colors shadow-sm focus:ring-2 focus:ring-black/20 disabled:cursor-not-allowed disabled:bg-slate-50 cursor-pointer"
                            >
                               {[...Array(31)].map((_, i) => (
                                 <option key={i + 1} value={String(i + 1)}>{i + 1}</option>
@@ -1460,42 +1495,51 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
             </div>
             
             <div className={`border-t hairline ${showAdvanced ? 'block' : 'hidden'}`}>
+              <AdvancedConfigErrorBoundary>
                <div className="p-7 space-y-7">
                  {/* Aprobación de nuevas citas */}
                  <div>
                    <label className="flex items-center text-[13px] font-semibold ink-2 mb-3">
-                     Aprobación de nuevas citas <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                     Aprobación de nuevas citas <InfoTip text="Si eliges manual, deberás confirmar cada cita antes de que el cliente reciba la confirmación." />
                    </label>
                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                      <label className="flex items-center cursor-pointer group">
-                       <span className={`w-4 h-4 rounded-full border-[5px] mr-2 transition-colors ${activeGroup.approvalType === 'Aprobación automática' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
-                       <input type="radio" className="sr-only" checked={activeGroup.approvalType === 'Aprobación automática'} onChange={() => updateGroup({ approvalType: 'Aprobación automática' })} />
+                       <span className="relative w-4 h-4 mr-2 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                         <input type="radio" name={`approval_mode_${activeGroup.id}`} value="automatic" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" checked={activeGroup.approvalType === 'Aprobación automática'} onChange={() => updateGroup({ approvalType: 'Aprobación automática' })} />
+                         <span className={`w-4 h-4 rounded-full border-[5px] transition-colors ${activeGroup.approvalType === 'Aprobación automática' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
+                       </span>
                        <span className="text-[14px] ink-1 font-medium">Aprobación automática</span>
                      </label>
                      <label className="flex items-center cursor-pointer group">
-                       <span className={`w-4 h-4 rounded-full border-[5px] mr-2 transition-colors ${activeGroup.approvalType === 'Aprobación manual' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
-                       <input type="radio" className="sr-only" checked={activeGroup.approvalType === 'Aprobación manual'} onChange={() => updateGroup({ approvalType: 'Aprobación manual' })} />
+                       <span className="relative w-4 h-4 mr-2 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                         <input type="radio" name={`approval_mode_${activeGroup.id}`} value="manual" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" checked={activeGroup.approvalType === 'Aprobación manual'} onChange={() => updateGroup({ approvalType: 'Aprobación manual' })} />
+                         <span className={`w-4 h-4 rounded-full border-[5px] transition-colors ${activeGroup.approvalType === 'Aprobación manual' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
+                       </span>
                        <span className="text-[14px] ink-1 font-medium">Aprobación manual</span>
                      </label>
                    </div>
                  </div>
-                 
+
                  <hr className="border-t hairline" />
 
                  {/* Permitir que los suscriptores cancelen sus citas */}
                  <div>
                    <label className="flex items-center text-[13px] font-semibold ink-2 mb-3">
-                     Permitir que los suscriptores cancelen sus citas <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                     Permitir que los suscriptores cancelen sus citas <InfoTip text="Controla si los clientes pueden cancelar sus citas desde el enlace de confirmación." />
                    </label>
                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                      <label className="flex items-center cursor-pointer group">
-                       <span className={`w-4 h-4 rounded-full border-[5px] mr-2 transition-colors ${activeGroup.allowCancel === 'Acepte cancelación' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
-                       <input type="radio" className="sr-only" checked={activeGroup.allowCancel === 'Acepte cancelación'} onChange={() => updateGroup({ allowCancel: 'Acepte cancelación' })} />
+                       <span className="relative w-4 h-4 mr-2 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                         <input type="radio" name={`cancel_policy_${activeGroup.id}`} value="allow" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" checked={activeGroup.allowCancel === 'Acepte cancelación'} onChange={() => updateGroup({ allowCancel: 'Acepte cancelación' })} />
+                         <span className={`w-4 h-4 rounded-full border-[5px] transition-colors ${activeGroup.allowCancel === 'Acepte cancelación' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
+                       </span>
                        <span className="text-[14px] ink-1 font-medium">Acepte cancelación</span>
                      </label>
                      <label className="flex items-center cursor-pointer group">
-                       <span className={`w-4 h-4 rounded-full border-[5px] mr-2 transition-colors ${activeGroup.allowCancel === 'No acepte cancelación' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
-                       <input type="radio" className="sr-only" checked={activeGroup.allowCancel === 'No acepte cancelación'} onChange={() => updateGroup({ allowCancel: 'No acepte cancelación' })} />
+                       <span className="relative w-4 h-4 mr-2 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                         <input type="radio" name={`cancel_policy_${activeGroup.id}`} value="deny" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" checked={activeGroup.allowCancel === 'No acepte cancelación'} onChange={() => updateGroup({ allowCancel: 'No acepte cancelación' })} />
+                         <span className={`w-4 h-4 rounded-full border-[5px] transition-colors ${activeGroup.allowCancel === 'No acepte cancelación' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
+                       </span>
                        <span className="text-[14px] ink-1 font-medium">No acepte cancelación</span>
                      </label>
                    </div>
@@ -1506,17 +1550,21 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                  {/* Permitir a los suscriptores reprogramar sus horarios */}
                  <div>
                    <label className="flex items-center text-[13px] font-semibold ink-2 mb-3">
-                     Permitir a los suscriptores reprogramar sus horarios <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                     Permitir a los suscriptores reprogramar sus horarios <InfoTip text="Permite o bloquea que los clientes cambien la fecha u hora de su cita." />
                    </label>
                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                      <label className="flex items-center cursor-pointer group">
-                       <span className={`w-4 h-4 rounded-full border-[5px] mr-2 transition-colors ${activeGroup.allowReschedule === 'Aceptar reprogramación' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
-                       <input type="radio" className="sr-only" checked={activeGroup.allowReschedule === 'Aceptar reprogramación'} onChange={() => updateGroup({ allowReschedule: 'Aceptar reprogramación' })} />
+                       <span className="relative w-4 h-4 mr-2 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                         <input type="radio" name={`reschedule_policy_${activeGroup.id}`} value="allow" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" checked={activeGroup.allowReschedule === 'Aceptar reprogramación'} onChange={() => updateGroup({ allowReschedule: 'Aceptar reprogramación' })} />
+                         <span className={`w-4 h-4 rounded-full border-[5px] transition-colors ${activeGroup.allowReschedule === 'Aceptar reprogramación' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
+                       </span>
                        <span className="text-[14px] ink-1 font-medium">Aceptar reprogramación</span>
                      </label>
                      <label className="flex items-center cursor-pointer group">
-                       <span className={`w-4 h-4 rounded-full border-[5px] mr-2 transition-colors ${activeGroup.allowReschedule === 'No se aceptan reprogramaciones' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
-                       <input type="radio" className="sr-only" checked={activeGroup.allowReschedule === 'No se aceptan reprogramaciones'} onChange={() => updateGroup({ allowReschedule: 'No se aceptan reprogramaciones' })} />
+                       <span className="relative w-4 h-4 mr-2 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                         <input type="radio" name={`reschedule_policy_${activeGroup.id}`} value="deny" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" checked={activeGroup.allowReschedule === 'No se aceptan reprogramaciones'} onChange={() => updateGroup({ allowReschedule: 'No se aceptan reprogramaciones' })} />
+                         <span className={`w-4 h-4 rounded-full border-[5px] transition-colors ${activeGroup.allowReschedule === 'No se aceptan reprogramaciones' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
+                       </span>
                        <span className="text-[14px] ink-1 font-medium">No se aceptan reprogramaciones</span>
                      </label>
                    </div>
@@ -1527,17 +1575,21 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                  {/* Visualización de las horas no disponibles */}
                  <div>
                    <label className="flex items-center text-[13px] font-semibold ink-2 mb-3">
-                     Visualización de las horas no disponibles <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                     Visualización de las horas no disponibles <InfoTip text="Define si los horarios ocupados aparecen como 'No disponible' o si simplemente no se muestran." />
                    </label>
                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                      <label className="flex items-center cursor-pointer group">
-                       <span className={`w-4 h-4 rounded-full border-[5px] mr-2 transition-colors ${activeGroup.unavailableDisplay === 'Mostrar como ocupado' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
-                       <input type="radio" className="sr-only" checked={activeGroup.unavailableDisplay === 'Mostrar como ocupado'} onChange={() => updateGroup({ unavailableDisplay: 'Mostrar como ocupado' })} />
+                       <span className="relative w-4 h-4 mr-2 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                         <input type="radio" name={`unavailable_display_${activeGroup.id}`} value="show_busy" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" checked={activeGroup.unavailableDisplay === 'Mostrar como ocupado'} onChange={() => updateGroup({ unavailableDisplay: 'Mostrar como ocupado' })} />
+                         <span className={`w-4 h-4 rounded-full border-[5px] transition-colors ${activeGroup.unavailableDisplay === 'Mostrar como ocupado' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
+                       </span>
                        <span className="text-[14px] ink-1 font-medium">Mostrar como ocupado</span>
                      </label>
                      <label className="flex items-center cursor-pointer group">
-                       <span className={`w-4 h-4 rounded-full border-[5px] mr-2 transition-colors ${activeGroup.unavailableDisplay === 'Oculto' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
-                       <input type="radio" className="sr-only" checked={activeGroup.unavailableDisplay === 'Oculto'} onChange={() => updateGroup({ unavailableDisplay: 'Oculto' })} />
+                       <span className="relative w-4 h-4 mr-2 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                         <input type="radio" name={`unavailable_display_${activeGroup.id}`} value="hidden" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" checked={activeGroup.unavailableDisplay === 'Oculto'} onChange={() => updateGroup({ unavailableDisplay: 'Oculto' })} />
+                         <span className={`w-4 h-4 rounded-full border-[5px] transition-colors ${activeGroup.unavailableDisplay === 'Oculto' ? 'border-black srf-panel' : 'border-slate-300 srf-panel group-hover:border-slate-400'}`}></span>
+                       </span>
                        <span className="text-[14px] ink-1 font-medium">Oculto</span>
                      </label>
                    </div>
@@ -1548,56 +1600,73 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
                  {/* Límite de programación por tiempo */}
                  <div>
                    <label className="flex items-center text-[13px] font-semibold ink-2 mb-2">
-                     Límite de programación por tiempo <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                     Límite de programación por tiempo <InfoTip text="Máximo de tiempo en el futuro en que se pueden agendar citas." />
                    </label>
-                   <input 
-                     type="number"
-                     value={activeGroup.timeLimit}
-                     onChange={(e) => updateGroup({ timeLimit: e.target.value })}
-                     className="w-full max-w-sm srf-panel border hairline focus:border-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-black/10 ink-1 shadow-sm transition-all"
-                   />
+                   <div className="flex max-w-sm gap-2">
+                     <input
+                       type="number"
+                       min="1"
+                       max="365"
+                       value={activeGroup.timeLimit}
+                       onChange={(e) => updateGroup({ timeLimit: e.target.value })}
+                       className="w-24 srf-panel border hairline focus:border-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-black/10 ink-1 shadow-sm transition-all text-center"
+                     />
+                     <select
+                       value={activeGroup.timeLimitUnit}
+                       onChange={(e) => updateGroup({ timeLimitUnit: e.target.value })}
+                       className="flex-1 srf-panel border hairline focus:border-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-black/10 ink-1 shadow-sm transition-all cursor-pointer"
+                     >
+                        <option value="days">Día(s)</option>
+                        <option value="weeks">Semana(s)</option>
+                        <option value="months">Mes(es)</option>
+                     </select>
+                   </div>
+                   <p className="text-[13px] ink-3 mt-2 font-medium leading-relaxed">
+                     Este calendario no aceptará citas con más de {activeGroup.timeLimit || 0}{' '}
+                     {activeGroup.timeLimitUnit === 'days' ? 'día(s)' : activeGroup.timeLimitUnit === 'weeks' ? 'semana(s)' : 'mes(es)'} de anticipación.
+                   </p>
                  </div>
 
                  {/* Límite de programación por correo electrónico */}
                  <div>
                    <label className="flex items-center text-[13px] font-semibold ink-2 mb-2">
-                     Límite de programación por correo electrónico <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                     Límite de programación por correo electrónico <InfoTip text="Número máximo de citas activas que puede tener una misma dirección de correo." />
                    </label>
-                   <select 
+                   <select
                      value={activeGroup.emailLimit}
                      onChange={(e) => updateGroup({ emailLimit: e.target.value })}
                      className="w-full max-w-sm srf-panel border hairline focus:border-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-black/10 ink-1 shadow-sm transition-all cursor-pointer"
                    >
                       <option value="Sin límite">Sin límite</option>
-                      <option value="1 Programación">1 Programación</option>
-                      <option value="2 Horarios">2 Horarios</option>
-                      <option value="3 Horarios">3 Horarios</option>
-                      <option value="4 Horarios">4 Horarios</option>
-                      <option value="5 Horarios">5 Horarios</option>
-                      <option value="10 Horarios">10 Horarios</option>
+                      <option value="1 cita">1 cita</option>
+                      <option value="2 citas">2 citas</option>
+                      <option value="3 citas">3 citas</option>
+                      <option value="4 citas">4 citas</option>
+                      <option value="5 citas">5 citas</option>
+                      <option value="10 citas">10 citas</option>
                    </select>
                  </div>
 
-                 {/* Antiguo */}
+                 {/* Ventana máxima de agendamiento (meses) */}
                  <div>
                    <label className="flex items-center text-[13px] font-semibold ink-2 mb-2">
-                     Antiguo <Info className="w-3.5 h-3.5 ink-3 ml-1.5 cursor-help" />
+                     Ventana máxima de agendamiento (meses) <InfoTip text="Cantidad máxima de meses hacia el futuro que estarán visibles para agendar." />
                    </label>
-                   <select 
+                   <select
                      value={activeGroup.advanceLimit}
                      onChange={(e) => updateGroup({ advanceLimit: e.target.value })}
                      className="w-full max-w-sm srf-panel border hairline focus:border-slate-400 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-black/10 ink-1 shadow-sm transition-all cursor-pointer"
                    >
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                      <option value="Hidden">Hidden</option>
+                      <option value="1">1 mes</option>
+                      <option value="2">2 meses</option>
+                      <option value="3">3 meses</option>
+                      <option value="4">4 meses</option>
+                      <option value="5">5 meses</option>
                    </select>
                  </div>
 
                </div>
+              </AdvancedConfigErrorBoundary>
             </div>
           </div>
         )}

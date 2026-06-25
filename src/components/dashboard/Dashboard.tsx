@@ -15,7 +15,6 @@ import Integrations from '../views/Integrations';
 import Ajustes from '../views/Ajustes';
 import ProfileView from '../views/ProfileView';
 import CalendarEditor from '../views/calendar-editor/CalendarEditor';
-import PaymentConfigsView from '../views/PaymentConfigsView';
 import MobileTabBar from './MobileTabBar';
 import { useIsMobileApp } from '../../hooks/useMediaQuery';
 import { Calendar as CalendarIcon, ChevronRight, Bell, Trash2, Inbox, CheckCheck, Clock, User, Calendar } from 'lucide-react';
@@ -119,9 +118,6 @@ const Dashboard: React.FC = () => {
     } else if (activeSidebarItem === 'Escritorio') {
        breadcrumbCategory = 'Panel';
        breadcrumbTitle = 'Inicio';
-    } else if (activeSidebarItem === 'Configuración de Pagos') {
-       breadcrumbCategory = 'Configuración';
-       breadcrumbTitle = 'Métodos de Pago';
     }
 
     return (
@@ -204,9 +200,7 @@ const Dashboard: React.FC = () => {
             onBack={() => setActiveSidebarItem('Mis calendarios')}
             unreadCount={unreadCount}
             onShowNotifications={() => setShowNotifications(true)}
-            onTitleChange={setEditingCalendarTitle}
-            onNavigateToPayments={() => setActiveSidebarItem('Configuración de Pagos')}
-          />
+            onTitleChange={setEditingCalendarTitle}          />
         </div>
       );
     }
@@ -232,14 +226,6 @@ const Dashboard: React.FC = () => {
         return (
            <div className="flex-1 pb-6 mx-4 md:mx-6 max-w-5xl">
               <ProfileView />
-           </div>
-        );
-    }
-
-    if (activeSidebarItem === 'Configuración de Pagos') {
-        return (
-           <div className="flex-1 pb-6 mx-4 md:mx-6">
-              <PaymentConfigsView />
            </div>
         );
     }
@@ -296,7 +282,6 @@ const Dashboard: React.FC = () => {
           unreadCount={unreadCount}
           onShowNotifications={() => setShowNotifications(true)}
           onTitleChange={setEditingCalendarTitle}
-          onNavigateToPayments={() => setActiveSidebarItem('Configuración de Pagos')}
         />
       )}
       {activeSidebarItem === 'Lista de Citas' && (
@@ -304,7 +289,6 @@ const Dashboard: React.FC = () => {
       )}
       {activeSidebarItem === 'Ajustes' && <Ajustes />}
       {activeSidebarItem === 'Perfil' && <ProfileView />}
-      {activeSidebarItem === 'Configuración de Pagos' && <PaymentConfigsView />}
     </div>
   );
 

@@ -109,6 +109,40 @@ const getBookingWindowMaxTime = (group: any): number | null => {
   return max;
 };
 
+// Primer instante en que se puede agendar según la anticipación mínima del grupo.
+const getMinAnticipationEarliestTime = (group: any): number => {
+  if (!group) return Date.now();
+  const type = group.minAnticipationType;
+  if (!type || type === 'Sin anticipación mínima') return Date.now();
+
+  const now = new Date();
+  const todayZero = new Date();
+  todayZero.setHours(0, 0, 0, 0);
+
+  if (type === 'No hay disponibilidad para hoy') {
+    const d = new Date(todayZero);
+    d.setDate(d.getDate() + 1);
+    return d.getTime();
+  }
+  if (type === 'No hay disponibilidad para hoy ni mañana') {
+    const d = new Date(todayZero);
+    d.setDate(d.getDate() + 2);
+    return d.getTime();
+  }
+
+  const val = parseInt(group.minAnticipationValue, 10) || 0;
+  if (val <= 0) return Date.now();
+
+  if (type === 'Día(s) y') {
+    const d = new Date(todayZero);
+    d.setDate(d.getDate() + val);
+    return d.getTime();
+  }
+  if (type === 'Horas') return now.getTime() + val * 60 * 60 * 1000;
+  if (type === 'Minutos') return now.getTime() + val * 60 * 1000;
+  return Date.now();
+};
+
 interface PublicBookingProps {
   calendarId: string;
 }
@@ -633,8 +667,10 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
       const rollingDays = parseInt(selectedGroup.availabilityRollingDays, 10) || 90;
       if (diffDays > rollingDays) return false;
     } else if (selectedGroup.availabilityType === 'Hasta cierto día...' && selectedGroup.availabilityDate) {
+      // Si la fecha límite está vacía o es inválida, se trata como "Indefinidamente"
+      // (no bloquear), en vez de invalidar todos los días con un Invalid Date.
       const limitTime = new Date(selectedGroup.availabilityDate + 'T23:59:59').getTime();
-      if (date.getTime() > limitTime) return false;
+      if (!isNaN(limitTime) && date.getTime() > limitTime) return false;
     }
 
     // 4b. Ventana máxima de agendamiento (timeLimit / advanceLimit)
@@ -1005,6 +1041,21 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
     }
     return timeSlots;
   }, [timeSlots, timeFilter]);
+
+  // Detecta configuraciones imposibles: cuando la ventana máxima de agendamiento
+  // es más corta que la anticipación mínima requerida, ningún día queda disponible.
+  const configIssue = React.useMemo(() => {
+    if (!selectedGroup) return null;
+    const windowMax = getBookingWindowMaxTime(selectedGroup);
+    if (windowMax === null) return null;
+    const earliest = getMinAnticipationEarliestTime(selectedGroup);
+    if (earliest > windowMax) {
+      return lang === 'es'
+        ? 'Este calendario no tiene fechas disponibles por su configuración actual: el límite de tiempo para agendar es menor que la anticipación mínima requerida. Por favor contacta al negocio.'
+        : 'This calendar has no available dates due to its current settings: the booking time limit is shorter than the required minimum notice. Please contact the business.';
+    }
+    return null;
+  }, [selectedGroup, lang]);
 
   // ─────────────────────────────────────────────────────────────
   // Helpers para construir los datos de booking
@@ -1388,6 +1439,14 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
                         );
                       })}
                     </div>
+                  </div>
+                )}
+
+                {/* Aviso de configuración imposible (ventana < anticipación mínima) */}
+                {configIssue && (
+                  <div className="flex items-start gap-3 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-800">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-500" />
+                    <p className="text-xs font-semibold leading-relaxed">{configIssue}</p>
                   </div>
                 )}
 

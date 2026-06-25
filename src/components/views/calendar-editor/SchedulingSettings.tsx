@@ -512,6 +512,37 @@ const parseTimeToMinutes = (timeStr: string): number => {
   return hours * 60 + minutes;
 };
 
+// Convierte la anticipación mínima del grupo a días (aprox.) para comparar con la ventana.
+const minAnticipationToDays = (type: string, value: string): number => {
+  const v = parseInt(value, 10) || 0;
+  switch (type) {
+    case 'No hay disponibilidad para hoy': return 1;
+    case 'No hay disponibilidad para hoy ni mañana': return 2;
+    case 'Día(s) y': return v;
+    case 'Horas': return v / 24;
+    case 'Minutos': return v / 1440;
+    default: return 0;
+  }
+};
+
+// Ventana máxima de agendamiento del grupo en días (la más restrictiva entre
+// timeLimit+unidad y advanceLimit en meses). null = sin límite.
+const bookingWindowToDays = (group: GroupSettings): number | null => {
+  let max: number | null = null;
+  const tlv = parseInt(group.timeLimit, 10);
+  if (!isNaN(tlv) && tlv > 0) {
+    const unit = group.timeLimitUnit || 'days';
+    const d = unit === 'weeks' ? tlv * 7 : unit === 'months' ? tlv * 30 : tlv;
+    max = max === null ? d : Math.min(max, d);
+  }
+  const alv = parseInt(group.advanceLimit, 10);
+  if (!isNaN(alv) && alv > 0) {
+    const d = alv * 30;
+    max = max === null ? d : Math.min(max, d);
+  }
+  return max;
+};
+
 interface OverlapError {
   dayName: string;
   group1Name: string;
@@ -682,6 +713,17 @@ const SchedulingSettings: React.FC<Props> = ({ initialData, initialDataBasic, on
       const intervalMins = timeToMinutes(g.intervalHours, g.intervalMinutes);
       if (intervalMins < 0) {
         setErrorMessage(`El intervalo entre sesiones para "${gName}" no puede ser negativo.`);
+        return false;
+      }
+
+      // Conflicto: la ventana máxima de agendamiento no puede ser menor que la
+      // anticipación mínima, o no quedaría ningún día disponible.
+      const windowDays = bookingWindowToDays(g);
+      const minDays = minAnticipationToDays(g.minAnticipationType, g.minAnticipationValue);
+      if (windowDays !== null && minDays > windowDays) {
+        setErrorMessage(
+          `En "${gName}", la ventana máxima de agendamiento (${windowDays} día(s)) es menor que la anticipación mínima (${minDays} día(s)). Con esta combinación ningún día quedaría disponible. Aumenta el límite de tiempo o reduce la anticipación mínima.`
+        );
         return false;
       }
 

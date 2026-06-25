@@ -413,7 +413,7 @@ const PaymentConfigsView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 ml-1">Precio</label>
+                    <label className="text-[11px] font-bold ink-3 uppercase tracking-wider block mb-1.5 ml-1">Precio base del servicio</label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ink-3" />
                       <input
@@ -428,6 +428,19 @@ const PaymentConfigsView: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Aviso: precio local heredado del editor que quedará ignorado */}
+                {selectedCalendar?.section_PAYMENT?.price && parseFloat(selectedCalendar.section_PAYMENT.price) > 0 && (
+                  <div className="flex items-start gap-2.5 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-[12px] text-amber-800">
+                    <Info className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />
+                    <p>
+                      ⚠️ El calendario seleccionado tiene un precio anterior de{' '}
+                      <strong>{selectedCalendar.section_PAYMENT.currency || 'USD'} {parseFloat(selectedCalendar.section_PAYMENT.price).toFixed(2)}</strong>{' '}
+                      configurado en el editor. Esta configuración global tiene prioridad, así que ese
+                      precio anterior será ignorado mientras este método esté activo.
+                    </p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>

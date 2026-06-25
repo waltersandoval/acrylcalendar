@@ -205,6 +205,7 @@ const Dashboard: React.FC = () => {
             unreadCount={unreadCount}
             onShowNotifications={() => setShowNotifications(true)}
             onTitleChange={setEditingCalendarTitle}
+            onNavigateToPayments={() => setActiveSidebarItem('Configuración de Pagos')}
           />
         </div>
       );
@@ -295,6 +296,7 @@ const Dashboard: React.FC = () => {
           unreadCount={unreadCount}
           onShowNotifications={() => setShowNotifications(true)}
           onTitleChange={setEditingCalendarTitle}
+          onNavigateToPayments={() => setActiveSidebarItem('Configuración de Pagos')}
         />
       )}
       {activeSidebarItem === 'Lista de Citas' && (

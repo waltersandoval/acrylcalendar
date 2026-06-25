@@ -22,6 +22,7 @@ interface CalendarEditorProps {
   unreadCount?: number;
   onShowNotifications?: () => void;
   onTitleChange?: (title: string) => void;
+  onNavigateToPayments?: () => void;
 }
 
 const SECTION_COPY: Record<string, { title: string; eyebrow: string }> = {
@@ -78,6 +79,7 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
   unreadCount = 0,
   onShowNotifications,
   onTitleChange,
+  onNavigateToPayments,
 }) => {
   const persistentId = calendarId || 'nuevo-calendario';
   const bookingUrl = `${window.location.origin}/booking/${persistentId}`;
@@ -184,7 +186,7 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
       return <SocialProofSettings initialData={calendarData?.section_SOCIAL_PROOF} onSave={(data) => handleSaveSection('SOCIAL_PROOF', data)} onRegisterSave={registerSave} />;
     }
     if (activeSection === 'PAYMENT') {
-      return <PaymentSettings calendarId={calendarId} initialData={calendarData?.section_PAYMENT} onSave={(data) => handleSaveSection('PAYMENT', data)} onRegisterSave={registerSave} />;
+      return <PaymentSettings calendarId={calendarId} initialData={calendarData?.section_PAYMENT} onSave={(data) => handleSaveSection('PAYMENT', data)} onRegisterSave={registerSave} onNavigateToPayments={onNavigateToPayments} />;
     }
     return <ContextPanel section={activeSection} bookingUrl={bookingUrl} />;
   };

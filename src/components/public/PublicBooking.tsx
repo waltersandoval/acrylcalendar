@@ -109,6 +109,26 @@ const getBookingWindowMaxTime = (group: any): number | null => {
   return max;
 };
 
+// Límite máximo para la NAVEGACIÓN por meses del calendario.
+// A diferencia de getBookingWindowMaxTime, aquí solo cuenta la "Ventana máxima
+// de agendamiento (meses)" (advanceLimit), que por definición es una ventana
+// pensada en meses y por tanto apropiada para acotar el selector de meses.
+// NO se incluye timeLimit ("Límite de programación por tiempo"): ese límite
+// (p. ej. "1 día de anticipación") restringe qué FECHAS concretas se pueden
+// agendar, no qué meses aparecen en la navegación. Esa restricción por fecha
+// la sigue aplicando isDayActive vía getBookingWindowMaxTime, así que las
+// fechas fuera de la ventana quedan deshabilitadas aunque el mes sí se muestre.
+const getMonthNavMaxTime = (group: any): number | null => {
+  if (!group) return null;
+  const alv = parseInt(group.advanceLimit, 10);
+  if (!isNaN(alv) && alv > 0) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + alv);
+    return d.getTime();
+  }
+  return null;
+};
+
 // Primer instante en que se puede agendar según la anticipación mínima del grupo.
 const getMinAnticipationEarliestTime = (group: any): number => {
   if (!group) return Date.now();
@@ -729,10 +749,14 @@ export default function PublicBooking({ calendarId }: PublicBookingProps) {
         maxDate.setDate(today.getDate() + rollingDays);
       }
 
-      // Recortar por la ventana máxima de agendamiento si es más restrictiva
-      const bookingWindowMax = getBookingWindowMaxTime(selectedGroup);
-      if (bookingWindowMax !== null && bookingWindowMax < maxDate.getTime()) {
-        maxDate = new Date(bookingWindowMax);
+      // Recortar la navegación solo por la "Ventana máxima de agendamiento
+      // (meses)" (advanceLimit). NO se recorta por timeLimit: ese límite
+      // restringe fechas puntuales (lo aplica isDayActive), no la lista de
+      // meses navegables. Así un grupo "Indefinidamente" con todos los meses
+      // activos muestra los 12 meses aunque tenga un timeLimit pequeño.
+      const monthNavMax = getMonthNavMaxTime(selectedGroup);
+      if (monthNavMax !== null && monthNavMax < maxDate.getTime()) {
+        maxDate = new Date(monthNavMax);
       }
     }
 

@@ -210,9 +210,55 @@ export const onEventCreated = onDocumentCreated(
       needsApproval = true;
     }
 
-    const paymentStatusText = needsApproval ? "Pago Pendiente" : "Pago Confirmado";
+    // ─────────────────────────────────────────────────────────────
+    // Estado de PAGO de la cita (independiente de la aprobación).
+    // El pago real lo marca verifyPaypalAndCreateEvent en el evento
+    // (paymentStatus:"paid" + paypalOrderId). Una cita SIN pago, creada por
+    // createEvent, no trae esos campos. La "Aprobación manual" es OTRA cosa:
+    // el dueño confirma la cita, lo cual NO implica que se haya pagado. Antes
+    // este texto se derivaba de needsApproval y mostraba "Pago Confirmado"
+    // incluso en calendarios configurados SIN pago.
+    // ─────────────────────────────────────────────────────────────
+    const isPaid = data.paymentStatus === "paid" || !!data.paypalOrderId || data.paymentMethod === "paypal";
 
-    const body = `📅 Nueva cita agendada\n${clientName} — ${groupName}\n📅 ${appointmentDate} a las ${appointmentTime}\n💳 ${paymentStatusText}`;
+    // ¿Este grupo/calendario exige pago para agendar? Mismo criterio que el
+    // flujo público de reserva: una payment_config activa con precio > 0 para
+    // el grupo (o genérica "all"), o el legacy section_PAYMENT con PayPal
+    // habilitado y precio > 0.
+    let requiresPayment = false;
+    try {
+      if (data.calendarId) {
+        const cfgSnap = await db.collection("payment_configs")
+          .where("calendarId", "==", data.calendarId)
+          .where("enabled", "==", true)
+          .get();
+        const cfgs = cfgSnap.docs.map((d) => d.data() as any);
+        let cfg: any = null;
+        if (data.groupId) cfg = cfgs.find((c) => c.groupId === data.groupId) || null;
+        if (!cfg) cfg = cfgs.find((c) => c.groupId === "all" || !c.groupId) || null;
+        if (cfg) {
+          requiresPayment = parseFloat(String(cfg.price || "0")) > 0;
+        } else {
+          const legacy = calData?.section_PAYMENT;
+          requiresPayment = !!legacy?.paypalEnabled && parseFloat(String(legacy?.price || "0")) > 0;
+        }
+      }
+    } catch (e) {
+      console.warn(`onEventCreated [${eventId}]: no se pudo resolver si la cita requería pago:`, e);
+    }
+
+    let paymentLine: string;
+    if (isPaid) {
+      paymentLine = data.price ? `💳 Pago confirmado (${data.price})` : "💳 Pago confirmado";
+    } else if (requiresPayment) {
+      paymentLine = "💳 Pago pendiente";
+    } else {
+      paymentLine = "💳 Sin pago requerido";
+    }
+
+    const approvalLine = needsApproval ? "\n⏳ Pendiente de aprobación" : "";
+
+    const body = `📅 Nueva cita agendada\n${clientName} — ${groupName}\n📅 ${appointmentDate} a las ${appointmentTime}\n${paymentLine}${approvalLine}`;
 
     try {
       const res = await admin.messaging().sendEachForMulticast({

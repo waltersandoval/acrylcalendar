@@ -88,7 +88,12 @@ const getBookingWindowMaxTime = (group: any): number | null => {
 
   const tlv = parseInt(group.timeLimit, 10);
   if (!isNaN(tlv) && tlv > 0) {
-    const unit = group.timeLimitUnit || 'days';
+    // Datos heredados (factory anterior a jun-2026) guardaban timeLimit sin
+    // timeLimitUnit. La UI actual siempre guarda una unidad, así que una unidad
+    // ausente solo puede ser data vieja: se interpreta como 'months' (la unidad
+    // por defecto del factory y del diseño original), no como 'days', para no
+    // colapsar la ventana a 1 día y dejar el calendario sin fechas agendables.
+    const unit = group.timeLimitUnit || 'months';
     const ms = unit === 'weeks'
       ? tlv * 7 * 24 * 60 * 60 * 1000
       : unit === 'months'

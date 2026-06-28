@@ -531,7 +531,10 @@ const bookingWindowToDays = (group: GroupSettings): number | null => {
   let max: number | null = null;
   const tlv = parseInt(group.timeLimit, 10);
   if (!isNaN(tlv) && tlv > 0) {
-    const unit = group.timeLimitUnit || 'days';
+    // Unidad ausente = data heredada (factory previo). Se asume 'months', no
+    // 'days', para no malinterpretar timeLimit:'1' como 1 día. Ver nota en
+    // getBookingWindowMaxTime de PublicBooking.tsx.
+    const unit = group.timeLimitUnit || 'months';
     const d = unit === 'weeks' ? tlv * 7 : unit === 'months' ? tlv * 30 : tlv;
     max = max === null ? d : Math.min(max, d);
   }

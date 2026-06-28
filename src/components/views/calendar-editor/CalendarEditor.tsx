@@ -181,7 +181,7 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
       return <MarketingSettings calendarId={calendarId} initialData={calendarData?.section_MARKETING} initialDataForms={calendarData?.section_FORMS} onSave={(data) => handleSaveSection('MARKETING', data)} onRegisterSave={registerSave} />;
     }
     if (activeSection === 'SOCIAL_PROOF') {
-      return <SocialProofSettings initialData={calendarData?.section_SOCIAL_PROOF} onSave={(data) => handleSaveSection('SOCIAL_PROOF', data)} onRegisterSave={registerSave} />;
+      return <SocialProofSettings calendarId={calendarId} initialData={calendarData?.section_SOCIAL_PROOF} onSave={(data) => handleSaveSection('SOCIAL_PROOF', data)} onRegisterSave={registerSave} />;
     }
     if (activeSection === 'PAYMENT') {
       return <PaymentSettings calendarId={calendarId} initialData={calendarData?.section_PAYMENT} onSave={(data) => handleSaveSection('PAYMENT', data)} calendarGroups={calendarGroups} onRegisterSave={registerSave} />;

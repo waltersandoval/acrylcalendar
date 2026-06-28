@@ -1,13 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Eye, Info, Layout, Play, Clock } from 'lucide-react';
+import { Sparkles, Eye, Info, Layout, Play, Clock, Search, Pencil, Trash2, Check, X, Users } from 'lucide-react';
+import { db } from '../../../lib/firebase';
+import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 interface Props {
+  calendarId?: string;
   initialData?: any;
   onSave?: (data: any) => void;
   onRegisterSave?: (fn: () => void) => void;
 }
 
+interface SpRecord {
+  id: string;
+  client: string;
+  service: string;
+  city: string;
+  status: string;
+  ts: number;
+}
+
 const SocialProofSettings: React.FC<Props> = ({
+  calendarId,
   initialData,
   onSave,
   onRegisterSave,
@@ -65,6 +78,128 @@ const SocialProofSettings: React.FC<Props> = ({
   useEffect(() => {
     onRegisterSave?.(() => saveImpl.current());
   }, [onRegisterSave]);
+
+  // ─────────────────────────────────────────────────────────────
+  // Registros mostrados en la prueba social (colección social_proof_events).
+  // El dueño puede buscarlos, editar el nombre/servicio/ciudad o eliminarlos.
+  // ─────────────────────────────────────────────────────────────
+  const [records, setRecords] = useState<SpRecord[]>([]);
+  const [recordsLoading, setRecordsLoading] = useState<boolean>(true);
+  const [search, setSearch] = useState<string>('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ client: string; service: string; city: string }>({ client: '', service: '', city: '' });
+  const [recordError, setRecordError] = useState<string | null>(null);
+  const [savingRecord, setSavingRecord] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!calendarId) {
+      setRecords([]);
+      setRecordsLoading(false);
+      return;
+    }
+    setRecordsLoading(true);
+    // Sin orderBy para no requerir un índice compuesto: ordenamos en cliente.
+    const qy = query(collection(db, 'social_proof_events'), where('calendarId', '==', calendarId));
+    const unsub = onSnapshot(
+      qy,
+      (snap) => {
+        const list: SpRecord[] = [];
+        snap.forEach((d) => {
+          const data: any = d.data();
+          let ts = 0;
+          if (data.timestamp) {
+            try {
+              ts = data.timestamp.toDate ? data.timestamp.toDate().getTime() : new Date(data.timestamp).getTime();
+            } catch (e) { /* timestamp inválido: queda en 0 */ }
+          }
+          list.push({
+            id: d.id,
+            client: data.client || '',
+            service: data.service || '',
+            city: data.city || '',
+            status: data.status || '',
+            ts,
+          });
+        });
+        list.sort((a, b) => b.ts - a.ts);
+        setRecords(list);
+        setRecordsLoading(false);
+      },
+      (err) => {
+        console.error('Error al cargar registros de prueba social:', err);
+        setRecordError('No se pudieron cargar los registros.');
+        setRecordsLoading(false);
+      }
+    );
+    return () => unsub();
+  }, [calendarId]);
+
+  const filteredRecords = records.filter((r) => {
+    const term = search.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      r.client.toLowerCase().includes(term) ||
+      r.service.toLowerCase().includes(term) ||
+      r.city.toLowerCase().includes(term)
+    );
+  });
+
+  const startEdit = (r: SpRecord) => {
+    setEditingId(r.id);
+    setEditForm({ client: r.client, service: r.service, city: r.city });
+    setRecordError(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setRecordError(null);
+  };
+
+  const saveEdit = async (id: string) => {
+    setSavingRecord(true);
+    setRecordError(null);
+    try {
+      await updateDoc(doc(db, 'social_proof_events', id), {
+        client: editForm.client.trim() || 'Cliente',
+        service: editForm.service.trim(),
+        city: editForm.city.trim(),
+      });
+      setEditingId(null);
+    } catch (err) {
+      console.error('Error al actualizar registro de prueba social:', err);
+      setRecordError('No se pudo guardar el cambio.');
+    } finally {
+      setSavingRecord(false);
+    }
+  };
+
+  const deleteRecord = async (id: string) => {
+    if (!window.confirm('¿Eliminar este registro de la prueba social? Dejará de mostrarse en el widget.')) return;
+    setDeletingId(id);
+    setRecordError(null);
+    try {
+      await deleteDoc(doc(db, 'social_proof_events', id));
+    } catch (err) {
+      console.error('Error al eliminar registro de prueba social:', err);
+      setRecordError('No se pudo eliminar el registro.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const relTime = (ts: number) => {
+    if (!ts) return '';
+    const diff = Date.now() - ts;
+    if (diff < 0) return '';
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'hace un momento';
+    if (mins < 60) return `hace ${mins} min`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `hace ${hours} h`;
+    const days = Math.floor(hours / 24);
+    return `hace ${days} d`;
+  };
 
   // Generar un preview textual rápido
   const getPreviewText = () => {
@@ -269,6 +404,127 @@ const SocialProofSettings: React.FC<Props> = ({
                 <option value="fade">Desvanecimiento (Fade)</option>
                 <option value="scale">Escala (Scale)</option>
               </select>
+            </div>
+
+            {/* Registros / Nombres mostrados en la prueba social */}
+            <div className="space-y-3 pt-4 border-t hairline">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-[11px] font-extrabold uppercase tracking-[0.12em] ink-3 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" /> Nombres registrados
+                </label>
+                <span className="text-[11px] font-bold ink-3 tabular-nums">{records.length}</span>
+              </div>
+              <p className="text-[11px] ink-3 leading-relaxed">
+                Registros que el widget muestra a tus visitantes. Búscalos, edita el nombre, servicio o ciudad, o elimínalos. Los cambios afectan solo a la prueba social, no a la cita original.
+              </p>
+
+              {/* Buscador */}
+              <div className="relative">
+                <Search className="w-4 h-4 ink-3 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por nombre, servicio o ciudad..."
+                  className="w-full srf-sunken border hairline rounded-xl pl-9 pr-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-slate-400"
+                />
+              </div>
+
+              {recordError && (
+                <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-lg">
+                  {recordError}
+                </div>
+              )}
+
+              {recordsLoading ? (
+                <div className="text-xs ink-3 py-4 text-center">Cargando registros...</div>
+              ) : records.length === 0 ? (
+                <div className="text-xs ink-3 py-6 text-center leading-relaxed">
+                  Aún no hay registros. Aparecerán aquí cuando se agenden citas con la prueba social activada.
+                </div>
+              ) : filteredRecords.length === 0 ? (
+                <div className="text-xs ink-3 py-6 text-center">Sin resultados para “{search.trim()}”.</div>
+              ) : (
+                <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                  {filteredRecords.map((r) => (
+                    <div key={r.id} className="p-3 rounded-xl srf-sunken border hairline">
+                      {editingId === r.id ? (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={editForm.client}
+                            onChange={(e) => setEditForm((f) => ({ ...f, client: e.target.value }))}
+                            placeholder="Nombre del cliente"
+                            className="w-full srf-panel border hairline rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-slate-400"
+                          />
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={editForm.service}
+                              onChange={(e) => setEditForm((f) => ({ ...f, service: e.target.value }))}
+                              placeholder="Servicio"
+                              className="w-full srf-panel border hairline rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-slate-400"
+                            />
+                            <input
+                              type="text"
+                              value={editForm.city}
+                              onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
+                              placeholder="Ciudad"
+                              className="w-full srf-panel border hairline rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-slate-400"
+                            />
+                          </div>
+                          <div className="flex items-center justify-end gap-2 pt-1">
+                            <button
+                              onClick={cancelEdit}
+                              disabled={savingRecord}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold ink-2 hover:srf-panel border hairline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <X className="w-3.5 h-3.5" /> Cancelar
+                            </button>
+                            <button
+                              onClick={() => saveEdit(r.id)}
+                              disabled={savingRecord}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white accent-bg hover:brightness-110 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <Check className="w-3.5 h-3.5" /> {savingRecord ? 'Guardando...' : 'Guardar'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0 uppercase">
+                            {(r.client || '?').trim().charAt(0) || '?'}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold ink-1 truncate">{r.client || 'Cliente'}</p>
+                            <p className="text-[11px] ink-3 truncate">
+                              {[r.service, r.city].filter(Boolean).join(' · ') || 'Sin detalles'}
+                              {r.ts ? ` — ${relTime(r.ts)}` : ''}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => startEdit(r)}
+                              title="Editar"
+                              className="p-1.5 rounded-lg ink-3 hover:ink-1 hover:srf-panel transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteRecord(r.id)}
+                              disabled={deletingId === r.id}
+                              title="Eliminar"
+                              className="p-1.5 rounded-lg ink-3 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

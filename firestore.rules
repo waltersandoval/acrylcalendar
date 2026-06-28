@@ -46,7 +46,22 @@ service cloud.firestore {
 
     match /social_proof_events/{eventId} {
       allow read: if true;
-      allow write: if false;
+      // El dueño/editor del calendario vinculado puede curar lo que muestra el
+      // widget: editar el nombre/servicio/ciudad de un registro o eliminarlo.
+      // Estos documentos solo tienen `calendarId` (no `ownerUid`), así que
+      // -igual que en `events` y `payment_configs`- no basta con estar
+      // autenticado: hay que verificar la RELACIÓN, que ese calendarId apunte a
+      // un calendario que el caller realmente puede editar. En `update` se
+      // exige además que el calendarId NO cambie, para que nadie repunte un
+      // registro hacia el calendario de otro. No se permite `create` desde el
+      // cliente: los registros los sincroniza la Cloud Function (Admin SDK),
+      // evitando que alguien inyecte prueba social falsa.
+      allow create: if false;
+      allow update: if signedIn()
+        && request.resource.data.calendarId == resource.data.calendarId
+        && canEditCalendar(calendarData(resource.data.calendarId));
+      allow delete: if signedIn()
+        && canEditCalendar(calendarData(resource.data.calendarId));
     }
 
     match /calendars/{calendarId} {
